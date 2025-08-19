@@ -14,7 +14,7 @@ const navigationItems = [
   { id: 'blogs', label: 'Health Blogs', icon: BookOpen, path: '/maternity/blogs' },
   { id: 'calendar', label: 'Integrated Calendar', icon: Calendar, path: '/maternity/calendar' },
   { id: 'supplies', label: 'Supply Requests', icon: Package, path: '/maternity/supplies' },
-  { id: 'visits', label: 'Visit Requests', icon: UserCheck, path: '/maternity/visits' },
+  { id: 'visits', label: 'Antenatal Visits', icon: UserCheck, path: '/maternity/visits' },
   { id: 'vaccinations', label: 'Vaccination Booking', icon: Syringe, path: '/maternity/vaccinations' },
   { id: 'mcp-card', label: 'Digital MCP Card', icon: CreditCard, path: '/maternity/mcp-card' },
   { id: 'feedback', label: 'Feedback', icon: MessageSquare, path: '/maternity/feedback' },

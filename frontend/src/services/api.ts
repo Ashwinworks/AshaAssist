@@ -80,4 +80,28 @@ export const healthAPI = {
   },
 };
 
+// Maternity API
+export const maternityAPI = {
+  setProfile: async (payload: { lmpDate?: string; eddDate?: string }) => {
+    const response = await api.put('/maternity/profile', payload);
+    return response.data;
+  },
+  getVisits: async () => {
+    const response = await api.get('/maternity/visits');
+    return response.data;
+  },
+  addVisit: async (payload: { visitDate: string; week?: number; center?: string; notes?: string }) => {
+    const response = await api.post('/maternity/visits', payload);
+    return response.data;
+  },
+  deleteVisit: async (visitId: string) => {
+    const response = await api.delete(`/maternity/visits/${visitId}`);
+    return response.data;
+  },
+  getSchedule: async () => {
+    const response = await api.get('/maternity/schedule');
+    return response.data;
+  },
+};
+
 export default api;

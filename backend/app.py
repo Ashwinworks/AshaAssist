@@ -1,7 +1,13 @@
+
+
+
+
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
 from pymongo import MongoClient
+from pymongo.errors import DuplicateKeyError
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import os
@@ -49,6 +55,25 @@ except Exception as e:
 users_collection = db.users
 asha_workers_collection = db.asha_workers
 admins_collection = db.admins
+visits_collection = db.visits
+
+# Ensure unique indexes on users collection
+try:
+    # Email must be unique for all docs
+    users_collection.create_index([('email', 1)], unique=True)
+
+    # Recreate phone index as a partial unique index so multiple docs without phone don't conflict
+    indexes = users_collection.index_information()
+    if 'phone_1' in indexes:
+        users_collection.drop_index('phone_1')
+    users_collection.create_index(
+        [('phone', 1)],
+        unique=True,
+        partialFilterExpression={'phone': {'$exists': True, '$type': 'string'}}
+    )
+    print("Indexes ensured on users: email(unique), phone(unique, partial on existing string values)")
+except Exception as e:
+    print(f'Warning: could not ensure indexes: {e}')
 
 def create_default_accounts():
     """Create default ASHA worker and admin accounts if they don't exist"""
@@ -147,6 +172,12 @@ def register():
     try:
         data = request.get_json()
         
+        # Normalize inputs for registration
+        if 'email' in data and isinstance(data['email'], str):
+            data['email'] = data['email'].strip().lower()
+        if 'phone' in data and isinstance(data['phone'], str):
+            data['phone'] = data['phone'].strip()
+        
         # Validate required fields
         required_fields = ['email', 'password', 'name', 'phone', 'userType', 'beneficiaryCategory']
         for field in required_fields:
@@ -172,10 +203,15 @@ def register():
         if data['userType'] == 'user' and data['beneficiaryCategory'] not in ['maternity', 'palliative']:
             return jsonify({'error': 'Invalid beneficiary category'}), 400
         
-        # Check if user already exists
+        # Check if user already exists (email)
         existing_user = users_collection.find_one({'email': data['email']})
         if existing_user:
             return jsonify({'error': 'User with this email already exists'}), 409
+        
+        # Check if phone already exists
+        existing_phone = users_collection.find_one({'phone': data['phone']})
+        if existing_phone:
+            return jsonify({'error': 'User with this phone number already exists'}), 409
         
         # Hash password
         hashed_password = generate_password_hash(data['password'])
@@ -196,7 +232,13 @@ def register():
         }
         
         # Insert user
-        result = users_collection.insert_one(user_doc)
+        try:
+            result = users_collection.insert_one(user_doc)
+        except DuplicateKeyError as e:
+            # Determine which field caused the duplicate key
+            error_text = str(e)
+            field = 'email' if 'email' in error_text else ('phone' if 'phone' in error_text else 'field')
+            return jsonify({'error': f'User with this {field} already exists'}), 409
         
         # Create access token
         access_token = create_access_token(
@@ -229,6 +271,10 @@ def register():
 def login():
     try:
         data = request.get_json()
+        
+        # Normalize inputs for login
+        if 'email' in data and isinstance(data['email'], str):
+            data['email'] = data['email'].strip().lower()
         
         # Validate required fields
         if not data.get('email') or not data.get('password'):
@@ -292,7 +338,7 @@ def google_login():
         try:
             decoded_token = auth.verify_id_token(data['token'])
             google_uid = decoded_token['uid']
-            email = decoded_token.get('email')
+            email = (decoded_token.get('email') or '').strip().lower()
             name = decoded_token.get('name', '')
             picture = decoded_token.get('picture', '')
             
@@ -447,6 +493,196 @@ def update_profile():
         
     except Exception as e:
         return jsonify({'error': f'Failed to update profile: {str(e)}'}), 500
+
+# ---------------------------
+# Maternity (Antenatal) APIs
+# ---------------------------
+def _ensure_maternity_user(user):
+    """Validate that user is a maternal beneficiary user."""
+    if not user:
+        return 'User not found', 404
+    if user.get('userType') != 'user' or user.get('beneficiaryCategory') != 'maternity':
+        return 'Only maternal users can access this endpoint', 403
+    return None, 200
+
+def _parse_date(date_str):
+    """Parse an ISO or YYYY-MM-DD string to a datetime (00:00:00)."""
+    try:
+        dt = datetime.fromisoformat(date_str)
+        # Normalize to date boundary if time part present
+        return datetime(dt.year, dt.month, dt.day)
+    except Exception:
+        return None
+
+def _calc_edd_from_lmp(lmp_dt):
+    return lmp_dt + timedelta(days=280)
+
+def _calc_lmp_from_edd(edd_dt):
+    return edd_dt - timedelta(days=280)
+
+def _gestational_week(lmp_dt, at_date):
+    """Return integer gestational week (0..42) from LMP at given date."""
+    if not lmp_dt:
+        return None
+    days = (at_date - lmp_dt).days
+    if days < 0:
+        return 0
+    return days // 7
+
+def _build_schedule(lmp_dt, visits):
+    """Build recommended visit schedule with status per week.
+    visits: list of dicts with 'visitDate' (datetime) and 'week' (int)
+    """
+    if not lmp_dt:
+        return {'error': 'LMP not set', 'schedule': []}
+    # Define schedule weeks per guideline
+    weeks = list(range(4, 29, 4)) + [30, 32, 34, 36] + [37, 38, 39, 40] + [41, 42]
+    # Map completed weeks from recorded visits
+    completed_weeks = set()
+    for v in (visits or []):
+        if isinstance(v, dict) and isinstance(v.get('week'), int):
+            completed_weeks.add(v['week'])
+    today = datetime.utcnow()
+    schedule = []
+    for w in weeks:
+        sched_date = lmp_dt + timedelta(weeks=w)
+        status = 'done' if w in completed_weeks else ('overdue' if sched_date.date() < today.date() else 'upcoming')
+        schedule.append({
+            'week': w,
+            'scheduledDate': sched_date,
+            'status': status,
+            'optional': True if w in [41, 42] else False
+        })
+    return {'schedule': schedule}
+
+@app.route('/api/maternity/profile', methods=['PUT'])
+@jwt_required()
+def set_maternity_profile():
+    try:
+        user_id = get_jwt_identity()
+        user = users_collection.find_one({'_id': ObjectId(user_id)})
+        err, code = _ensure_maternity_user(user)
+        if err:
+            return jsonify({'error': err}), code
+        data = request.get_json() or {}
+        lmp_str = data.get('lmpDate')
+        edd_str = data.get('eddDate')
+        lmp_dt = _parse_date(lmp_str) if lmp_str else None
+        edd_dt = _parse_date(edd_str) if edd_str else None
+        if not lmp_dt and not edd_dt:
+            return jsonify({'error': 'Provide at least lmpDate or eddDate (YYYY-MM-DD)'}), 400
+        if lmp_dt and not edd_dt:
+            edd_dt = _calc_edd_from_lmp(lmp_dt)
+        if edd_dt and not lmp_dt:
+            lmp_dt = _calc_lmp_from_edd(edd_dt)
+        update = {
+            'maternityProfile': {
+                'lmpDate': lmp_dt,
+                'eddDate': edd_dt,
+                'updatedAt': datetime.utcnow()
+            },
+            'updatedAt': datetime.utcnow()
+        }
+        users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': update})
+        return jsonify({'message': 'Maternity profile updated', 'maternityProfile': update['maternityProfile']}), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to update maternity profile: {str(e)}'}), 500
+
+@app.route('/api/maternity/visits', methods=['GET'])
+@jwt_required()
+def get_maternity_visits():
+    try:
+        user_id = get_jwt_identity()
+        user = users_collection.find_one({'_id': ObjectId(user_id)})
+        err, code = _ensure_maternity_user(user)
+        if err:
+            return jsonify({'error': err}), code
+        # Fetch from visits collection
+        cursor = visits_collection.find({'userId': ObjectId(user_id)}).sort('visitDate', 1)
+        visits = []
+        for doc in cursor:
+            doc['_id'] = str(doc['_id'])
+            doc['userId'] = str(doc['userId'])
+            visits.append(doc)
+        return jsonify({'visits': visits}), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to fetch visits: {str(e)}'}), 500
+
+@app.route('/api/maternity/visits', methods=['POST'])
+@jwt_required()
+def add_maternity_visit():
+    try:
+        user_id = get_jwt_identity()
+        user = users_collection.find_one({'_id': ObjectId(user_id)})
+        err, code = _ensure_maternity_user(user)
+        if err:
+            return jsonify({'error': err}), code
+        data = request.get_json() or {}
+        visit_date_str = data.get('visitDate')
+        provided_week = data.get('week')
+        if not visit_date_str:
+            return jsonify({'error': 'visitDate (YYYY-MM-DD) is required'}), 400
+        visit_dt = _parse_date(visit_date_str)
+        if not visit_dt:
+            return jsonify({'error': 'Invalid visitDate format. Use YYYY-MM-DD'}), 400
+        lmp_dt = None
+        if user.get('maternityProfile') and user['maternityProfile'].get('lmpDate'):
+            # Stored as datetime already
+            lmp_dt = user['maternityProfile']['lmpDate']
+        computed_week = _gestational_week(lmp_dt, visit_dt) if lmp_dt else None
+        week = int(provided_week) if provided_week is not None else computed_week
+        visit_doc = {
+            'userId': ObjectId(user_id),
+            'visitDate': visit_dt,
+            'week': week,
+            'center': (data.get('center') or '').strip(),
+            'notes': (data.get('notes') or '').strip(),
+            'createdAt': datetime.utcnow(),
+            'updatedAt': datetime.utcnow()
+        }
+        result = visits_collection.insert_one(visit_doc)
+        visit_doc['_id'] = str(result.inserted_id)
+        visit_doc['userId'] = str(visit_doc['userId'])
+        return jsonify({'message': 'Visit recorded', 'visit': visit_doc}), 201
+    except Exception as e:
+        return jsonify({'error': f'Failed to add visit: {str(e)}'}), 500
+
+@app.route('/api/maternity/visits/<visit_id>', methods=['DELETE'])
+@jwt_required()
+def delete_maternity_visit(visit_id):
+    try:
+        user_id = get_jwt_identity()
+        user = users_collection.find_one({'_id': ObjectId(user_id)})
+        err, code = _ensure_maternity_user(user)
+        if err:
+            return jsonify({'error': err}), code
+        # Delete visit document owned by the user
+        result = visits_collection.delete_one({'_id': ObjectId(visit_id), 'userId': ObjectId(user_id)})
+        if result.deleted_count == 0:
+            return jsonify({'error': 'Visit not found'}), 404
+        return jsonify({'message': 'Visit deleted'}), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to delete visit: {str(e)}'}), 500
+
+@app.route('/api/maternity/schedule', methods=['GET'])
+@jwt_required()
+def get_maternity_schedule():
+    try:
+        user_id = get_jwt_identity()
+        user = users_collection.find_one({'_id': ObjectId(user_id)})
+        err, code = _ensure_maternity_user(user)
+        if err:
+            return jsonify({'error': err}), code
+        lmp_dt = None
+        if user.get('maternityProfile') and user['maternityProfile'].get('lmpDate'):
+            lmp_dt = user['maternityProfile']['lmpDate']
+        visits = user.get('antenatalVisits', [])
+        result = _build_schedule(lmp_dt, visits)
+        if 'error' in result:
+            return jsonify({'error': result['error']}), 400
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to fetch schedule: {str(e)}'}), 500
 
 # Error handlers
 @app.errorhandler(404)

@@ -22,6 +22,7 @@ import MaternitySupplyRequests from './pages/maternity/SupplyRequests';
 import VaccinationBooking from './pages/maternity/VaccinationBooking';
 import MCPCard from './pages/maternity/MCPCard';
 import MaternityFeedback from './pages/maternity/Feedback';
+import AntenatalVisits from './pages/maternity/AntenatalVisits';
 
 // Import palliative pages
 import PalliativeProfileSetup from './pages/palliative/ProfileSetup';
@@ -246,7 +247,8 @@ const AppRoutes: React.FC = () => {
         path="/maternity/visits"
         element={
           <ProtectedRoute>
-            <VisitRequests />
+            {/* Antenatal Visits page */}
+            <AntenatalVisits />
           </ProtectedRoute>
         }
       />
