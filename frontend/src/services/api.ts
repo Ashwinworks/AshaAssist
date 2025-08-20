@@ -80,6 +80,62 @@ export const healthAPI = {
   },
 };
 
+// ASHA Feedback API
+export const ashaFeedbackAPI = {
+  submit: async (payload: {
+    rating: number;
+    timeliness?: number;
+    communication?: number;
+    supportiveness?: number;
+    comments?: string;
+    ashaWorkerId?: string;
+  }) => {
+    const response = await api.post('/asha-feedback', payload);
+    return response.data;
+  },
+  listMine: async () => {
+    const response = await api.get('/asha-feedback');
+    return response.data;
+  }
+};
+
+// Admin API
+export const adminAPI = {
+  listAllFeedback: async () => {
+    const response = await api.get('/admin/asha-feedback');
+    return response.data;
+  }
+};
+
+// Calendar API (Asha-managed)
+export const calendarAPI = {
+  list: async (month?: string) => {
+    const params = month ? { month } : undefined;
+    const response = await api.get('/calendar-events', { params });
+    return response.data;
+  },
+  create: async (payload: {
+    title: string;
+    description?: string;
+    place?: string;
+    start: string; // ISO
+    end?: string; // ISO
+    allDay?: boolean;
+    category?: string;
+  }) => {
+    const response = await api.post('/calendar-events', payload);
+    return response.data;
+  },
+  update: async (id: string, payload: Partial<{ title: string; description: string; place: string; start: string; end: string; allDay: boolean; category: string }>) => {
+    const response = await api.put(`/calendar-events/${id}`, payload);
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await api.delete(`/calendar-events/${id}`);
+    return response.data;
+  }
+};
+
 // Maternity API
 export const maternityAPI = {
   setProfile: async (payload: { lmpDate?: string; eddDate?: string }) => {

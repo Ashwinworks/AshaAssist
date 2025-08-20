@@ -22,9 +22,13 @@ const LoginPage: React.FC = () => {
     handleSubmit,
     formState: { errors, touchedFields },
     trigger,
+    watch,
   } = useForm<LoginFormData>({
     mode: 'onChange', // Enable real-time validation
   });
+
+  const watchEmail = watch('email');
+  const watchPassword = watch('password');
 
   const onSubmit = async (data: LoginFormData) => {
     try {
@@ -97,7 +101,7 @@ const LoginPage: React.FC = () => {
                   <input
                     id="email"
                     type="email"
-                    className={`input ${errors.email ? 'input-error' : touchedFields.email && !errors.email ? 'input-success' : ''}`}
+                    className={`input ${errors.email ? 'input-error' : touchedFields.email && watchEmail && watchEmail.trim() && !errors.email ? 'input-success' : ''}`}
                     placeholder="Enter your email address"
                     {...register('email', {
                       required: 'Email address is required',
@@ -108,7 +112,7 @@ const LoginPage: React.FC = () => {
                       onChange: () => trigger('email'),
                     })}
                   />
-                  {touchedFields.email && !errors.email && (
+                  {touchedFields.email && watchEmail && watchEmail.trim() && !errors.email && (
                     <div className="input-success-icon">✓</div>
                   )}
                 </div>
@@ -127,7 +131,7 @@ const LoginPage: React.FC = () => {
                   <input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    className={`input ${errors.password ? 'input-error' : touchedFields.password && !errors.password ? 'input-success' : ''}`}
+                    className={`input ${errors.password ? 'input-error' : touchedFields.password && watchPassword && watchPassword.trim() && !errors.password ? 'input-success' : ''}`}
                     placeholder="Enter your password"
                     {...register('password', {
                       required: 'Password is required',
@@ -145,7 +149,7 @@ const LoginPage: React.FC = () => {
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
-                  {touchedFields.password && !errors.password && (
+                  {touchedFields.password && watchPassword && watchPassword.trim() && !errors.password && (
                     <div className="input-success-icon">✓</div>
                   )}
                 </div>

@@ -8,12 +8,14 @@ import RegisterPage from './pages/RegisterPage';
 import MaternityDashboard from './pages/MaternityDashboard';
 import PalliativeDashboard from './pages/PalliativeDashboard';
 import AshaWorkerDashboard from './pages/AshaWorkerDashboard';
+import AshaCalendarManagement from './pages/asha/CalendarManagement';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AshaManagement from './pages/admin/AshaManagement';
 import HealthBlogsManagement from './pages/admin/content/HealthBlogsManagement';
 import VaccinationSchedulesManagement from './pages/admin/content/VaccinationSchedulesManagement';
 import CommunityClassesManagement from './pages/admin/content/CommunityClassesManagement';
 import Feedbacks from './pages/admin/Feedbacks';
+
 import CategorySelection from './components/CategorySelection';
 
 // Import maternity pages
@@ -210,6 +212,14 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/asha/calendar"
+        element={
+          <ProtectedRoute>
+            <AshaCalendarManagement />
+          </ProtectedRoute>
+        }
+      />
       {/* Maternity Routes */}
       <Route
         path="/maternity/profile"
@@ -384,6 +394,7 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+
 
       {/* Catch all route */}
       <Route path="*" element={<Navigate to="/" replace />} />

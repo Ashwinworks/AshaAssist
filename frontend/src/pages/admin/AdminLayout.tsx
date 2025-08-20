@@ -57,7 +57,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
       icon: MessageSquare, 
       label: 'Feedbacks',
       color: 'var(--yellow-600)'
-    }
+    },
   ];
 
   const handleNavigation = (path: string) => {

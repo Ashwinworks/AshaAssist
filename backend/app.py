@@ -5,7 +5,7 @@
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -53,16 +53,14 @@ except Exception as e:
 
 # Collections
 users_collection = db.users
-asha_workers_collection = db.asha_workers
-admins_collection = db.admins
 visits_collection = db.visits
+asha_feedback_collection = db.asha_feedback
+calendar_events_collection = db.calendar_events
 
-# Ensure unique indexes on users collection
+# Ensure indexes
 try:
-    # Email must be unique for all docs
+    # Users: unique email and partial unique phone
     users_collection.create_index([('email', 1)], unique=True)
-
-    # Recreate phone index as a partial unique index so multiple docs without phone don't conflict
     indexes = users_collection.index_information()
     if 'phone_1' in indexes:
         users_collection.drop_index('phone_1')
@@ -71,7 +69,14 @@ try:
         unique=True,
         partialFilterExpression={'phone': {'$exists': True, '$type': 'string'}}
     )
-    print("Indexes ensured on users: email(unique), phone(unique, partial on existing string values)")
+    # ASHA feedback: index by user and createdAt for listing
+    asha_feedback_collection.create_index([('userId', 1), ('createdAt', -1)])
+
+    # Calendar events: by start/end for range queries, and createdBy
+    calendar_events_collection.create_index([('start', 1)])
+    calendar_events_collection.create_index([('end', 1)])
+    calendar_events_collection.create_index([('createdBy', 1)])
+    print("Indexes ensured: users(email unique, phone partial unique), asha_feedback(userId+createdAt), calendar_events(start,end,createdBy)")
 except Exception as e:
     print(f'Warning: could not ensure indexes: {e}')
 
@@ -683,6 +688,221 @@ def get_maternity_schedule():
         return jsonify(result), 200
     except Exception as e:
         return jsonify({'error': f'Failed to fetch schedule: {str(e)}'}), 500
+
+# ---------------------------
+# Calendar Events APIs (managed by ASHA worker)
+# ---------------------------
+@app.route('/api/calendar-events', methods=['GET'])
+@jwt_required()
+def list_calendar_events():
+    try:
+        # Optional month filter: ?month=YYYY-MM
+        month = request.args.get('month')
+        query = {}
+        if month:
+            try:
+                year, mon = map(int, month.split('-'))
+                start = datetime(year, mon, 1)
+                # next month
+                if mon == 12:
+                    end = datetime(year + 1, 1, 1)
+                else:
+                    end = datetime(year, mon + 1, 1)
+                query = {'start': {'$lt': end}, 'end': {'$gte': start}}
+            except Exception:
+                pass
+        cursor = calendar_events_collection.find(query).sort('start', 1)
+        events = []
+        for doc in cursor:
+            events.append({
+                'id': str(doc['_id']),
+                'title': doc.get('title', ''),
+                'description': doc.get('description', ''),
+                'place': doc.get('place', ''),
+                'start': doc.get('start').isoformat() if isinstance(doc.get('start'), datetime) else doc.get('start'),
+                'end': doc.get('end').isoformat() if isinstance(doc.get('end'), datetime) else doc.get('end'),
+                'allDay': bool(doc.get('allDay', False)),
+                'category': doc.get('category', ''),
+                'createdBy': str(doc.get('createdBy')) if doc.get('createdBy') else None,
+                'createdAt': doc.get('createdAt').isoformat() if isinstance(doc.get('createdAt'), datetime) else doc.get('createdAt'),
+            })
+        return jsonify({'events': events}), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to load events: {str(e)}'}), 500
+
+@app.route('/api/calendar-events', methods=['POST'])
+@jwt_required()
+def create_calendar_event():
+    try:
+        claims = get_jwt() or {}
+        if claims.get('userType') not in ['asha_worker', 'admin']:
+            return jsonify({'error': 'Only ASHA workers or admins can manage events'}), 403
+        user_id = get_jwt_identity()
+        data = request.get_json() or {}
+        title = (data.get('title') or '').strip()
+        start = data.get('start')
+        end = data.get('end') or start
+        if not title or not start:
+            return jsonify({'error': 'Title and start are required'}), 400
+        # Parse dates
+        def parse_dt(val):
+            if isinstance(val, str):
+                try:
+                    return datetime.fromisoformat(val.replace('Z', '+00:00'))
+                except Exception:
+                    pass
+            return None
+        start_dt = parse_dt(start)
+        end_dt = parse_dt(end)
+        if not start_dt or not end_dt:
+            return jsonify({'error': 'Invalid start/end datetime'}), 400
+        doc = {
+            'title': title,
+            'description': (data.get('description') or '').strip(),
+            'place': (data.get('place') or '').strip(),
+            'start': start_dt,
+            'end': end_dt,
+            'allDay': bool(data.get('allDay', False)),
+            'category': (data.get('category') or '').strip(),
+            'createdBy': ObjectId(user_id),
+            'createdAt': datetime.utcnow(),
+            'updatedAt': datetime.utcnow()
+        }
+        res = calendar_events_collection.insert_one(doc)
+        return jsonify({'id': str(res.inserted_id), 'message': 'Event created'}), 201
+    except Exception as e:
+        return jsonify({'error': f'Failed to create event: {str(e)}'}), 500
+
+@app.route('/api/calendar-events/<event_id>', methods=['PUT'])
+@jwt_required()
+def update_calendar_event(event_id):
+    try:
+        claims = get_jwt() or {}
+        if claims.get('userType') not in ['asha_worker', 'admin']:
+            return jsonify({'error': 'Only ASHA workers or admins can manage events'}), 403
+        data = request.get_json() or {}
+        updates = {}
+        for field in ['title', 'description', 'place', 'category']:
+            if field in data:
+                updates[field] = (data.get(field) or '').strip()
+        def parse_dt(val):
+            if isinstance(val, str):
+                try:
+                    return datetime.fromisoformat(val.replace('Z', '+00:00'))
+                except Exception:
+                    pass
+            return None
+        if 'start' in data:
+            dt = parse_dt(data['start'])
+            if not dt: return jsonify({'error': 'Invalid start'}), 400
+            updates['start'] = dt
+        if 'end' in data:
+            dt = parse_dt(data['end'])
+            if not dt: return jsonify({'error': 'Invalid end'}), 400
+            updates['end'] = dt
+        if 'allDay' in data:
+            updates['allDay'] = bool(data['allDay'])
+        if not updates:
+            return jsonify({'error': 'No updates provided'}), 400
+        updates['updatedAt'] = datetime.utcnow()
+        calendar_events_collection.update_one({'_id': ObjectId(event_id)}, {'$set': updates})
+        return jsonify({'message': 'Event updated'}), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to update event: {str(e)}'}), 500
+
+@app.route('/api/calendar-events/<event_id>', methods=['DELETE'])
+@jwt_required()
+def delete_calendar_event(event_id):
+    try:
+        claims = get_jwt() or {}
+        if claims.get('userType') not in ['asha_worker', 'admin']:
+            return jsonify({'error': 'Only ASHA workers or admins can manage events'}), 403
+        calendar_events_collection.delete_one({'_id': ObjectId(event_id)})
+        return jsonify({'message': 'Event deleted'}), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to delete event: {str(e)}'}), 500
+
+# ---------------------------
+# ASHA Feedback APIs
+# ---------------------------
+@app.route('/api/asha-feedback', methods=['POST'])
+@jwt_required()
+def submit_asha_feedback():
+    try:
+        user_id = get_jwt_identity()
+        data = request.get_json() or {}
+        # Basic validation
+        rating = int(data.get('rating', 0))
+        if rating < 1 or rating > 5:
+            return jsonify({'error': 'Rating must be between 1 and 5'}), 400
+        feedback_doc = {
+            'userId': ObjectId(user_id),
+            'ashaWorkerId': data.get('ashaWorkerId'),  # optional for now
+            'rating': rating,
+            'timeliness': int(data.get('timeliness', rating)),
+            'communication': int(data.get('communication', rating)),
+            'supportiveness': int(data.get('supportiveness', rating)),
+            'comments': (data.get('comments') or '').strip(),
+            'createdAt': datetime.utcnow(),
+            'updatedAt': datetime.utcnow()
+        }
+        result = asha_feedback_collection.insert_one(feedback_doc)
+        return jsonify({'message': 'Feedback submitted', 'id': str(result.inserted_id)}), 201
+    except Exception as e:
+        return jsonify({'error': f'Failed to submit feedback: {str(e)}'}), 500
+
+@app.route('/api/asha-feedback', methods=['GET'])
+@jwt_required()
+def list_my_asha_feedback():
+    try:
+        user_id = get_jwt_identity()
+        cursor = asha_feedback_collection.find({'userId': ObjectId(user_id)}).sort('createdAt', -1)
+        items = []
+        for doc in cursor:
+            doc['id'] = str(doc['_id'])
+            doc.pop('_id', None)
+            doc['userId'] = str(doc['userId'])
+            items.append(doc)
+        return jsonify({'feedbacks': items}), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to load feedback: {str(e)}'}), 500
+
+@app.route('/api/admin/asha-feedback', methods=['GET'])
+@jwt_required()
+def admin_list_all_asha_feedback():
+    try:
+        claims = get_jwt() or {}
+        if claims.get('userType') != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+        # Fetch with user basics
+        pipeline = [
+            { '$sort': { 'createdAt': -1 } },
+            { '$lookup': { 'from': 'users', 'localField': 'userId', 'foreignField': '_id', 'as': 'user' } },
+            { '$unwind': { 'path': '$user', 'preserveNullAndEmptyArrays': True } },
+            { '$project': {
+                'id': { '$toString': '$_id' },
+                '_id': 0,
+                'userId': { '$toString': '$userId' },
+                'userName': { '$ifNull': ['$user.name', ''] },
+                'userEmail': { '$ifNull': ['$user.email', ''] },
+                'beneficiaryCategory': { '$ifNull': ['$user.beneficiaryCategory', ''] },
+                'rating': 1,
+                'timeliness': 1,
+                'communication': 1,
+                'supportiveness': 1,
+                'comments': 1,
+                'ashaWorkerId': 1,
+                'createdAt': 1
+            }}
+        ]
+        results = list(asha_feedback_collection.aggregate(pipeline))
+        # Convert datetimes
+        for r in results:
+            if isinstance(r.get('createdAt'), datetime):
+                r['createdAt'] = r['createdAt'].isoformat()
+        return jsonify({'feedbacks': results}), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to load all feedback: {str(e)}'}), 500
 
 # Error handlers
 @app.errorhandler(404)
