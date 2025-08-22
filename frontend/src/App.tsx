@@ -34,6 +34,8 @@ import PalliativeFeedback from './pages/palliative/Feedback';
 
 // Import shared pages
 import HealthBlogs from './pages/shared/HealthBlogs';
+import BlogDetail from './pages/shared/BlogDetail';
+import AshaHealthBlogs from './pages/asha/HealthBlogs';
 import Calendar from './pages/shared/Calendar';
 import VisitRequests from './pages/shared/VisitRequests';
 import './App.css';
@@ -220,6 +222,14 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/asha/health-blogs"
+        element={
+          <ProtectedRoute>
+            <AshaHealthBlogs />
+          </ProtectedRoute>
+        }
+      />
       {/* Maternity Routes */}
       <Route
         path="/maternity/profile"
@@ -234,6 +244,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <HealthBlogs />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/maternity/blogs/:id"
+        element={
+          <ProtectedRoute>
+            <BlogDetail />
           </ProtectedRoute>
         }
       />
@@ -301,6 +319,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <HealthBlogs />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/palliative/blogs/:id"
+        element={
+          <ProtectedRoute>
+            <BlogDetail />
           </ProtectedRoute>
         }
       />

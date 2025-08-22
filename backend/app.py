@@ -3,7 +3,7 @@
 
 
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt
 from pymongo import MongoClient
@@ -56,6 +56,7 @@ users_collection = db.users
 visits_collection = db.visits
 asha_feedback_collection = db.asha_feedback
 calendar_events_collection = db.calendar_events
+health_blogs_collection = db.health_blogs
 
 # Ensure indexes
 try:
@@ -76,7 +77,12 @@ try:
     calendar_events_collection.create_index([('start', 1)])
     calendar_events_collection.create_index([('end', 1)])
     calendar_events_collection.create_index([('createdBy', 1)])
-    print("Indexes ensured: users(email unique, phone partial unique), asha_feedback(userId+createdAt), calendar_events(start,end,createdBy)")
+
+    # Health blogs: indexes for author, category, createdAt, status
+    health_blogs_collection.create_index([('createdBy', 1), ('createdAt', -1)])
+    health_blogs_collection.create_index([('category', 1), ('status', 1)])
+    health_blogs_collection.create_index([('status', 1), ('createdAt', -1)])
+    print("Indexes ensured: users(email unique, phone partial unique), asha_feedback(userId+createdAt), calendar_events(start,end,createdBy), health_blogs(createdBy+createdAt, category+status, status+createdAt)")
 except Exception as e:
     print(f'Warning: could not ensure indexes: {e}')
 
@@ -903,6 +909,183 @@ def admin_list_all_asha_feedback():
         return jsonify({'feedbacks': results}), 200
     except Exception as e:
         return jsonify({'error': f'Failed to load all feedback: {str(e)}'}), 500
+
+# ---------------------------
+# Health Blogs APIs
+# ---------------------------
+@app.route('/api/health-blogs', methods=['POST'])
+@jwt_required()
+def create_health_blog():
+    try:
+        user_id = get_jwt_identity()
+        claims = get_jwt() or {}
+        if claims.get('userType') not in ['asha_worker', 'admin']:
+            return jsonify({'error': 'Only ASHA workers or admins can create blogs'}), 403
+
+        # Support both JSON and multipart (for image upload)
+        data = {}
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            data['title'] = (request.form.get('title') or '').strip()
+            data['content'] = (request.form.get('content') or '').strip()
+            data['category'] = (request.form.get('category') or 'general').strip().lower()
+            data['authorName'] = (request.form.get('authorName') or '').strip()
+            image_file = request.files.get('image')
+        else:
+            data = request.get_json() or {}
+            image_file = None
+
+        # Validate required fields
+        if not data.get('title') or not data.get('content') or not data.get('authorName'):
+            return jsonify({'error': 'title, content, and authorName are required'}), 400
+
+        # Save image if provided
+        image_url = None
+        if image_file:
+            uploads_dir = os.path.join(os.getcwd(), 'uploads')
+            os.makedirs(uploads_dir, exist_ok=True)
+            # Create unique filename
+            ts = datetime.utcnow().strftime('%Y%m%d%H%M%S%f')
+            ext = os.path.splitext(image_file.filename)[1]
+            filename = f"blog_{ts}{ext}"
+            save_path = os.path.join(uploads_dir, filename)
+            image_file.save(save_path)
+            image_url = f"/uploads/{filename}"
+
+        doc = {
+            'title': data['title'].strip(),
+            'content': data['content'].strip(),
+            'category': (data.get('category') or 'general').strip().lower(),
+            'authorName': data['authorName'].strip(),
+            'imageUrl': image_url,
+            'status': (data.get('status') or 'published').strip().lower(),  # published|draft
+            'createdBy': ObjectId(user_id),
+            'createdAt': datetime.utcnow(),
+            'updatedAt': datetime.utcnow(),
+            'views': 0,
+            'likes': 0,
+            'tags': data.get('tags') or []
+        }
+        result = health_blogs_collection.insert_one(doc)
+        return jsonify({'message': 'Blog created', 'id': str(result.inserted_id)}), 201
+    except Exception as e:
+        return jsonify({'error': f'Failed to create blog: {str(e)}'}), 500
+
+@app.route('/api/health-blogs', methods=['GET'])
+@jwt_required()
+def list_health_blogs():
+    try:
+        claims = get_jwt() or {}
+        user_type = claims.get('userType')
+        # filters
+        category = (request.args.get('category') or '').strip().lower() or None
+        status = (request.args.get('status') or '').strip().lower() or None
+        created_by = (request.args.get('createdBy') or '').strip() or None
+
+        query = {}
+        if category:
+            query['category'] = category
+        if status:
+            query['status'] = status
+        else:
+            # Default for non-admin/non-asha: show published only
+            if user_type not in ['admin', 'asha_worker']:
+                query['status'] = 'published'
+        if created_by:
+            try:
+                query['createdBy'] = ObjectId(created_by)
+            except Exception:
+                pass
+
+        cursor = health_blogs_collection.find(query).sort('createdAt', -1)
+        items = []
+        for doc in cursor:
+            doc['id'] = str(doc['_id'])
+            doc.pop('_id', None)
+            doc['createdBy'] = str(doc['createdBy'])
+            if isinstance(doc.get('createdAt'), datetime):
+                doc['createdAt'] = doc['createdAt'].isoformat()
+            if isinstance(doc.get('updatedAt'), datetime):
+                doc['updatedAt'] = doc['updatedAt'].isoformat()
+            items.append(doc)
+        return jsonify({'blogs': items}), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to list blogs: {str(e)}'}), 500
+
+@app.route('/api/health-blogs/<blog_id>', methods=['GET'])
+@jwt_required()
+def get_health_blog(blog_id):
+    try:
+        claims = get_jwt() or {}
+        user_type = claims.get('userType')
+        doc = health_blogs_collection.find_one({'_id': ObjectId(blog_id)})
+        if not doc:
+            return jsonify({'error': 'Blog not found'}), 404
+        # Restrict access: non-admin/non-asha can only read published
+        if user_type not in ['admin', 'asha_worker'] and doc.get('status') != 'published':
+            return jsonify({'error': 'Not allowed'}), 403
+        doc['id'] = str(doc['_id'])
+        doc.pop('_id', None)
+        doc['createdBy'] = str(doc['createdBy'])
+        if isinstance(doc.get('createdAt'), datetime):
+            doc['createdAt'] = doc['createdAt'].isoformat()
+        if isinstance(doc.get('updatedAt'), datetime):
+            doc['updatedAt'] = doc['updatedAt'].isoformat()
+        return jsonify({'blog': doc}), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to get blog: {str(e)}'}), 500
+
+@app.route('/api/health-blogs/<blog_id>', methods=['PUT'])
+@jwt_required()
+def update_health_blog(blog_id):
+    try:
+        user_id = get_jwt_identity()
+        claims = get_jwt() or {}
+        is_admin = claims.get('userType') == 'admin'
+        data = request.get_json() or {}
+
+        # Only creator or admin can edit
+        existing = health_blogs_collection.find_one({'_id': ObjectId(blog_id)})
+        if not existing:
+            return jsonify({'error': 'Blog not found'}), 404
+        if not is_admin and str(existing['createdBy']) != str(ObjectId(user_id)):
+            return jsonify({'error': 'Not allowed'}), 403
+
+        update = {k: v for k, v in {
+            'title': data.get('title'),
+            'content': data.get('content'),
+            'category': (data.get('category') or '').strip().lower() if data.get('category') else None,
+            'authorName': data.get('authorName'),
+            'status': (data.get('status') or '').strip().lower() if data.get('status') else None,
+            'tags': data.get('tags')
+        }.items() if v is not None}
+        update['updatedAt'] = datetime.utcnow()
+        health_blogs_collection.update_one({'_id': ObjectId(blog_id)}, {'$set': update})
+        return jsonify({'message': 'Blog updated'}), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to update blog: {str(e)}'}), 500
+
+@app.route('/api/health-blogs/<blog_id>', methods=['DELETE'])
+@jwt_required()
+def delete_health_blog(blog_id):
+    try:
+        user_id = get_jwt_identity()
+        claims = get_jwt() or {}
+        is_admin = claims.get('userType') == 'admin'
+        existing = health_blogs_collection.find_one({'_id': ObjectId(blog_id)})
+        if not existing:
+            return jsonify({'error': 'Blog not found'}), 404
+        if not is_admin and str(existing['createdBy']) != str(ObjectId(user_id)):
+            return jsonify({'error': 'Not allowed'}), 403
+        health_blogs_collection.delete_one({'_id': ObjectId(blog_id)})
+        return jsonify({'message': 'Blog deleted'}), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to delete blog: {str(e)}'}), 500
+
+# Serve uploaded images
+@app.route('/uploads/<path:filename>')
+def serve_uploads(filename):
+    uploads_dir = os.path.join(os.getcwd(), 'uploads')
+    return send_from_directory(uploads_dir, filename)
 
 # Error handlers
 @app.errorhandler(404)

@@ -160,4 +160,58 @@ export const maternityAPI = {
   },
 };
 
+// Health Blogs API
+export const healthBlogsAPI = {
+  create: async (payload: {
+    title: string;
+    content: string;
+    category?: 'maternity' | 'palliative' | 'child' | 'general';
+    authorName: string;
+    status?: 'published' | 'draft';
+    imageFile?: File | null;
+    tags?: string[];
+  }) => {
+    // Use multipart if image is present
+    if (payload.imageFile) {
+      const form = new FormData();
+      form.append('title', payload.title);
+      form.append('content', payload.content);
+      form.append('authorName', payload.authorName);
+      form.append('category', payload.category || 'general');
+      form.append('status', payload.status || 'published');
+      if (payload.tags) form.append('tags', JSON.stringify(payload.tags));
+      form.append('image', payload.imageFile);
+      const response = await api.post('/health-blogs', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return response.data;
+    }
+    const response = await api.post('/health-blogs', {
+      title: payload.title,
+      content: payload.content,
+      authorName: payload.authorName,
+      category: payload.category || 'general',
+      status: payload.status || 'published',
+      tags: payload.tags || [],
+    });
+    return response.data;
+  },
+  list: async (params?: { category?: string; status?: string; createdBy?: string }) => {
+    const response = await api.get('/health-blogs', { params });
+    return response.data as { blogs: any[] };
+  },
+  get: async (id: string) => {
+    const response = await api.get(`/health-blogs/${id}`);
+    return response.data as { blog: any };
+  },
+  update: async (id: string, payload: Partial<{ title: string; content: string; authorName: string; category: string; status: string; tags: string[] }>) => {
+    const response = await api.put(`/health-blogs/${id}`, payload);
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await api.delete(`/health-blogs/${id}`);
+    return response.data;
+  }
+};
+
 export default api;

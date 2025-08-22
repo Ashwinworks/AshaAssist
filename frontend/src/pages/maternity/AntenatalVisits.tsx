@@ -87,68 +87,68 @@ const AntenatalVisits: React.FC = () => {
             <p className="card-subtitle">Record your checkup at a hospital/clinic</p>
           </div>
           <div className="card-content">
-            <form onSubmit={addVisit} style={{ display: 'grid', gap: '1.25rem', maxWidth: 520 }}>
+            <form onSubmit={addVisit} style={{ display: 'grid', gap: '1.25rem' }}>
+              <div className="form-group">
+                <label className="form-label">Visit Date</label>
+                <input
+                  type="date"
+                  className="input"
+                  value={visitDate}
+                  onChange={(e) => setVisitDate(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Gestational Week (optional)</label>
+                <select
+                  className="input"
+                  value={week}
+                  onChange={(e) => setWeek(e.target.value ? Number(e.target.value) : '')}
+                >
+                  <option value="">Auto-compute</option>
+                  {/* Weeks 4-28 every 4 weeks */}
+                  {[4,8,12,16,20,24,28].map(w => (
+                    <option key={w} value={w}>{`Week ${w}`}</option>
+                  ))}
+                  {/* Weeks 30,32,34,36 */}
+                  {[30,32,34,36].map(w => (
+                    <option key={w} value={w}>{`Week ${w}`}</option>
+                  ))}
+                  {/* Weeks 37-40 */}
+                  {[37,38,39,40].map(w => (
+                    <option key={w} value={w}>{`Week ${w}`}</option>
+                  ))}
+                  {/* Optional follow-ups 41,42 */}
+                  {[41,42].map(w => (
+                    <option key={w} value={w}>{`Week ${w}`}</option>
+                  ))}
+                </select>
+                <div className="form-help">Select if known; otherwise it will be computed.</div>
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label className="form-label">Visit Date</label>
+                  <label className="form-label">Health Center (optional)</label>
                   <input
-                    type="date"
+                    type="text"
                     className="input"
-                    value={visitDate}
-                    onChange={(e) => setVisitDate(e.target.value)}
-                    required
+                    placeholder="e.g., PHC, CHC, Pvt Clinic"
+                    value={center}
+                    onChange={(e) => setCenter(e.target.value)}
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Gestational Week (optional)</label>
-                  <select
+                  <label className="form-label">Notes (optional)</label>
+                  <textarea
                     className="input"
-                    value={week}
-                    onChange={(e) => setWeek(e.target.value ? Number(e.target.value) : '')}
-                  >
-                    <option value="">Auto-compute</option>
-                    {/* Weeks 4-28 every 4 weeks */}
-                    {[4,8,12,16,20,24,28].map(w => (
-                      <option key={w} value={w}>{`Week ${w}`}</option>
-                    ))}
-                    {/* Weeks 30,32,34,36 */}
-                    {[30,32,34,36].map(w => (
-                      <option key={w} value={w}>{`Week ${w}`}</option>
-                    ))}
-                    {/* Weeks 37-40 */}
-                    {[37,38,39,40].map(w => (
-                      <option key={w} value={w}>{`Week ${w}`}</option>
-                    ))}
-                    {/* Optional follow-ups 41,42 */}
-                    {[41,42].map(w => (
-                      <option key={w} value={w}>{`Week ${w}`}</option>
-                    ))}
-                  </select>
-                  <div className="form-help">Select if known; otherwise it will be computed.</div>
+                    placeholder="Any observations, tests, doctor instructions, etc."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={4}
+                  />
+                  <div className="form-help">Add key observations or instructions from your visit.</div>
                 </div>
               </div>
-              <div className="form-group">
-                <label className="form-label">Health Center (optional)</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g., PHC, CHC, Pvt Clinic"
-                  value={center}
-                  onChange={(e) => setCenter(e.target.value)}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Notes (optional)</label>
-                <textarea
-                  className="input"
-                  placeholder="Any observations, tests, doctor instructions, etc."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={4}
-                />
-                <div className="form-help">Add key observations or instructions from your visit.</div>
-              </div>
-              <div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <button type="submit" className="btn btn-primary btn-lg" disabled={loading}>
                   {loading ? 'Saving...' : 'Add Visit'}
                 </button>
