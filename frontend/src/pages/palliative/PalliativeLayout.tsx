@@ -10,7 +10,7 @@ import {
 // Navigation items for palliative users
 const navigationItems = [
   { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/palliative-dashboard' },
-  { id: 'profile', label: 'Profile Setup', icon: User, path: '/palliative/profile' },
+
   { id: 'blogs', label: 'Health Blogs', icon: BookOpen, path: '/palliative/blogs' },
   { id: 'calendar', label: 'Calendar', icon: Calendar, path: '/palliative/calendar' },
   { id: 'supplies', label: 'Supply Requests', icon: Package, path: '/palliative/supplies' },
