@@ -32,8 +32,12 @@ const HealthBlogs: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        const { blogs } = await healthBlogsAPI.list({ category: userType });
-        setBlogs((blogs || []).filter((b: any) => (b.status || 'published') === 'published'));
+        const { blogs } = await healthBlogsAPI.list();
+        // Show published blogs where category matches userType OR general
+        setBlogs((blogs || [])
+          .filter((b: any) => (b.status || 'published') === 'published')
+          .filter((b: any) => (b.category || 'general') === userType || (b.category || 'general') === 'general')
+        );
       } catch (e: any) {
         setError(e?.response?.data?.error || e?.message || 'Failed to load blogs');
       } finally {

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import AshaLayout from './AshaLayout';
 import { Plus, Edit, Eye, Calendar, Image as ImageIcon } from 'lucide-react';
 import { healthBlogsAPI } from '../../services/api';
+import { useNavigate, Link } from 'react-router-dom';
 
 interface BlogItem {
   id: string;
@@ -141,6 +142,8 @@ const HealthBlogs: React.FC = () => {
     }
   };
 
+  const navigate = useNavigate();
+
   return (
     <AshaLayout title="Health Blogs">
       <div>
@@ -226,7 +229,7 @@ const HealthBlogs: React.FC = () => {
                   >
                     <option value="maternity">Maternity Care</option>
                     <option value="palliative">Palliative Care</option>
-                    <option value="child">Child Health</option>
+
                     <option value="general">General Health</option>
                   </select>
                 </div>
@@ -336,9 +339,8 @@ const HealthBlogs: React.FC = () => {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {publishedBlogs.map((blog) => (
-                  <a
+                  <div
                     key={blog.id}
-                    href={`${(blog.category === 'palliative' ? '/palliative' : '/maternity')}/blogs/${blog.id}`}
                     className="card"
                     style={{
                       display: 'block',
@@ -349,10 +351,10 @@ const HealthBlogs: React.FC = () => {
                       cursor: 'pointer'
                     }}
                     onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)';
+                      (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)';
                     }}
                     onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLAnchorElement).style.boxShadow = 'none';
+                      (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
                     }}
                   >
                     <div style={{ display: 'flex', gap: '1rem' }}>
@@ -389,7 +391,8 @@ const HealthBlogs: React.FC = () => {
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1rem', borderTop: '1px solid var(--gray-200)' }}>
-                      <button
+                      <Link
+                        to={`/asha/health-blogs/${blog.id}`}
                         style={{
                           backgroundColor: 'var(--blue-600, #2563eb)',
                           color: '#ffffff',
@@ -400,13 +403,14 @@ const HealthBlogs: React.FC = () => {
                           alignItems: 'center',
                           gap: '0.25rem',
                           borderRadius: 6,
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          textDecoration: 'none'
                         }}
-                        onClick={() => window.alert('Coming soon')}
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <Eye size={14} />
                         View
-                      </button>
+                      </Link>
                       <button
                         style={{
                           backgroundColor: 'var(--green-600, #16a34a)',
@@ -443,7 +447,7 @@ const HealthBlogs: React.FC = () => {
                         Delete
                       </button>
                     </div>
-                  </a>
+                  </div>
                 ))}
                 {!loading && publishedBlogs.length === 0 && (
                   <p style={{ color: 'var(--gray-600)' }}>No blogs yet.</p>

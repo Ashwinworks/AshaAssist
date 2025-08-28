@@ -16,7 +16,7 @@ interface BlogItem {
   id: string;
   title: string;
   content: string;
-  category: 'maternity' | 'palliative' | 'child' | 'general' | string;
+  category: 'maternity' | 'palliative' | 'general' | string;
   authorName: string;
   status: 'published' | 'draft' | string;
   createdAt?: string;
@@ -29,7 +29,6 @@ interface BlogItem {
 const categoryLabel: Record<string, string> = {
   maternity: 'Maternity',
   palliative: 'Palliative',
-  child: 'Child Health',
   general: 'General Health'
 };
 
@@ -49,8 +48,7 @@ const getCategoryColor = (category: string) => {
       return 'var(--pink-600)';
     case 'palliative':
       return 'var(--blue-600)';
-    case 'child':
-      return 'var(--green-600)';
+
     case 'general':
       return 'var(--purple-600)';
     default:
@@ -66,7 +64,7 @@ const HealthBlogsManagement: React.FC = () => {
   // Filters
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filterStatus, setFilterStatus] = React.useState<'all' | 'published' | 'draft'>('all');
-  const [filterCategory, setFilterCategory] = React.useState<'all' | 'maternity' | 'palliative' | 'child' | 'general'>('all');
+  const [filterCategory, setFilterCategory] = React.useState<'all' | 'maternity' | 'palliative' | 'general'>('all');
 
   // View modal state
   const [viewingBlog, setViewingBlog] = React.useState<BlogItem | null>(null);
@@ -206,7 +204,7 @@ const HealthBlogsManagement: React.FC = () => {
                 <option value="all">All Categories</option>
                 <option value="maternity">Maternity</option>
                 <option value="palliative">Palliative</option>
-                <option value="child">Child Health</option>
+
                 <option value="general">General Health</option>
               </select>
             </div>

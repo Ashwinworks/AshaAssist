@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import MaternityLayout from '../maternity/MaternityLayout';
 import PalliativeLayout from '../palliative/PalliativeLayout';
+import AshaLayout from '../asha/AshaLayout';
 import { healthBlogsAPI } from '../../services/api';
 
 interface BlogItem {
@@ -20,7 +21,7 @@ const BlogDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const userType = location.pathname.includes('/palliative/') ? 'palliative' : 'maternity';
+  const userType = location.pathname.includes('/palliative/') ? 'palliative' : location.pathname.includes('/asha/') ? 'asha' : 'maternity';
   const [blog, setBlog] = useState<BlogItem | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -98,6 +99,13 @@ const BlogDetail: React.FC = () => {
       <PalliativeLayout title="Health Blog">
         {content}
       </PalliativeLayout>
+    );
+  }
+  if (userType === 'asha') {
+    return (
+      <AshaLayout title="Health Blog">
+        {content}
+      </AshaLayout>
     );
   }
 

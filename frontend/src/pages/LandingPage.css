@@ -1,6 +1,12 @@
 /* Landing Page Styles */
 .landing-page {
   min-height: 100vh;
+  position: relative;
+  /* Subtle global gradient mesh to blend across the whole page */
+  background:
+    radial-gradient(1200px 600px at -10% 6%, rgba(2, 132, 199, 0.08), transparent 55%),
+    radial-gradient(1000px 520px at 110% 8%, rgba(219, 39, 119, 0.08), transparent 55%),
+    linear-gradient(180deg, #ffffff 0%, #fbfdff 50%, #fdf7fb 100%);
 }
 
 /* Header Styles */
@@ -386,6 +392,88 @@
   color: var(--primary-600);
 }
 
+/* Persistent background accents across whole page */
+.landing-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(1400px 700px at -10% 10%, rgba(2, 132, 199, 0.06), transparent 60%),
+    radial-gradient(1200px 600px at 110% 12%, rgba(219, 39, 119, 0.06), transparent 60%);
+}
+
+/* Keep all sections above the persistent accents */
+.landing-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* CTA subtle overlays to blend with page accents */
+.cta {
+  position: relative;
+  overflow: hidden;
+}
+
+.cta::before,
+.cta::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(8px);
+}
+
+.cta::before {
+  width: 580px;
+  height: 580px;
+  left: -220px;
+  top: -220px;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.12), transparent 70%);
+}
+
+.cta::after {
+  width: 520px;
+  height: 520px;
+  right: -200px;
+  bottom: -200px;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.10), transparent 70%);
+}
+
+/* Footer subtle overlays */
+.footer {
+  position: relative;
+  overflow: hidden;
+}
+
+.footer::before,
+.footer::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(10px);
+}
+
+.footer::before {
+  width: 520px;
+  height: 520px;
+  left: -200px;
+  top: -160px;
+  background: radial-gradient(closest-side, rgba(2, 132, 199, 0.15), transparent 70%);
+}
+
+.footer::after {
+  width: 520px;
+  height: 520px;
+  right: -200px;
+  bottom: -200px;
+  background: radial-gradient(closest-side, rgba(219, 39, 119, 0.15), transparent 70%);
+}
+
 /* Footer */
 .footer {
   background-color: var(--gray-900);
@@ -469,6 +557,146 @@
 
 .footer-bottom-links a:hover {
   color: white;
+}
+
+/* Decorative side gradients and subtle glows */
+/* Make hero accept decorative background layers without affecting layout */
+.hero {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Soft gradient blobs on left and right sides of the hero */
+.hero::before,
+.hero::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(8px);
+}
+
+.hero::before {
+  width: 700px;
+  height: 700px;
+  left: -260px;
+  top: -220px;
+  background: radial-gradient(closest-side, rgba(2, 132, 199, 0.25), transparent 70%);
+}
+
+.hero::after {
+  width: 700px;
+  height: 700px;
+  right: -260px;
+  bottom: -240px;
+  background: radial-gradient(closest-side, rgba(236, 72, 153, 0.22), transparent 70%);
+}
+
+/* Ensure hero content stays above the gradients */
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Add a subtle glow behind the hero card to anchor the right side */
+.hero-image {
+  position: relative;
+}
+
+.hero-image::before {
+  content: '';
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(2, 132, 199, 0.18), transparent 70%);
+  filter: blur(6px);
+  z-index: 0;
+}
+
+.hero-card {
+  position: relative;
+  z-index: 1;
+}
+
+/* Light side accents for features and user-types sections */
+.features,
+.user-types {
+  position: relative;
+  overflow: hidden;
+}
+
+.features::before,
+.features::after,
+.user-types::before,
+.user-types::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(6px);
+}
+
+.features::before {
+  width: 420px;
+  height: 420px;
+  left: -180px;
+  top: -140px;
+  background: radial-gradient(closest-side, rgba(2, 132, 199, 0.08), transparent 70%);
+}
+
+.features::after {
+  width: 380px;
+  height: 380px;
+  right: -150px;
+  bottom: -120px;
+  background: radial-gradient(closest-side, rgba(219, 39, 119, 0.08), transparent 70%);
+}
+
+.user-types::before {
+  width: 420px;
+  height: 420px;
+  left: -180px;
+  top: -100px;
+  background: radial-gradient(closest-side, rgba(2, 132, 199, 0.06), transparent 70%);
+}
+
+.user-types::after {
+  width: 380px;
+  height: 380px;
+  right: -150px;
+  bottom: -100px;
+  background: radial-gradient(closest-side, rgba(219, 39, 119, 0.06), transparent 70%);
+}
+
+/* Enhanced Features section background: mesh + subtle dotted texture */
+.features {
+  /* Override plain white with layered, subtle accents */
+  background:
+    radial-gradient(1200px 520px at -15% 25%, rgba(2, 132, 199, 0.08), transparent 60%),
+    radial-gradient(1100px 520px at 115% 75%, rgba(219, 39, 119, 0.08), transparent 60%),
+    radial-gradient(circle at 50% 0%, rgba(2, 132, 199, 0.05), transparent 40%),
+    radial-gradient(circle at 50% 100%, rgba(219, 39, 119, 0.04), transparent 40%),
+    radial-gradient(rgba(2, 132, 199, 0.04) 1px, transparent 1px), /* dotted texture */
+    linear-gradient(#ffffff, #ffffff); /* base */
+  background-size: auto, auto, auto, auto, 26px 26px, auto;
+  background-position: center, center, center, center, 0 0, 0 0;
+}
+
+/* Slightly richer accents for User Types to keep continuity */
+.user-types {
+  background:
+    radial-gradient(1200px 520px at -15% 20%, rgba(2, 132, 199, 0.06), transparent 60%),
+    radial-gradient(1100px 520px at 115% 80%, rgba(219, 39, 119, 0.06), transparent 60%),
+    radial-gradient(rgba(2, 132, 199, 0.03) 1px, transparent 1px),
+    linear-gradient(#f8fafc, #f8fafc);
+  background-size: auto, auto, 28px 28px, auto;
+  background-position: center, center, 0 0, 0 0;
 }
 
 /* Responsive Design */

@@ -230,6 +230,14 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/asha/health-blogs/:id"
+        element={
+          <ProtectedRoute>
+            <BlogDetail />
+          </ProtectedRoute>
+        }
+      />
       {/* Maternity Routes */}
       <Route
         path="/maternity/profile"

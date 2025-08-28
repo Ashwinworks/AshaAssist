@@ -165,7 +165,7 @@ export const healthBlogsAPI = {
   create: async (payload: {
     title: string;
     content: string;
-    category?: 'maternity' | 'palliative' | 'child' | 'general';
+    category?: 'maternity' | 'palliative' | 'general';
     authorName: string;
     status?: 'published' | 'draft';
     imageFile?: File | null;
