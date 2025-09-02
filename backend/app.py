@@ -911,6 +911,53 @@ def admin_list_all_asha_feedback():
         return jsonify({'error': f'Failed to load all feedback: {str(e)}'}), 500
 
 # ---------------------------
+# Admin ASHA Overview APIs
+# ---------------------------
+@app.route('/api/admin/asha-overview', methods=['GET'])
+@jwt_required()
+def admin_asha_overview():
+    try:
+        claims = get_jwt() or {}
+        if claims.get('userType') != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+        # Since we have a single ASHA worker
+        worker = users_collection.find_one({'userType': 'asha_worker'})
+        if not worker:
+            return jsonify({'error': 'No ASHA worker found'}), 404
+        # Feedback stats
+        total_feedbacks = asha_feedback_collection.count_documents({})
+        complaints_received = asha_feedback_collection.count_documents({'rating': {'$lte': 2}})
+        avg_result = list(asha_feedback_collection.aggregate([
+            { '$group': { '_id': None, 'avgRating': { '$avg': '$rating' }, 'count': { '$sum': 1 } } }
+        ]))
+        avg_rating = round(float(avg_result[0]['avgRating']), 1) if avg_result else 0.0
+        # Prepare response
+        def to_iso(val):
+            if isinstance(val, datetime):
+                return val.isoformat()
+            return val
+        data = {
+            'worker': {
+                'id': str(worker.get('_id')),
+                'name': worker.get('name'),
+                'email': worker.get('email'),
+                'phone': worker.get('phone'),
+                'ward': worker.get('ward'),
+                'isActive': bool(worker.get('isActive', True)),
+                'createdAt': to_iso(worker.get('createdAt')),
+                'lastLogin': to_iso(worker.get('lastLogin'))
+            },
+            'stats': {
+                'totalFeedbacks': int(total_feedbacks),
+                'averageRating': avg_rating,
+                'complaintsReceived': int(complaints_received)
+            }
+        }
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to load ASHA overview: {str(e)}'}), 500
+
+# ---------------------------
 # Health Blogs APIs
 # ---------------------------
 @app.route('/api/health-blogs', methods=['POST'])

@@ -14,6 +14,7 @@ import AshaManagement from './pages/admin/AshaManagement';
 import HealthBlogsManagement from './pages/admin/content/HealthBlogsManagement';
 import VaccinationSchedulesManagement from './pages/admin/content/VaccinationSchedulesManagement';
 import CommunityClassesManagement from './pages/admin/content/CommunityClassesManagement';
+import LocalCampsManagement from './pages/admin/content/LocalCampsManagement';
 import Feedbacks from './pages/admin/Feedbacks';
 
 import CategorySelection from './components/CategorySelection';
@@ -417,6 +418,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <CommunityClassesManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/content/local-camps"
+        element={
+          <ProtectedRoute>
+            <LocalCampsManagement />
           </ProtectedRoute>
         }
       />

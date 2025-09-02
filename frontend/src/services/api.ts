@@ -104,6 +104,13 @@ export const adminAPI = {
   listAllFeedback: async () => {
     const response = await api.get('/admin/asha-feedback');
     return response.data;
+  },
+  getAshaOverview: async (): Promise<{
+    worker: { id: string; name: string; email: string; phone: string; ward: string; isActive: boolean; createdAt?: string; lastLogin?: string };
+    stats: { totalFeedbacks: number; averageRating: number; complaintsReceived: number };
+  }> => {
+    const response = await api.get('/admin/asha-overview');
+    return response.data;
   }
 };
 
