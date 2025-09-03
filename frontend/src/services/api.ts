@@ -28,10 +28,16 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+    const status = error.response?.status;
+    const url = error.config?.url || '';
+    if (status === 401) {
+      // Skip redirect for auth endpoints so UI can show proper error messages
+      const isAuthEndpoint = url.includes('/login') || url.includes('/register') || url.includes('/auth/google');
+      if (!isAuthEndpoint) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

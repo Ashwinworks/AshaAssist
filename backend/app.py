@@ -9,7 +9,7 @@ from flask_jwt_extended import JWTManager, jwt_required, create_access_token, ge
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 from dotenv import load_dotenv
 import re
@@ -101,8 +101,8 @@ def create_default_accounts():
                 "ward": "Ward 1",
                 "isActive": True,
                 "isFirstLogin": True,
-                "createdAt": datetime.utcnow(),
-                "updatedAt": datetime.utcnow()
+                "createdAt": datetime.now(timezone.utc),
+                "updatedAt": datetime.now(timezone.utc)
             }
             users_collection.insert_one(asha_account)
             print("✓ Default ASHA worker account created: asha@gmail.com / asha123")
@@ -120,8 +120,8 @@ def create_default_accounts():
                 "designation": "Panchayat Health Representative",
                 "isActive": True,
                 "isFirstLogin": True,
-                "createdAt": datetime.utcnow(),
-                "updatedAt": datetime.utcnow()
+                "createdAt": datetime.now(timezone.utc),
+                "updatedAt": datetime.now(timezone.utc)
             }
             users_collection.insert_one(admin_account)
             print("✓ Default admin account created: admin@example.com / admin123")
@@ -168,14 +168,14 @@ def health_check():
         return jsonify({
             'status': 'healthy',
             'database': 'connected',
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.now(timezone.utc).isoformat()
         })
     except Exception as e:
         return jsonify({
             'status': 'unhealthy',
             'database': 'disconnected',
             'error': str(e),
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': datetime.now(timezone.utc).isoformat()
         }), 500
 
 @app.route('/api/register', methods=['POST'])
@@ -237,8 +237,8 @@ def register():
             'beneficiaryCategory': data['beneficiaryCategory'] if data['userType'] == 'user' else None,
             'isFirstLogin': True,
             'profileCompleted': False,
-            'createdAt': datetime.utcnow(),
-            'updatedAt': datetime.utcnow(),
+            'createdAt': datetime.now(timezone.utc),
+            'updatedAt': datetime.now(timezone.utc),
             'isActive': True
         }
         
@@ -317,7 +317,7 @@ def login():
         # Update last login
         users_collection.update_one(
             {'_id': user['_id']},
-            {'$set': {'lastLogin': datetime.utcnow()}}
+            {'$set': {'lastLogin': datetime.now(timezone.utc)}}
         )
         
         return jsonify({
@@ -369,8 +369,8 @@ def google_login():
             
             # Update Google info if not already set
             update_data = {
-                'lastLogin': datetime.utcnow(),
-                'updatedAt': datetime.utcnow()
+                'lastLogin': datetime.now(timezone.utc),
+                'updatedAt': datetime.now(timezone.utc)
             }
             
             if not existing_user.get('googleId'):
@@ -419,9 +419,9 @@ def google_login():
                 'beneficiaryCategory': 'maternity',  # Temporary default - user will select
                 'isFirstLogin': True,
                 'profileCompleted': False,
-                'createdAt': datetime.utcnow(),
-                'updatedAt': datetime.utcnow(),
-                'lastLogin': datetime.utcnow(),
+                'createdAt': datetime.now(timezone.utc),
+                'updatedAt': datetime.now(timezone.utc),
+                'lastLogin': datetime.now(timezone.utc),
                 'isActive': True,
                 'authProvider': 'google'
             }
@@ -489,7 +489,7 @@ def update_profile():
             data.pop(field, None)
         
         # Add updated timestamp
-        data['updatedAt'] = datetime.utcnow()
+        data['updatedAt'] = datetime.now(timezone.utc)
         
         # Update user
         result = users_collection.update_one(
@@ -553,7 +553,7 @@ def _build_schedule(lmp_dt, visits):
     for v in (visits or []):
         if isinstance(v, dict) and isinstance(v.get('week'), int):
             completed_weeks.add(v['week'])
-    today = datetime.utcnow()
+    today = datetime.now(timezone.utc)
     schedule = []
     for w in weeks:
         sched_date = lmp_dt + timedelta(weeks=w)
@@ -590,9 +590,9 @@ def set_maternity_profile():
             'maternityProfile': {
                 'lmpDate': lmp_dt,
                 'eddDate': edd_dt,
-                'updatedAt': datetime.utcnow()
+                'updatedAt': datetime.now(timezone.utc)
             },
-            'updatedAt': datetime.utcnow()
+            'updatedAt': datetime.now(timezone.utc)
         }
         users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': update})
         return jsonify({'message': 'Maternity profile updated', 'maternityProfile': update['maternityProfile']}), 200
@@ -648,8 +648,8 @@ def add_maternity_visit():
             'week': week,
             'center': (data.get('center') or '').strip(),
             'notes': (data.get('notes') or '').strip(),
-            'createdAt': datetime.utcnow(),
-            'updatedAt': datetime.utcnow()
+            'createdAt': datetime.now(timezone.utc),
+            'updatedAt': datetime.now(timezone.utc)
         }
         result = visits_collection.insert_one(visit_doc)
         visit_doc['_id'] = str(result.inserted_id)
@@ -771,8 +771,8 @@ def create_calendar_event():
             'allDay': bool(data.get('allDay', False)),
             'category': (data.get('category') or '').strip(),
             'createdBy': ObjectId(user_id),
-            'createdAt': datetime.utcnow(),
-            'updatedAt': datetime.utcnow()
+            'createdAt': datetime.now(timezone.utc),
+            'updatedAt': datetime.now(timezone.utc)
         }
         res = calendar_events_collection.insert_one(doc)
         return jsonify({'id': str(res.inserted_id), 'message': 'Event created'}), 201
@@ -810,7 +810,7 @@ def update_calendar_event(event_id):
             updates['allDay'] = bool(data['allDay'])
         if not updates:
             return jsonify({'error': 'No updates provided'}), 400
-        updates['updatedAt'] = datetime.utcnow()
+        updates['updatedAt'] = datetime.now(timezone.utc)
         calendar_events_collection.update_one({'_id': ObjectId(event_id)}, {'$set': updates})
         return jsonify({'message': 'Event updated'}), 200
     except Exception as e:
@@ -849,8 +849,8 @@ def submit_asha_feedback():
             'communication': int(data.get('communication', rating)),
             'supportiveness': int(data.get('supportiveness', rating)),
             'comments': (data.get('comments') or '').strip(),
-            'createdAt': datetime.utcnow(),
-            'updatedAt': datetime.utcnow()
+            'createdAt': datetime.now(timezone.utc),
+            'updatedAt': datetime.now(timezone.utc)
         }
         result = asha_feedback_collection.insert_one(feedback_doc)
         return jsonify({'message': 'Feedback submitted', 'id': str(result.inserted_id)}), 201
@@ -991,7 +991,7 @@ def create_health_blog():
             uploads_dir = os.path.join(os.getcwd(), 'uploads')
             os.makedirs(uploads_dir, exist_ok=True)
             # Create unique filename
-            ts = datetime.utcnow().strftime('%Y%m%d%H%M%S%f')
+            ts = datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')
             ext = os.path.splitext(image_file.filename)[1]
             filename = f"blog_{ts}{ext}"
             save_path = os.path.join(uploads_dir, filename)
@@ -1006,8 +1006,8 @@ def create_health_blog():
             'imageUrl': image_url,
             'status': (data.get('status') or 'published').strip().lower(),  # published|draft
             'createdBy': ObjectId(user_id),
-            'createdAt': datetime.utcnow(),
-            'updatedAt': datetime.utcnow(),
+            'createdAt': datetime.now(timezone.utc),
+            'updatedAt': datetime.now(timezone.utc),
             'views': 0,
             'likes': 0,
             'tags': data.get('tags') or []
@@ -1105,7 +1105,7 @@ def update_health_blog(blog_id):
             'status': (data.get('status') or '').strip().lower() if data.get('status') else None,
             'tags': data.get('tags')
         }.items() if v is not None}
-        update['updatedAt'] = datetime.utcnow()
+        update['updatedAt'] = datetime.now(timezone.utc)
         health_blogs_collection.update_one({'_id': ObjectId(blog_id)}, {'$set': update})
         return jsonify({'message': 'Blog updated'}), 200
     except Exception as e:
