@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import MaternityLayout from './MaternityLayout';
-import { maternityAPI } from '../../services/api';
+import { maternityAPI, vaccinationAPI } from '../../services/api';
 import { Calendar, Syringe, FileText, Download } from 'lucide-react';
 
 interface VisitItem {
@@ -41,6 +41,7 @@ const MCPCard: React.FC = () => {
   const [visits, setVisits] = useState<VisitItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+  const [vaccinationRecords, setVaccinationRecords] = useState<Array<{ id: string; vaccines: string[]; date?: string; location?: string }>>([]);
   const printRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -48,9 +49,12 @@ const MCPCard: React.FC = () => {
     (async () => {
       try {
         setLoading(true);
-        const data = await maternityAPI.getVisits();
+        const [visitsData, vaccData] = await Promise.all([
+          maternityAPI.getVisits(),
+          vaccinationAPI.listMyRecords()
+        ]);
         if (!mounted) return;
-        const items: VisitItem[] = (data?.visits || []).map((v: any) => ({
+        const items: VisitItem[] = (visitsData?.visits || []).map((v: any) => ({
           id: v._id || v.id,
           visitDate: v.visitDate,
           week: v.week ?? null,
@@ -58,6 +62,13 @@ const MCPCard: React.FC = () => {
           notes: v.notes || '',
         }));
         setVisits(items);
+        const recs = (vaccData?.records || []).map((r: any) => ({
+          id: r.id,
+          vaccines: Array.isArray(r.vaccines) ? r.vaccines : [],
+          date: r.date,
+          location: r.location,
+        }));
+        setVaccinationRecords(recs);
       } catch (err: any) {
         setError(err?.response?.data?.error || 'Failed to load visits');
       } finally {
@@ -201,12 +212,12 @@ const MCPCard: React.FC = () => {
             </div>
           </section>
 
-          {/* Vaccination Records Placeholder */}
+          {/* Vaccination Records */}
           <section style={{ padding: '0 1.5rem 1.5rem' }}>
             <div
               style={{
                 backgroundColor: colors.pink100,
-                border: `1px dashed ${colors.pink300}`,
+                border: `1px solid ${colors.pink200}`,
                 borderRadius: 10,
                 padding: '1rem',
               }}
@@ -216,9 +227,32 @@ const MCPCard: React.FC = () => {
                 <h3 style={{ margin: 0, fontWeight: 800, color: colors.gray800 }}>Vaccination Records</h3>
               </div>
               <div style={{ backgroundColor: colors.white, borderRadius: 8, padding: '0.75rem 1rem', border: `1px solid ${colors.gray200}` }}>
-                <p style={{ margin: 0, color: colors.gray600 }}>
-                  Vaccination data will appear here once added in the Vaccination option. Fields planned: vaccine, dose, date, batch number, and next due date.
-                </p>
+                {loading && (
+                  <p style={{ margin: 0, color: colors.gray600 }}>Loading vaccination records...</p>
+                )}
+                {!loading && vaccinationRecords.length === 0 && (
+                  <p style={{ margin: 0, color: colors.gray600 }}>No completed vaccination records yet.</p>
+                )}
+                {!loading && vaccinationRecords.length > 0 && (
+                  <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
+                    <thead>
+                      <tr style={{ backgroundColor: colors.pink100 }}>
+                        <th style={thStyle}>Date</th>
+                        <th style={thStyle}>Location</th>
+                        <th style={thStyle}>Vaccines</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {vaccinationRecords.map((r, idx) => (
+                        <tr key={r.id} style={{ backgroundColor: idx % 2 ? colors.gray50 : colors.white }}>
+                          <td style={tdStyle}>{r.date ? formatDate(r.date) : '-'}</td>
+                          <td style={tdStyle}>{r.location || '-'}</td>
+                          <td style={tdStyle}>{r.vaccines && r.vaccines.length ? r.vaccines.join(', ') : '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
           </section>

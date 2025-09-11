@@ -9,6 +9,7 @@ import MaternityDashboard from './pages/MaternityDashboard';
 import PalliativeDashboard from './pages/PalliativeDashboard';
 import AshaWorkerDashboard from './pages/AshaWorkerDashboard';
 import AshaCalendarManagement from './pages/asha/CalendarManagement';
+import VaccinationSchedules from './pages/asha/VaccinationSchedules';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AshaManagement from './pages/admin/AshaManagement';
 import HealthBlogsManagement from './pages/admin/content/HealthBlogsManagement';
@@ -236,6 +237,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <BlogDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/asha/vaccination-schedules"
+        element={
+          <ProtectedRoute>
+            <VaccinationSchedules />
           </ProtectedRoute>
         }
       />

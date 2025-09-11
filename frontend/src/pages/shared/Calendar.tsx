@@ -108,7 +108,16 @@ const Calendar: React.FC = () => {
   const weekdayHeader = (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: 4 }}>
       {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
-        <div key={d} style={{ textAlign: 'center', fontWeight: 600, color: 'var(--gray-700)' }}>{d}</div>
+        <div
+          key={d}
+          style={{
+            textAlign: 'center',
+            fontWeight: 700,
+            color: d === 'Sun' ? 'var(--red-700)' : 'var(--gray-700)'
+          }}
+        >
+          {d}
+        </div>
       ))}
     </div>
   );
@@ -122,13 +131,53 @@ const Calendar: React.FC = () => {
           const dayEvents = eventsByDay[key] || [];
           const isToday = new Date().toDateString() === new Date(date).toDateString();
           return (
-            <div key={idx} className="card" style={{ padding: '0.5rem', background: inMonth ? 'white' : 'var(--gray-50)', border: isToday ? '2px solid var(--primary-600)' : '1px solid var(--gray-200)', cursor: 'pointer', minHeight: 96 }} onClick={() => setSelectedDate(date)}>
+            <div
+              key={idx}
+              className="card"
+              style={{
+                padding: '0.5rem',
+                background: inMonth
+                  ? (date.getUTCDay() === 0 ? 'rgba(254, 226, 226, 0.6)' : 'white')
+                  : 'var(--gray-50)',
+                border: isToday
+                  ? '2px solid var(--primary-600)'
+                  : date.getUTCDay() === 0
+                    ? '1px solid var(--red-200)'
+                    : '1px solid var(--gray-200)',
+                boxShadow: isToday ? '0 0 0 3px rgba(59,130,246,0.2)' : 'none',
+                cursor: 'pointer',
+                minHeight: 96,
+                transition: 'transform 120ms ease, box-shadow 120ms ease',
+              }}
+              onClick={() => setSelectedDate(date)}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 6px 14px rgba(0,0,0,0.08)'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = isToday ? '0 0 0 3px rgba(59,130,246,0.2)' : 'none'; }}
+            >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontWeight: 700, color: inMonth ? 'var(--gray-900)' : 'var(--gray-400)' }}>{date.getUTCDate()}</span>
+                <span style={{ fontWeight: 800, color: inMonth ? (date.getUTCDay() === 0 ? 'var(--red-700)' : 'var(--gray-900)') : 'var(--gray-400)' }}>
+                  {date.getUTCDate()}
+                </span>
+                {date.getUTCDay() === 0 && inMonth && (
+                  <span style={{ fontSize: '0.7rem', color: 'var(--red-600)', fontWeight: 600 }}>Holiday</span>
+                )}
               </div>
               <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {dayEvents.slice(0,3).map(ev => (
-                  <div key={ev.id} style={{ fontSize: '0.75rem', padding: '2px 6px', borderRadius: 6, background: 'var(--blue-50)', color: 'var(--blue-700)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ev.title}>
+                  <div
+                    key={ev.id}
+                    style={{
+                      fontSize: '0.75rem',
+                      padding: '2px 6px',
+                      borderRadius: 6,
+                      background: 'var(--blue-50)',
+                      color: 'var(--blue-700)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      border: '1px solid var(--blue-100)'
+                    }}
+                    title={ev.title}
+                  >
                     {ev.title}
                   </div>
                 ))}

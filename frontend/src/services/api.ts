@@ -173,6 +173,53 @@ export const maternityAPI = {
   },
 };
 
+// Vaccination schedules & bookings
+export const vaccinationAPI = {
+  // ASHA/Admin creation
+  createSchedule: async (payload: { title?: string; date: string; time?: string; location: string; vaccines: string[]; description?: string }) => {
+    const response = await api.post('/vaccination-schedules', payload);
+    return response.data;
+  },
+  // List for all users
+  listSchedules: async (params?: { fromDate?: string }) => {
+    const response = await api.get('/vaccination-schedules', { params });
+    return response.data as { schedules: any[] };
+  },
+  // Get single schedule
+  getSchedule: async (id: string) => {
+    const response = await api.get(`/vaccination-schedules/${id}`);
+    return response.data as { schedule: any };
+  },
+  // Update schedule (ASHA/Admin)
+  updateSchedule: async (
+    id: string,
+    payload: Partial<{ title: string; date: string; time: string; location: string; vaccines: string[]; description: string; status: string }>
+  ) => {
+    const response = await api.put(`/vaccination-schedules/${id}`, payload);
+    return response.data;
+  },
+  // User booking
+  book: async (scheduleId: string, payload: { childName: string; vaccines: string[] }) => {
+    const response = await api.post(`/vaccination-schedules/${scheduleId}/bookings`, payload);
+    return response.data;
+  },
+  // List bookings for a schedule (ASHA sees all, user sees own)
+  listBookings: async (scheduleId: string) => {
+    const response = await api.get(`/vaccination-schedules/${scheduleId}/bookings`);
+    return response.data as { bookings: any[] };
+  },
+  // Update booking status (ASHA/Admin only)
+  updateBookingStatus: async (bookingId: string, status: string) => {
+    const response = await api.put(`/vaccination-bookings/${bookingId}/status`, { status });
+    return response.data;
+  },
+  // My completed vaccination records for MCP card
+  listMyRecords: async (): Promise<{ records: Array<{ id: string; vaccines: string[]; childName?: string; status: string; date?: string; location?: string; createdAt?: string }> }> => {
+    const response = await api.get('/vaccination-records');
+    return response.data;
+  }
+};
+
 // Health Blogs API
 export const healthBlogsAPI = {
   create: async (payload: {
