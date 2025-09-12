@@ -85,6 +85,7 @@ const MCPCard: React.FC = () => {
     window.print();
   };
 
+
   return (
     <MaternityLayout title="Digital MCP Card">
       {/* Print stylesheet scoped for PDF export */}

@@ -117,6 +117,27 @@ export const adminAPI = {
   }> => {
     const response = await api.get('/admin/asha-overview');
     return response.data;
+  },
+  getVaccinationOverview: async (): Promise<{ schedules: Array<{ id: string; title: string; date?: string; time?: string; location?: string; vaccines: string[]; status: string; stats: { totalBookings: number; booked: number; completed: number; expired: number; cancelled: number } }> }> => {
+    const response = await api.get('/admin/vaccination-overview');
+    return response.data;
+  },
+  // Users Management
+  listUsers: async (params?: { q?: string; type?: string; category?: string; status?: 'active' | 'inactive'; page?: number; pageSize?: number }) => {
+    const response = await api.get('/admin/users', { params });
+    return response.data as { users: any[]; total: number; page: number; pageSize: number };
+  },
+  getUser: async (id: string) => {
+    const response = await api.get(`/admin/users/${id}`);
+    return response.data as { user: any };
+  },
+  updateUser: async (id: string, payload: Partial<{ name: string; phone: string; beneficiaryCategory: string; isActive: boolean }>) => {
+    const response = await api.put(`/admin/users/${id}`, payload);
+    return response.data;
+  },
+  updateUserStatus: async (id: string, isActive: boolean) => {
+    const response = await api.put(`/admin/users/${id}/status`, { isActive });
+    return response.data as { message: string; isActive: boolean };
   }
 };
 
@@ -217,6 +238,11 @@ export const vaccinationAPI = {
   listMyRecords: async (): Promise<{ records: Array<{ id: string; vaccines: string[]; childName?: string; status: string; date?: string; location?: string; createdAt?: string }> }> => {
     const response = await api.get('/vaccination-records');
     return response.data;
+  },
+  // Download vaccination certificate
+  downloadCertificate: async (bookingId: string) => {
+    const response = await api.get(`/vaccination-certificate/${bookingId}`, { responseType: 'blob' });
+    return response;
   }
 };
 

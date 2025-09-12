@@ -12,6 +12,7 @@ import AshaCalendarManagement from './pages/asha/CalendarManagement';
 import VaccinationSchedules from './pages/asha/VaccinationSchedules';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AshaManagement from './pages/admin/AshaManagement';
+import UsersManagement from './pages/admin/UsersManagement';
 import HealthBlogsManagement from './pages/admin/content/HealthBlogsManagement';
 import VaccinationSchedulesManagement from './pages/admin/content/VaccinationSchedulesManagement';
 import CommunityClassesManagement from './pages/admin/content/CommunityClassesManagement';
@@ -403,6 +404,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <AshaManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute>
+            <UsersManagement />
           </ProtectedRoute>
         }
       />

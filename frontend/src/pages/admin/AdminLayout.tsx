@@ -40,6 +40,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
       color: 'var(--green-600)'
     },
     { 
+      path: '/admin/users', 
+      icon: Users, 
+      label: 'User Management',
+      color: 'var(--blue-600)'
+    },
+    { 
       path: '', 
       icon: FileText, 
       label: 'Content Management',

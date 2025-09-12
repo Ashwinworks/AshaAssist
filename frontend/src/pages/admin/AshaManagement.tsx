@@ -175,7 +175,7 @@ const AshaManagement: React.FC = () => {
                     <button
                       className="btn"
                       style={{
-                        backgroundColor: overview.worker.isActive ? 'var(--red-600)' : 'var(--green-600)',
+                        backgroundColor: overview.worker.isActive ? '#dc2626' : '#16a34a',
                         color: 'white',
                         border: 'none',
                         fontSize: '0.875rem',
@@ -183,11 +183,10 @@ const AshaManagement: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.5rem',
-                        opacity: 0.6,
-                        cursor: 'not-allowed'
+                        cursor: 'pointer',
+                        fontWeight: '500'
                       }}
-                      title="Activate/Deactivate coming soon"
-                      disabled
+                      title="Activate/Deactivate ASHA worker"
                     >
                       {overview.worker.isActive ? <UserX size={14} /> : <UserCheck size={14} />}
                       {overview.worker.isActive ? 'Deactivate Account' : 'Activate Account'}

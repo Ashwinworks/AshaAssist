@@ -382,6 +382,119 @@ def init_vaccination_routes(app, collections):
         except Exception as e:
             return jsonify({'error': f'Failed to list vaccination records: {str(e)}'}), 500
 
+    @vaccination_bp.route('/api/vaccination-certificate/<booking_id>', methods=['GET'])
+    @jwt_required()
+    def download_vaccination_certificate(booking_id):
+        """Generate and download vaccination completion certificate (PDF) for a specific booking"""
+        try:
+            user_id = get_jwt_identity()
+            
+            # Find the booking and verify it belongs to the current user
+            booking = collections['vaccination_bookings'].find_one({
+                '_id': ObjectId(booking_id),
+                'userId': ObjectId(user_id),
+                'status': 'Completed'
+            })
+            
+            if not booking:
+                return jsonify({'error': 'Vaccination record not found or not completed'}), 404
+            
+            # Get schedule details
+            schedule = collections['vaccination_schedules'].find_one({'_id': booking['scheduleId']})
+            if not schedule:
+                return jsonify({'error': 'Schedule not found'}), 404
+            
+            # Get user details
+            user = collections['users'].find_one({'_id': ObjectId(user_id)})
+            if not user:
+                return jsonify({'error': 'User not found'}), 404
+            
+            # Generate PDF certificate using reportlab
+            try:
+                from reportlab.lib.pagesizes import A4
+                from reportlab.pdfgen import canvas
+                from reportlab.lib import colors
+                from reportlab.lib.units import mm
+            except Exception:
+                return jsonify({'error': 'PDF generation dependency missing. Please install reportlab.'}), 500
+
+            from io import BytesIO
+            pdf_buffer = BytesIO()
+            c = canvas.Canvas(pdf_buffer, pagesize=A4)
+            width, height = A4
+
+            # Header
+            c.setFillColor(colors.HexColor('#ec4899'))
+            c.rect(0, height - 30*mm, width, 30*mm, fill=1, stroke=0)
+            c.setFillColor(colors.white)
+            c.setFont('Helvetica-Bold', 20)
+            c.drawCentredString(width/2, height - 18*mm, 'VACCINATION COMPLETION CERTIFICATE')
+            c.setFont('Helvetica', 11)
+            c.drawCentredString(width/2, height - 26*mm, 'Mother and Child Protection Program')
+
+            # Content
+            margin_x = 20*mm
+            y = height - 45*mm
+            line_gap = 8*mm
+
+            def draw_field(label, value):
+                nonlocal y
+                c.setFillColor(colors.black)
+                c.setFont('Helvetica-Bold', 12)
+                c.drawString(margin_x, y, f"{label}:")
+                c.setFont('Helvetica', 12)
+                c.drawString(margin_x + 50*mm, y, str(value or 'N/A'))
+                y -= line_gap
+
+            child_name = booking.get('childName', '')
+            parent_name = user.get('name', '')
+            vaccines = ', '.join(booking.get('vaccines', [])) or 'N/A'
+            vaccination_date = schedule.get('date', '')
+            location = schedule.get('location', '')
+            certificate_id = str(booking['_id'])
+            issued_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+
+            draw_field("Child's Name", child_name)
+            draw_field("Parent/Guardian", parent_name)
+            draw_field("Vaccination Date", vaccination_date)
+            draw_field("Location", location)
+
+            # Vaccines block
+            c.setFont('Helvetica-Bold', 12)
+            c.drawString(margin_x, y, 'Vaccines Administered:')
+            c.setFont('Helvetica', 12)
+            y -= 6*mm
+            text_obj = c.beginText(margin_x, y)
+            text_obj.setFont('Helvetica', 12)
+            for line in vaccines.split(', '):
+                text_obj.textLine(line)
+            c.drawText(text_obj)
+            y = text_obj.getY() - 4*mm
+
+            draw_field('Certificate ID', certificate_id)
+            draw_field('Issued Date', issued_date)
+
+            # Footer
+            c.setFont('Helvetica-Oblique', 10)
+            c.setFillColor(colors.grey)
+            c.drawCentredString(width/2, 15*mm, 'This certificate confirms the successful completion of vaccination as per the immunization schedule.')
+
+            c.showPage()
+            c.save()
+            pdf_buffer.seek(0)
+
+            from flask import send_file
+            filename = f"vaccination-certificate-{certificate_id}.pdf"
+            return send_file(
+                pdf_buffer,
+                mimetype='application/pdf',
+                as_attachment=True,
+                download_name=filename
+            )
+            
+        except Exception as e:
+            return jsonify({'error': f'Failed to generate certificate: {str(e)}'}), 500
+
     # Register blueprint with app
     app.register_blueprint(vaccination_bp)
 
