@@ -72,23 +72,18 @@ const UsersManagement: React.FC = () => {
   };
 
   const removeUser = async (u: UserRow) => {
-    if (!window.confirm(`Are you sure you want to permanently remove user "${u.name}"? This action cannot be undone.`)) {
+    if (!window.confirm(`Deactivate user "${u.name}"? They will not be able to log in until reactivated.`)) {
       return;
     }
-    
+
     try {
-      // Remove from list optimistically
-      setUsers((prev) => prev.filter((x) => x.id !== u.id));
-      setTotal((prev) => prev - 1);
-      
-      // TODO: Add delete user API call when backend supports it
-      // await adminAPI.deleteUser(u.id);
-      
-      alert('User removal functionality will be implemented when backend supports it.');
+      // Optimistic update to inactive
+      setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, isActive: false } : x)));
+      await adminAPI.updateUserStatus(u.id, false);
     } catch (e) {
       // Revert on error
-      fetchUsers();
-      alert('Failed to remove user');
+      setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, isActive: u.isActive } : x)));
+      alert('Failed to deactivate user');
     }
   };
 
