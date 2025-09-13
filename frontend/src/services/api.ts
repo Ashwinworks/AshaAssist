@@ -300,4 +300,36 @@ export const healthBlogsAPI = {
   }
 };
 
+// Palliative Records API
+export const palliativeAPI = {
+  listRecords: async (params?: { testType?: string }) => {
+    const response = await api.get('/palliative/records', { params });
+    return response.data as { records: any[] };
+  },
+  createRecord: async (payload: FormData | {
+    date: string;
+    testType: string;
+    notes?: string;
+    value?: number;
+    unit?: string;
+    systolic?: number;
+    diastolic?: number;
+    pulse?: number;
+    subvalues?: Record<string, number | string>;
+    files?: File[];
+  }) => {
+    if (payload instanceof FormData) {
+      const response = await api.post('/palliative/records', payload, { headers: { 'Content-Type': 'multipart/form-data' } });
+      return response.data;
+    }
+    // Fallback JSON
+    const response = await api.post('/palliative/records', payload);
+    return response.data;
+  },
+  deleteRecord: async (id: string) => {
+    const response = await api.delete(`/palliative/records/${id}`);
+    return response.data as { message: string };
+  }
+};
+
 export default api;

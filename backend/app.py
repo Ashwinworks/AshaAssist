@@ -70,6 +70,8 @@ def create_app(config_name='default'):
     init_vaccination_routes(app, collections)
     init_admin_routes(app, collections)
     init_general_routes(app, collections)
+    from routes.palliative import init_palliative_routes
+    init_palliative_routes(app, collections)
     
     # Error handlers
     @app.errorhandler(404)

@@ -25,7 +25,8 @@ def get_collections(db):
         'calendar_events': db.calendar_events,
         'health_blogs': db.health_blogs,
         'vaccination_schedules': db.vaccination_schedules,
-        'vaccination_bookings': db.vaccination_bookings
+        'vaccination_bookings': db.vaccination_bookings,
+        'palliative_records': db.palliative_records,
     }
 
 def ensure_indexes(collections):
@@ -60,7 +61,11 @@ def ensure_indexes(collections):
         collections['vaccination_schedules'].create_index([('createdBy', 1), ('date', -1)])
         collections['vaccination_bookings'].create_index([('scheduleId', 1)])
         collections['vaccination_bookings'].create_index([('userId', 1), ('createdAt', -1)])
+
+        # Palliative records: by user and date for timeline/listing; testType for filtering
+        collections['palliative_records'].create_index([('userId', 1), ('date', -1)])
+        collections['palliative_records'].create_index([('testType', 1)])
         
-        print("Indexes ensured: users(email unique, phone partial unique), asha_feedback(userId+createdAt), calendar_events(start,end,createdBy), health_blogs(createdBy+createdAt, category+status, status+createdAt), vaccination_schedules(date,createdBy+date), vaccination_bookings(scheduleId,userId+createdAt)")
+        print("Indexes ensured: users(email unique, phone partial unique), asha_feedback(userId+createdAt), calendar_events(start,end,createdBy), health_blogs(createdBy+createdAt, category+status, status+createdAt), vaccination_schedules(date,createdBy+date), vaccination_bookings(scheduleId,userId+createdAt), palliative_records(userId+date, testType)")
     except Exception as e:
         print(f'Warning: could not ensure indexes: {e}')
