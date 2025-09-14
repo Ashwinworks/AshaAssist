@@ -165,14 +165,25 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
                       gap: '1rem',
                       padding: sidebarOpen ? '1rem 1.5rem' : '1rem',
                       border: 'none',
-                      background: isContentManagementActive() ? 'var(--purple-50)' : 'transparent',
-                      color: isContentManagementActive() ? item.color : 'var(--gray-700)',
+                      background: isContentManagementActive() ? 'var(--blue-50)' : 'transparent',
+                      color: isContentManagementActive() ? 'var(--blue-700)' : 'var(--gray-700)',
                       fontSize: '1rem',
                       fontWeight: '500',
                       cursor: 'pointer',
                       textAlign: 'left',
-                      borderLeft: isContentManagementActive() ? `4px solid ${item.color}` : '4px solid transparent',
-                      justifyContent: sidebarOpen ? 'flex-start' : 'center'
+                      borderLeft: isContentManagementActive() ? '4px solid var(--blue-600)' : '4px solid transparent',
+                      justifyContent: sidebarOpen ? 'flex-start' : 'center',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isContentManagementActive()) {
+                        e.currentTarget.style.backgroundColor = 'var(--gray-50)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isContentManagementActive()) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }
                     }}
                   >
                     <item.icon size={22} />
@@ -196,13 +207,24 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
                             gap: '0.75rem',
                             padding: '0.75rem 3rem',
                             border: 'none',
-                            background: isActivePath(subItem.path) ? 'var(--purple-50)' : 'transparent',
-                            color: isActivePath(subItem.path) ? 'var(--purple-600)' : 'var(--gray-600)',
+                            background: isActivePath(subItem.path) ? 'var(--blue-50)' : 'transparent',
+                            color: isActivePath(subItem.path) ? 'var(--blue-700)' : 'var(--gray-600)',
                             fontSize: '0.8125rem',
                             fontWeight: '500',
                             cursor: 'pointer',
                             textAlign: 'left',
-                            borderLeft: isActivePath(subItem.path) ? '4px solid var(--purple-600)' : '4px solid transparent'
+                            borderLeft: isActivePath(subItem.path) ? '4px solid var(--blue-600)' : '4px solid transparent',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isActivePath(subItem.path)) {
+                              e.currentTarget.style.backgroundColor = 'var(--gray-50)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isActivePath(subItem.path)) {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }
                           }}
                         >
                           {subItem.label}
@@ -221,14 +243,25 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
                     gap: '1rem',
                     padding: sidebarOpen ? '1rem 1.5rem' : '1rem',
                     border: 'none',
-                    background: isActivePath(item.path) ? `${item.color}15` : 'transparent',
-                    color: isActivePath(item.path) ? item.color : 'var(--gray-700)',
+                    background: isActivePath(item.path) ? 'var(--blue-50)' : 'transparent',
+                    color: isActivePath(item.path) ? 'var(--blue-700)' : 'var(--gray-700)',
                     fontSize: '1rem',
                     fontWeight: '500',
                     cursor: 'pointer',
                     textAlign: 'left',
-                    borderLeft: isActivePath(item.path) ? `4px solid ${item.color}` : '4px solid transparent',
-                    justifyContent: sidebarOpen ? 'flex-start' : 'center'
+                    borderLeft: isActivePath(item.path) ? '4px solid var(--blue-600)' : '4px solid transparent',
+                    justifyContent: sidebarOpen ? 'flex-start' : 'center',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActivePath(item.path)) {
+                      e.currentTarget.style.backgroundColor = 'var(--gray-50)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActivePath(item.path)) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
                   }}
                 >
                   <item.icon size={22} />

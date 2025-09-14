@@ -159,6 +159,8 @@ const HealthRecords: React.FC = () => {
   const [notes, setNotes] = useState<string>('');
   const [subvalues, setSubvalues] = useState<Record<string, string>>({ LDL: '', HDL: '', TG: '', Total: '' });
   const [attachments, setAttachments] = useState<AttachmentPreview[]>([]);
+  // Keep original files to actually upload to backend
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const [q, setQ] = useState('');
   const [filterTest, setFilterTest] = useState<'all' | TestType>('all');
@@ -218,6 +220,7 @@ const HealthRecords: React.FC = () => {
   const onFilesSelected = (files: FileList | null) => {
     if (!files) return;
     const items: AttachmentPreview[] = [];
+    const originals: File[] = [];
     Array.from(files).forEach((f) => {
       const ext = f.name.toLowerCase();
       let type: AttachmentPreview['type'] = 'other';
@@ -225,8 +228,10 @@ const HealthRecords: React.FC = () => {
       else if (ext.endsWith('.pdf') || f.type === 'application/pdf') type = 'pdf';
       const url = URL.createObjectURL(f);
       items.push({ id: Math.random().toString(36).slice(2), name: f.name, type, url });
+      originals.push(f);
     });
     setAttachments((prev) => [...prev, ...items]);
+    setSelectedFiles((prev) => [...prev, ...originals]);
   };
 
   const removeAttachment = (id: string) => {
@@ -306,23 +311,23 @@ const HealthRecords: React.FC = () => {
     }
 
     try {
-      // If attachments exist, send multipart
-      if (attachments.length > 0) {
+      // If files selected, send multipart with actual files
+      if (selectedFiles.length > 0) {
         const form = new FormData();
         Object.entries(payload).forEach(([k, v]) => {
           if (v !== undefined && v !== null) form.append(k, String(v));
         });
-        // subvalues as fields: subvalues[LDL], etc.
         if (payload.subvalues) {
           Object.entries(payload.subvalues).forEach(([k, v]) => form.append(`subvalues[${k}]`, String(v)));
         }
-        attachments.forEach((a, idx) => {
-          // Convert object URL back to File is not feasible here; instead we should keep original files.
-          // For now, skip sending previews; UI will work best when selecting and sending files directly through input change.
+        // append files
+        selectedFiles.forEach((file) => {
+          form.append('files', file);
         });
-        // Better approach: read from input directly (re-trigger upload before save):
-        // We'll allow save without files if previews exist but input lacks File references.
         await palliativeAPI.createRecord(form);
+      } else if (attachments.length > 0) {
+        // previews exist but no original files retained — save metadata-only
+        await palliativeAPI.createRecord(payload);
       } else {
         await palliativeAPI.createRecord(payload);
       }
@@ -330,6 +335,7 @@ const HealthRecords: React.FC = () => {
       const { records } = await palliativeAPI.listRecords();
       setRecords(records as any);
       resetForm();
+      setSelectedFiles([]);
     } catch (err) {
       alert('Failed to save record');
     }

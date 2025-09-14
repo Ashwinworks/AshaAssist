@@ -57,6 +57,32 @@ body {
   --gray-700: #334155;
   --gray-800: #1e293b;
   --gray-900: #0f172a;
+
+  /* Color aliases used across components (ensure buttons/icons are visible) */
+  --blue-50: var(--primary-50);
+  --blue-100: var(--primary-100);
+  --blue-200: var(--primary-200);
+  --blue-600: var(--primary-600);
+  --blue-700: var(--primary-700);
+
+  --green-600: var(--success-600);
+  --green-25: #f0fdf4;
+
+  --red-600: var(--error-600);
+  --red-50: #fef2f2;
+  --red-200: #fecaca;
+
+  --purple-25: #faf5ff;
+  --purple-600: #7c3aed;
+  --purple-700: #6d28d9;
+
+  --amber-700: #b45309;
+  --rose-600: #e11d48;
+  --indigo-600: #4f46e5;
+  --orange-600: #ea580c;
+  --teal-700: #0f766e;
+  --cyan-700: #0e7490;
+  --emerald-700: #047857;
 }
 
 /* Button Styles */

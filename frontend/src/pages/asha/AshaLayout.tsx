@@ -175,18 +175,18 @@ const AshaLayout: React.FC<AshaLayoutProps> = ({ children, title }) => {
           <div style={{
             padding: '1.5rem',
             borderBottom: '1px solid #e5e7eb',
-            backgroundColor: 'var(--green-50)'
+            backgroundColor: 'var(--blue-50)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <div style={{
                 width: '50px',
                 height: '50px',
                 borderRadius: '50%',
-                backgroundColor: 'var(--green-200)',
+                backgroundColor: 'var(--blue-200)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--green-700)',
+                color: 'var(--blue-700)',
                 fontWeight: '600',
                 fontSize: '1.25rem'
               }}>
@@ -198,9 +198,9 @@ const AshaLayout: React.FC<AshaLayoutProps> = ({ children, title }) => {
                 </div>
                 <div style={{ 
                   fontSize: '0.875rem', 
-                  color: 'var(--green-700)', 
+                  color: 'var(--blue-700)', 
                   fontWeight: '500',
-                  backgroundColor: 'var(--green-100)',
+                  backgroundColor: 'var(--blue-100)',
                   padding: '0.25rem 0.5rem',
                   borderRadius: '0.375rem',
                   display: 'inline-block',
@@ -238,12 +238,12 @@ const AshaLayout: React.FC<AshaLayoutProps> = ({ children, title }) => {
                     gap: '1rem',
                     padding: sidebarOpen ? '1rem 1.5rem' : '1rem',
                     border: 'none',
-                    background: isActive ? 'var(--green-50)' : 'transparent',
-                    color: isActive ? 'var(--green-700)' : 'var(--gray-600)',
+                    background: isActive ? 'var(--blue-50)' : 'transparent',
+                    color: isActive ? 'var(--blue-700)' : 'var(--gray-600)',
                     cursor: 'pointer',
                     fontSize: '1rem',
                     fontWeight: isActive ? '600' : '500',
-                    borderLeft: isActive ? '3px solid var(--green-600)' : '3px solid transparent',
+                    borderLeft: isActive ? '3px solid var(--blue-600)' : '3px solid transparent',
                     justifyContent: sidebarOpen ? 'space-between' : 'center',
                     transition: 'all 0.2s ease'
                   }}
@@ -281,8 +281,8 @@ const AshaLayout: React.FC<AshaLayoutProps> = ({ children, title }) => {
                           gap: '1rem',
                           padding: '0.75rem 3rem',
                           border: 'none',
-                          background: isActiveChild(child.path) ? 'var(--green-100)' : 'transparent',
-                          color: isActiveChild(child.path) ? 'var(--green-700)' : 'var(--gray-600)',
+                          background: isActiveChild(child.path) ? 'var(--blue-100)' : 'transparent',
+                          color: isActiveChild(child.path) ? 'var(--blue-700)' : 'var(--gray-600)',
                           cursor: 'pointer',
                           fontSize: '0.875rem',
                           fontWeight: isActiveChild(child.path) ? '600' : '500',
@@ -389,8 +389,8 @@ const AshaLayout: React.FC<AshaLayoutProps> = ({ children, title }) => {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <div style={{
-                backgroundColor: 'var(--green-100)',
-                color: 'var(--green-700)',
+                backgroundColor: 'var(--blue-100)',
+                color: 'var(--blue-700)',
                 padding: '0.75rem 1.5rem',
                 borderRadius: '0.75rem',
                 fontSize: '1rem',
