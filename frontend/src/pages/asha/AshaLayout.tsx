@@ -33,8 +33,7 @@ const navigationItems = [
     children: [
       { id: 'maternal-records', label: 'Maternal Records', path: '/asha/maternal-records' },
       { id: 'palliative-records', label: 'Palliative Records', path: '/asha/palliative-records' },
-      { id: 'vaccination-records', label: 'Child Vaccination Records', path: '/asha/vaccination-records' },
-      { id: 'vital-statistics', label: 'Vital Statistics', path: '/asha/vital-statistics' }
+      { id: 'vaccination-records', label: 'Child Vaccination Records', path: '/asha/vaccination-records' }
     ]
   },
   { 

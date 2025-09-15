@@ -192,6 +192,14 @@ export const maternityAPI = {
     const response = await api.get('/maternity/schedule');
     return response.data;
   },
+  getAllRecords: async (params?: { 
+    userName?: string; 
+    dateFrom?: string; 
+    dateTo?: string; 
+  }) => {
+    const response = await api.get('/maternity/records/all', { params });
+    return response.data as { records: any[] };
+  }
 };
 
 // Vaccination schedules & bookings
@@ -243,6 +251,16 @@ export const vaccinationAPI = {
   downloadCertificate: async (bookingId: string) => {
     const response = await api.get(`/vaccination-certificate/${bookingId}`, { responseType: 'blob' });
     return response;
+  },
+  // Get all vaccination records (for ASHA workers)
+  getAllRecords: async (params?: { 
+    userName?: string; 
+    dateFrom?: string; 
+    dateTo?: string; 
+    status?: string;
+  }) => {
+    const response = await api.get('/vaccination/records/all', { params });
+    return response.data as { records: any[] };
   }
 };
 
@@ -329,6 +347,15 @@ export const palliativeAPI = {
   deleteRecord: async (id: string) => {
     const response = await api.delete(`/palliative/records/${id}`);
     return response.data as { message: string };
+  },
+  getAllRecords: async (params?: { 
+    testType?: string; 
+    userName?: string; 
+    dateFrom?: string; 
+    dateTo?: string; 
+  }) => {
+    const response = await api.get('/palliative/records/all', { params });
+    return response.data as { records: any[] };
   }
 };
 

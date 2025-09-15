@@ -32,7 +32,8 @@ class FileService:
         
         try:
             file.save(save_path)
-            return f"/{self.upload_folder}/{filename}"
+            # Return absolute URL for proper serving
+            return f"/uploads/{filename}"
         except Exception as e:
             print(f"Error saving file {filename}: {e}")
             return None

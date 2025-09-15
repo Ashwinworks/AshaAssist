@@ -62,7 +62,20 @@ def init_palliative_routes(app, collections):
                     for file in request.files.getlist(key):
                         url = file_service.save_uploaded_file(file, 'palliative')
                         if url:
-                            attachments.append({'name': file.filename, 'url': url})
+                            # Determine file type
+                            file_type = 'other'
+                            if file.content_type and file.content_type.startswith('image/'):
+                                file_type = 'image'
+                            elif file.filename and (file.filename.lower().endswith('.pdf') or file.content_type == 'application/pdf'):
+                                file_type = 'pdf'
+                            
+                            attachment_data = {
+                                'name': file.filename, 
+                                'url': url,
+                                'type': file_type
+                            }
+                            print(f"Storing attachment: {attachment_data}")
+                            attachments.append(attachment_data)
 
             doc = {
                 'userId': ObjectId(user_id),
@@ -100,7 +113,7 @@ def init_palliative_routes(app, collections):
             cursor = collections['palliative_records'].find(query).sort('date', -1)
             items = []
             for doc in cursor:
-                items.append({
+                record_data = {
                     'id': str(doc['_id']),
                     'date': doc.get('date'),
                     'testType': doc.get('testType'),
@@ -113,7 +126,10 @@ def init_palliative_routes(app, collections):
                     'subvalues': doc.get('subvalues') or {},
                     'attachments': doc.get('attachments') or [],
                     'createdAt': doc.get('createdAt').isoformat() if doc.get('createdAt') else None,
-                })
+                }
+                if record_data['attachments']:
+                    print(f"Record {record_data['id']} has attachments: {record_data['attachments']}")
+                items.append(record_data)
             return jsonify({'records': items}), 200
         except Exception as e:
             return jsonify({'error': f'Failed to list records: {str(e)}'}), 500
@@ -139,6 +155,86 @@ def init_palliative_routes(app, collections):
             return jsonify({'message': 'Record deleted'}), 200
         except Exception as e:
             return jsonify({'error': f'Failed to delete record: {str(e)}'}), 500
+
+    # Get all palliative records (for ASHA workers)
+    @palliative_bp.route('/api/palliative/records/all', methods=['GET'])
+    @jwt_required()
+    def get_all_records():
+        try:
+            # Get user info to check if they're an ASHA worker
+            user_id = get_jwt_identity()
+            user = collections['users'].find_one({'_id': ObjectId(user_id)})
+            
+            if not user or user.get('userType') != 'asha_worker':
+                return jsonify({'error': 'Access denied. ASHA workers only.'}), 403
+
+            # Get query parameters
+            test_type = request.args.get('testType', '').strip()
+            user_name = request.args.get('userName', '').strip()
+            date_from = request.args.get('dateFrom', '').strip()
+            date_to = request.args.get('dateTo', '').strip()
+
+            # Build query
+            query = {}
+            if test_type:
+                query['testType'] = test_type
+            if date_from or date_to:
+                date_query = {}
+                if date_from:
+                    date_query['$gte'] = date_from
+                if date_to:
+                    date_query['$lte'] = date_to
+                query['date'] = date_query
+
+            # Get records with user information
+            pipeline = [
+                {'$match': query},
+                {'$lookup': {
+                    'from': 'users',
+                    'localField': 'userId',
+                    'foreignField': '_id',
+                    'as': 'user'
+                }},
+                {'$unwind': '$user'},
+                {'$sort': {'date': -1, 'createdAt': -1}}
+            ]
+
+            # Filter by user name if provided
+            if user_name:
+                pipeline.insert(-1, {'$match': {'user.name': {'$regex': user_name, '$options': 'i'}}})
+
+            cursor = collections['palliative_records'].aggregate(pipeline)
+            items = []
+            
+            print(f"DEBUG: Query: {query}")
+            print(f"DEBUG: Pipeline: {pipeline}")
+            
+            for doc in cursor:
+                items.append({
+                    'id': str(doc['_id']),
+                    'date': doc.get('date'),
+                    'testType': doc.get('testType'),
+                    'notes': doc.get('notes'),
+                    'value': doc.get('value'),
+                    'unit': doc.get('unit'),
+                    'systolic': doc.get('systolic'),
+                    'diastolic': doc.get('diastolic'),
+                    'pulse': doc.get('pulse'),
+                    'subvalues': doc.get('subvalues') or {},
+                    'attachments': doc.get('attachments') or [],
+                    'createdAt': doc.get('createdAt').isoformat() if doc.get('createdAt') else None,
+                    'user': {
+                        'id': str(doc['user']['_id']),
+                        'name': doc['user'].get('name'),
+                        'email': doc['user'].get('email'),
+                        'phone': doc['user'].get('phone')
+                    }
+                })
+
+            print(f"DEBUG: Found {len(items)} records")
+            return jsonify({'records': items}), 200
+        except Exception as e:
+            return jsonify({'error': f'Failed to get records: {str(e)}'}), 500
 
     # Register blueprint
     app.register_blueprint(palliative_bp)

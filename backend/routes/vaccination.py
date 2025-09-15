@@ -495,6 +495,92 @@ def init_vaccination_routes(app, collections):
         except Exception as e:
             return jsonify({'error': f'Failed to generate certificate: {str(e)}'}), 500
 
+    # Get all vaccination records (for ASHA workers)
+    @vaccination_bp.route('/api/vaccination/records/all', methods=['GET'])
+    @jwt_required()
+    def get_all_vaccination_records():
+        """Get all vaccination records for ASHA workers"""
+        try:
+            # Get user info to check if they're an ASHA worker
+            user_id = get_jwt_identity()
+            user = collections['users'].find_one({'_id': ObjectId(user_id)})
+            
+            if not user or user.get('userType') != 'asha_worker':
+                return jsonify({'error': 'Access denied. ASHA workers only.'}), 403
+
+            # Get query parameters
+            user_name = request.args.get('userName', '').strip()
+            date_from = request.args.get('dateFrom', '').strip()
+            date_to = request.args.get('dateTo', '').strip()
+            status = request.args.get('status', '').strip()
+
+            # Build query for bookings
+            query = {}
+            if status:
+                query['status'] = status
+            if date_from or date_to:
+                date_query = {}
+                if date_from:
+                    date_query['$gte'] = date_from
+                if date_to:
+                    date_query['$lte'] = date_to
+                query['createdAt'] = date_query
+
+            # Get bookings with user and schedule information
+            pipeline = [
+                {'$match': query},
+                {'$lookup': {
+                    'from': 'users',
+                    'localField': 'userId',
+                    'foreignField': '_id',
+                    'as': 'user'
+                }},
+                {'$lookup': {
+                    'from': 'vaccination_schedules',
+                    'localField': 'scheduleId',
+                    'foreignField': '_id',
+                    'as': 'schedule'
+                }},
+                {'$unwind': '$user'},
+                {'$unwind': '$schedule'},
+                {'$sort': {'createdAt': -1}}
+            ]
+
+            # Filter by user name if provided
+            if user_name:
+                pipeline.insert(-1, {'$match': {'user.name': {'$regex': user_name, '$options': 'i'}}})
+
+            cursor = collections['vaccination_bookings'].aggregate(pipeline)
+            items = []
+            
+            for doc in cursor:
+                items.append({
+                    'id': str(doc['_id']),
+                    'vaccines': doc.get('vaccines', []),
+                    'childName': doc.get('childName'),
+                    'status': doc.get('status'),
+                    'date': doc['schedule'].get('date'),
+                    'location': doc['schedule'].get('location'),
+                    'createdAt': doc.get('createdAt').isoformat() if isinstance(doc.get('createdAt'), datetime) else doc.get('createdAt'),
+                    'user': {
+                        'id': str(doc['user']['_id']),
+                        'name': doc['user'].get('name'),
+                        'email': doc['user'].get('email'),
+                        'phone': doc['user'].get('phone')
+                    },
+                    'schedule': {
+                        'id': str(doc['schedule']['_id']),
+                        'title': doc['schedule'].get('title'),
+                        'date': doc['schedule'].get('date'),
+                        'time': doc['schedule'].get('time'),
+                        'location': doc['schedule'].get('location')
+                    }
+                })
+
+            return jsonify({'records': items}), 200
+        except Exception as e:
+            return jsonify({'error': f'Failed to get records: {str(e)}'}), 500
+
     # Register blueprint with app
     app.register_blueprint(vaccination_bp)
 

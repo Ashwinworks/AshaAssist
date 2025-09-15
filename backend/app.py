@@ -2,7 +2,7 @@
 AshaAssist Backend Application
 Main application entry point with modular structure
 """
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 
@@ -72,6 +72,11 @@ def create_app(config_name='default'):
     init_general_routes(app, collections)
     from routes.palliative import init_palliative_routes
     init_palliative_routes(app, collections)
+    
+    # Serve uploaded files
+    @app.route('/uploads/<path:filename>')
+    def uploaded_file(filename):
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
     
     # Error handlers
     @app.errorhandler(404)

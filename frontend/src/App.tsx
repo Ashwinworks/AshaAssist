@@ -10,6 +10,15 @@ import PalliativeDashboard from './pages/PalliativeDashboard';
 import AshaWorkerDashboard from './pages/AshaWorkerDashboard';
 import AshaCalendarManagement from './pages/asha/CalendarManagement';
 import VaccinationSchedules from './pages/asha/VaccinationSchedules';
+import AshaVisitRequests from './pages/asha/VisitRequests';
+import AshaSupplyRequests from './pages/asha/SupplyRequests';
+import AshaMaternalRecords from './pages/asha/MaternalRecords';
+import AshaPalliativeRecords from './pages/asha/PalliativeRecords';
+import AshaVaccinationRecords from './pages/asha/VaccinationRecords';
+import AshaHealthBlogs from './pages/asha/HealthBlogs';
+import AshaCommunityClasses from './pages/asha/CommunityClasses';
+import AshaLocalCamps from './pages/asha/LocalCamps';
+import AshaSupplyDistribution from './pages/asha/SupplyDistribution';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AshaManagement from './pages/admin/AshaManagement';
 import UsersManagement from './pages/admin/UsersManagement';
@@ -38,7 +47,6 @@ import PalliativeFeedback from './pages/palliative/Feedback';
 // Import shared pages
 import HealthBlogs from './pages/shared/HealthBlogs';
 import BlogDetail from './pages/shared/BlogDetail';
-import AshaHealthBlogs from './pages/asha/HealthBlogs';
 import Calendar from './pages/shared/Calendar';
 import VisitRequests from './pages/shared/VisitRequests';
 import './App.css';
@@ -246,6 +254,70 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <VaccinationSchedules />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/asha/visit-requests"
+        element={
+          <ProtectedRoute>
+            <AshaVisitRequests />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/asha/supply-requests"
+        element={
+          <ProtectedRoute>
+            <AshaSupplyRequests />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/asha/maternal-records"
+        element={
+          <ProtectedRoute>
+            <AshaMaternalRecords />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/asha/palliative-records"
+        element={
+          <ProtectedRoute>
+            <AshaPalliativeRecords />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/asha/vaccination-records"
+        element={
+          <ProtectedRoute>
+            <AshaVaccinationRecords />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/asha/community-classes"
+        element={
+          <ProtectedRoute>
+            <AshaCommunityClasses />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/asha/local-camps"
+        element={
+          <ProtectedRoute>
+            <AshaLocalCamps />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/asha/supply-distribution"
+        element={
+          <ProtectedRoute>
+            <AshaSupplyDistribution />
           </ProtectedRoute>
         }
       />
