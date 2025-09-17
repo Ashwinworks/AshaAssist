@@ -21,6 +21,8 @@ const RegisterPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -72,6 +74,56 @@ const RegisterPage: React.FC = () => {
 
   return (
     <div className="auth-page">
+      {/* Terms Modal */}
+      {showTerms && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="terms-title" onClick={() => setShowTerms(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 id="terms-title" className="modal-title">Terms of Service</h3>
+              <button type="button" className="modal-close" aria-label="Close" onClick={() => setShowTerms(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p><strong>Welcome to AshaAssist.</strong> By creating an account, you agree to use the platform responsibly and comply with applicable laws.</p>
+              <ul>
+                <li><strong>Service scope</strong>: AshaAssist connects beneficiaries with ASHA workers and provides health information tools. It is not a substitute for professional medical advice.</li>
+                <li><strong>User responsibilities</strong>: Provide accurate information, keep your password secure, and do not misuse the platform.</li>
+                <li><strong>Content</strong>: Educational content is provided “as is.” Always consult healthcare professionals when needed.</li>
+                <li><strong>Prohibited activities</strong>: No harassment, fraud, or unauthorized data access.</li>
+                <li><strong>Changes</strong>: We may update these terms; continued use means you accept the changes.</li>
+              </ul>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn" onClick={() => setShowTerms(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Privacy Modal */}
+      {showPrivacy && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="privacy-title" onClick={() => setShowPrivacy(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 id="privacy-title" className="modal-title">Privacy Policy</h3>
+              <button type="button" className="modal-close" aria-label="Close" onClick={() => setShowPrivacy(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p>We value your privacy. This policy explains how AshaAssist collects, uses, and protects your information.</p>
+              <ul>
+                <li><strong>Data we collect</strong>: Name, contact details, and basic health-related preferences to provide services.</li>
+                <li><strong>How we use data</strong>: To create your account, improve services, and connect you with ASHA workers.</li>
+                <li><strong>Storage and security</strong>: We use reasonable safeguards to protect your data.</li>
+                <li><strong>Sharing</strong>: We do not sell personal data. We may share with trusted partners to operate the service, following strict safeguards.</li>
+                <li><strong>Your choices</strong>: You can access, update, or delete your account data by contacting support.</li>
+              </ul>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn" onClick={() => setShowPrivacy(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="auth-container">
         {/* Left Side - Branding */}
         <div className="auth-branding">
@@ -386,13 +438,13 @@ const RegisterPage: React.FC = () => {
                   />
                   <span className="checkbox-text">
                     I agree to the{' '}
-                    <Link to="/terms" className="terms-link">
+                    <a href="#" className="terms-link" onClick={(e) => { e.preventDefault(); setShowTerms(true); }}>
                       Terms of Service
-                    </Link>{' '}
+                    </a>{' '}
                     and{' '}
-                    <Link to="/privacy" className="terms-link">
+                    <a href="#" className="terms-link" onClick={(e) => { e.preventDefault(); setShowPrivacy(true); }}>
                       Privacy Policy
-                    </Link>
+                    </a>
                   </span>
                 </label>
                 {errors.agreeToTerms && (
