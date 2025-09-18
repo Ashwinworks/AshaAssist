@@ -27,6 +27,7 @@ interface AuthContextType {
     userType: string;
     beneficiaryCategory: string;
   }) => Promise<void>;
+  checkEmailAvailability: (email: string) => Promise<{ available: boolean; message?: string }>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
   hideCategorySelection: () => void;
@@ -111,10 +112,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       const response = await authAPI.register(userData);
-      
+
       // User data is stored in database, but we don't auto-login
       // User needs to manually login after registration
-      
+
       toast.success('Registration successful! Please login with your credentials.');
     } catch (error: any) {
       const message = error.response?.data?.error || 'Registration failed';
@@ -122,6 +123,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       throw error;
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkEmailAvailability = async (email: string) => {
+    try {
+      const response = await authAPI.checkEmailAvailability(email);
+      return response;
+    } catch (error: any) {
+      // If the endpoint doesn't exist yet, assume email is available for now
+      // This will be replaced when the backend implements the endpoint
+      return { available: true };
     }
   };
 
@@ -207,6 +219,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     loginWithGoogle,
     register,
+    checkEmailAvailability,
     logout,
     updateUser,
     hideCategorySelection,

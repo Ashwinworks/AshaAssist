@@ -23,7 +23,9 @@ const RegisterPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
-  const { register: registerUser } = useAuth();
+  const [emailChecking, setEmailChecking] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const { register: registerUser, checkEmailAvailability } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
@@ -67,6 +69,28 @@ const RegisterPage: React.FC = () => {
       // Error is handled by the auth context
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const checkEmail = async (email: string) => {
+    if (!email || !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
+      setEmailError(null);
+      return;
+    }
+
+    setEmailChecking(true);
+    setEmailError(null);
+
+    try {
+      const result = await checkEmailAvailability(email);
+      if (!result.available) {
+        setEmailError('This email is already registered. Please use a different email.');
+      }
+    } catch (error) {
+      // If API fails, don't block registration - let backend handle it
+      setEmailError(null);
+    } finally {
+      setEmailChecking(false);
     }
   };
 
@@ -254,7 +278,7 @@ const RegisterPage: React.FC = () => {
                   <input
                     id="email"
                     type="email"
-                    className={`input ${errors.email ? 'input-error' : touchedFields.email && !errors.email && watchEmail && watchEmail.trim() ? 'input-success' : ''}`}
+                    className={`input ${errors.email || emailError ? 'input-error' : touchedFields.email && !errors.email && !emailError && watchEmail && watchEmail.trim() ? 'input-success' : ''}`}
                     placeholder="Enter your email address"
                     {...register('email', {
                       required: 'Email address is required',
@@ -262,17 +286,33 @@ const RegisterPage: React.FC = () => {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                         message: 'Please enter a valid email address',
                       },
-                      onChange: () => trigger('email'),
+                      validate: (value) => {
+                        if (emailError) {
+                          return emailError;
+                        }
+                        return true;
+                      },
+                      onChange: (e) => {
+                        setEmailError(null); // Clear error on change
+                        trigger('email');
+                      },
+                      onBlur: (e) => checkEmail(e.target.value),
                     })}
                   />
                   {touchedFields.email && !errors.email && watchEmail && watchEmail.trim() && (
                     <div className="input-success-icon">✓</div>
                   )}
                 </div>
-                {errors.email && (
-                  <span className="form-error">{errors.email.message}</span>
+                {emailChecking && (
+                  <div className="form-checking">
+                    <span className="loading-spinner-small"></span>
+                    Checking email availability...
+                  </div>
                 )}
-                {!errors.email && touchedFields.email && watchEmail && watchEmail.trim() && (
+                {(errors.email || emailError) && (
+                  <span className="form-error">{errors.email?.message || emailError}</span>
+                )}
+                {!errors.email && !emailError && touchedFields.email && watchEmail && watchEmail.trim() && (
                   <div className="form-success">Valid email address</div>
                 )}
               </div>

@@ -15,6 +15,7 @@ const navigationItems = [
   { id: 'calendar', label: 'Integrated Calendar', icon: Calendar, path: '/maternity/calendar' },
   { id: 'supplies', label: 'Supply Requests', icon: Package, path: '/maternity/supplies' },
   { id: 'visits', label: 'Antenatal Visits', icon: UserCheck, path: '/maternity/visits' },
+  { id: 'visit-requests', label: 'Visit Requests', icon: UserCheck, path: '/maternity/visit-requests' },
   { id: 'vaccinations', label: 'Vaccination Booking', icon: Syringe, path: '/maternity/vaccinations' },
   { id: 'mcp-card', label: 'Digital MCP Card', icon: CreditCard, path: '/maternity/mcp-card' },
   { id: 'feedback', label: 'Feedback', icon: MessageSquare, path: '/maternity/feedback' },
@@ -51,7 +52,9 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
         position: 'fixed',
         height: '100vh',
         zIndex: 1000,
-        overflowY: 'auto'
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden'
       }}>
         {/* Sidebar Header */}
         <div style={{
@@ -128,7 +131,7 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
         )}
 
         {/* Navigation */}
-        <nav style={{ padding: '1.5rem 0' }}>
+        <nav style={{ padding: '1rem 0', overflowY: 'auto', flex: 1, minHeight: 0 }}>
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -171,13 +174,11 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
           })}
         </nav>
 
-        {/* Logout Button */}
-        <div style={{ 
-          position: 'absolute', 
-          bottom: '1rem', 
-          left: sidebarOpen ? '1rem' : '50%', 
-          right: sidebarOpen ? '1rem' : 'auto',
-          transform: sidebarOpen ? 'none' : 'translateX(-50%)'
+        {/* Logout Footer (pinned, non-overlapping) */}
+        <div style={{
+          padding: '1rem',
+          borderTop: '1px solid #e5e7eb',
+          background: 'white'
         }}>
           <button
             onClick={handleLogout}

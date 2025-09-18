@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#g)"/>
+  <circle cx="100" cy="80" r="60" fill="rgba(255,255,255,0.15)"/>
+  <circle cx="1100" cy="560" r="90" fill="rgba(255,255,255,0.12)"/>
+  <rect x="60" y="60" rx="24" ry="24" width="1080" height="510" fill="rgba(0,0,0,0.25)"/>
+  <text x="90" y="230" fill="#fff" font-family="Segoe UI, Roboto, Arial" font-size="64" font-weight="700" letter-spacing="0.5">
+    Understanding Vaccination</text><text x="90" y="330" fill="#fff" font-family="Segoe UI, Roboto, Arial" font-size="64" font-weight="700" letter-spacing="0.5">Schedules
+  </text>
+  <text x="90" y="400" fill="#e2e8f0" font-family="Segoe UI, Roboto, Arial" font-size="32" font-weight="400">
+    General Health Guidance
+  </text>
+  <text x="90" y="480" fill="#a7f3d0" font-family="Segoe UI, Roboto, Arial" font-size="28" font-weight="600">AshaAssist</text>
+</svg>

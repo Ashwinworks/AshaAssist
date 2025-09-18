@@ -57,6 +57,11 @@ export const authAPI = {
     return response.data;
   },
 
+  checkEmailAvailability: async (email: string) => {
+    const response = await api.post('/check-email', { email });
+    return response.data;
+  },
+
   login: async (credentials: { email: string; password: string }) => {
     const response = await api.post('/login', credentials);
     return response.data;

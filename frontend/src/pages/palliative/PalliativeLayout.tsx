@@ -50,7 +50,9 @@ const PalliativeLayout: React.FC<PalliativeLayoutProps> = ({ children, title }) 
         position: 'fixed',
         height: '100vh',
         zIndex: 1000,
-        overflowY: 'auto'
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden'
       }}>
         {/* Sidebar Header */}
         <div style={{
@@ -127,7 +129,7 @@ const PalliativeLayout: React.FC<PalliativeLayoutProps> = ({ children, title }) 
         )}
 
         {/* Navigation */}
-        <nav style={{ padding: '1.5rem 0' }}>
+        <nav style={{ padding: '1rem 0', overflowY: 'auto', flex: 1, minHeight: 0 }}>
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -170,13 +172,11 @@ const PalliativeLayout: React.FC<PalliativeLayoutProps> = ({ children, title }) 
           })}
         </nav>
 
-        {/* Logout Button */}
-        <div style={{ 
-          position: 'absolute', 
-          bottom: '1rem', 
-          left: sidebarOpen ? '1rem' : '50%', 
-          right: sidebarOpen ? '1rem' : 'auto',
-          transform: sidebarOpen ? 'none' : 'translateX(-50%)'
+        {/* Logout Footer (pinned, non-overlapping) */}
+        <div style={{
+          padding: '1rem',
+          borderTop: '1px solid #e5e7eb',
+          background: 'white'
         }}>
           <button
             onClick={handleLogout}

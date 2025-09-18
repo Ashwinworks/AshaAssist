@@ -48,7 +48,8 @@ import PalliativeFeedback from './pages/palliative/Feedback';
 import HealthBlogs from './pages/shared/HealthBlogs';
 import BlogDetail from './pages/shared/BlogDetail';
 import Calendar from './pages/shared/Calendar';
-import VisitRequests from './pages/shared/VisitRequests';
+import MaternityVisitRequests from './pages/maternity/VisitRequests';
+import PalliativeVisitRequests from './pages/palliative/VisitRequests';
 import './App.css';
 
 // Dashboard Redirect Component - redirects to appropriate dashboard based on user type
@@ -372,6 +373,14 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
+        path="/maternity/visit-requests"
+        element={
+          <ProtectedRoute>
+            <MaternityVisitRequests />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/maternity/vaccinations"
         element={
           <ProtectedRoute>
@@ -441,7 +450,7 @@ const AppRoutes: React.FC = () => {
         path="/palliative/visits"
         element={
           <ProtectedRoute>
-            <VisitRequests />
+            <PalliativeVisitRequests />
           </ProtectedRoute>
         }
       />

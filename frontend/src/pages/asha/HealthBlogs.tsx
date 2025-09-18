@@ -358,13 +358,6 @@ const HealthBlogs: React.FC = () => {
                     }}
                   >
                     <div style={{ display: 'flex', gap: '1rem' }}>
-                      {blog.imageUrl && (
-                        <img
-                          src={`${SERVER_BASE}${blog.imageUrl}`}
-                          alt={blog.title}
-                          style={{ width: 120, height: 80, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--gray-200)' }}
-                        />
-                      )}
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                           <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600, color: 'var(--gray-900)' }}>

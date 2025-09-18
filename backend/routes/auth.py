@@ -205,6 +205,38 @@ def init_auth_routes(app, collections):
         except Exception as e:
             return jsonify({'error': f'Failed to update profile: {str(e)}'}), 500
 
+    @auth_bp.route('/api/check-email', methods=['POST'])
+    def check_email():
+        """Check if email is available for registration"""
+        try:
+            data = request.get_json()
+
+            if not data or not data.get('email'):
+                return jsonify({'error': 'Email is required'}), 400
+
+            email = data['email'].strip().lower()
+
+            # Validate email format
+            if not validate_email(email):
+                return jsonify({'error': 'Invalid email format'}), 400
+
+            # Check if user already exists
+            existing_user = collections['users'].find_one({'email': email})
+
+            if existing_user:
+                return jsonify({
+                    'available': False,
+                    'message': 'This email is already registered. Please use a different email.'
+                }), 200
+            else:
+                return jsonify({
+                    'available': True,
+                    'message': 'Email is available for registration'
+                }), 200
+
+        except Exception as e:
+            return jsonify({'error': f'Email check failed: {str(e)}'}), 500
+
     # Register blueprint with app
     app.register_blueprint(auth_bp)
     
