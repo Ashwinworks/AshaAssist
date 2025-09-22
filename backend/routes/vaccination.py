@@ -70,8 +70,11 @@ def init_vaccination_routes(app, collections):
     def list_vaccination_schedules():
         """List vaccination schedules"""
         try:
-            # Public to all authenticated users
-            # Optional filter by date >= today
+            user_id = get_jwt_identity()
+            claims = get_jwt() or {}
+            user_type = claims.get('userType')
+
+            # Optional filter by date >= from_date (default 1 year ago)
             from_date = request.args.get('fromDate')  # YYYY-MM-DD
             query = {}
             if from_date:
@@ -80,23 +83,75 @@ def init_vaccination_routes(app, collections):
                     query['date'] = { '$gte': _ }
                 except Exception:
                     pass
-            
+
+            # Get candidate schedules
             cursor = collections['vaccination_schedules'].find(query).sort('date', 1)
+            raw_schedules = list(cursor)
+
+            if not raw_schedules:
+                return jsonify({'schedules': []}), 200
+
             schedules = []
-            for doc in cursor:
-                schedules.append({
-                    'id': str(doc['_id']),
-                    'title': doc.get('title'),
-                    'date': doc.get('date'),
-                    'time': doc.get('time'),
-                    'location': doc.get('location'),
-                    'vaccines': doc.get('vaccines', []),
-                    'description': doc.get('description', ''),
-                    'status': doc.get('status', 'Scheduled'),
-                    'createdBy': str(doc.get('createdBy')) if doc.get('createdBy') else None,
-                    'createdAt': doc.get('createdAt').isoformat() if isinstance(doc.get('createdAt'), datetime) else doc.get('createdAt'),
-                    'updatedAt': doc.get('updatedAt').isoformat() if isinstance(doc.get('updatedAt'), datetime) else doc.get('updatedAt'),
+
+            # ASHA workers and admins see all schedules (including expired ones for tracking)
+            if user_type in ['asha_worker', 'admin']:
+                for doc in raw_schedules:
+                    schedules.append({
+                        'id': str(doc['_id']),
+                        'title': doc.get('title'),
+                        'date': doc.get('date'),
+                        'time': doc.get('time'),
+                        'location': doc.get('location'),
+                        'vaccines': doc.get('vaccines', []),
+                        'description': doc.get('description', ''),
+                        'status': doc.get('status', 'Scheduled'),
+                        'createdBy': str(doc.get('createdBy')) if doc.get('createdBy') else None,
+                        'createdAt': doc.get('createdAt').isoformat() if isinstance(doc.get('createdAt'), datetime) else doc.get('createdAt'),
+                        'updatedAt': doc.get('updatedAt').isoformat() if isinstance(doc.get('updatedAt'), datetime) else doc.get('updatedAt'),
+                    })
+            else:
+                # Regular users: filter expired schedules unless they have completed bookings
+                # Get schedule IDs for booking lookup
+                schedule_ids = [doc['_id'] for doc in raw_schedules]
+
+                # Get user's completed bookings for these schedules
+                user_completed_bookings = collections['vaccination_bookings'].find({
+                    'scheduleId': {'$in': schedule_ids},
+                    'userId': ObjectId(user_id),
+                    'status': 'Completed'
                 })
+                completed_schedule_ids = {str(booking['scheduleId']) for booking in user_completed_bookings}
+
+                # Filter schedules
+                today = datetime.now().date()
+                for doc in raw_schedules:
+                    schedule_date_str = doc.get('date')
+                    schedule_date = None
+                    try:
+                        if schedule_date_str:
+                            schedule_date = datetime.strptime(schedule_date_str, '%Y-%m-%d').date()
+                    except:
+                        pass
+
+                    # Skip expired schedules unless user has completed booking
+                    if schedule_date and schedule_date < today:
+                        if str(doc['_id']) not in completed_schedule_ids:
+                            continue
+
+                    schedules.append({
+                        'id': str(doc['_id']),
+                        'title': doc.get('title'),
+                        'date': doc.get('date'),
+                        'time': doc.get('time'),
+                        'location': doc.get('location'),
+                        'vaccines': doc.get('vaccines', []),
+                        'description': doc.get('description', ''),
+                        'status': doc.get('status', 'Scheduled'),
+                        'createdBy': str(doc.get('createdBy')) if doc.get('createdBy') else None,
+                        'createdAt': doc.get('createdAt').isoformat() if isinstance(doc.get('createdAt'), datetime) else doc.get('createdAt'),
+                        'updatedAt': doc.get('updatedAt').isoformat() if isinstance(doc.get('updatedAt'), datetime) else doc.get('updatedAt'),
+                    })
+
             return jsonify({'schedules': schedules}), 200
         except Exception as e:
             return jsonify({'error': f'Failed to list schedules: {str(e)}'}), 500
@@ -121,7 +176,18 @@ def init_vaccination_routes(app, collections):
             schedule = collections['vaccination_schedules'].find_one({'_id': ObjectId(schedule_id)})
             if not schedule:
                 return jsonify({'error': 'Schedule not found'}), 404
-            
+
+            # Check if schedule date has passed (prevent booking past schedules)
+            schedule_date_str = schedule.get('date')
+            if schedule_date_str:
+                try:
+                    schedule_date = datetime.strptime(schedule_date_str, '%Y-%m-%d').date()
+                    today = datetime.now().date()
+                    if schedule_date < today:
+                        return jsonify({'error': 'Cannot book for past vaccination schedules'}), 400
+                except Exception:
+                    pass  # If date parsing fails, allow booking (though this shouldn't happen)
+
             # Optionally ensure selectedVaccines are subset of schedule.vaccines
             allowed = set(schedule.get('vaccines', []))
             if any(v not in allowed for v in selectedVaccines):

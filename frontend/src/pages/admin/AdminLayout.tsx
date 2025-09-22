@@ -281,16 +281,23 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
               display: 'flex',
               alignItems: 'center',
               gap: '1rem',
-              padding: sidebarOpen ? '1rem 1.5rem' : '1rem',
-              border: 'none',
-              background: 'transparent',
+              padding: sidebarOpen ? '0.75rem 1.5rem' : '0.75rem',
+              border: '1px solid var(--red-200)',
+              background: 'white',
               color: 'var(--red-600)',
               fontSize: '1rem',
               fontWeight: '500',
               cursor: 'pointer',
               textAlign: 'left',
               borderRadius: '0.5rem',
-              justifyContent: sidebarOpen ? 'flex-start' : 'center'
+              justifyContent: sidebarOpen ? 'flex-start' : 'center',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--red-50)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
             }}
           >
             <LogOut size={22} />
@@ -362,21 +369,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
         </main>
       </div>
 
-      {/* Overlay */}
-      {sidebarOpen && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 999
-          }}
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+
     </div>
   );
 };

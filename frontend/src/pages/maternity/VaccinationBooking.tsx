@@ -19,7 +19,10 @@ const VaccinationBooking: React.FC = () => {
   const fetchSchedules = async () => {
     try {
       setLoading(true);
-      const res = await vaccinationAPI.listSchedules({ fromDate: new Date().toISOString().slice(0,10) });
+      // Fetch schedules from 1 year ago to show past completed vaccinations
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      const res = await vaccinationAPI.listSchedules({ fromDate: oneYearAgo.toISOString().slice(0,10) });
       setSchedules(res.schedules || []);
     } catch (e: any) {
       setError(e?.response?.data?.error || 'Failed to load schedules');
