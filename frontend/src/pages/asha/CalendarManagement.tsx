@@ -9,8 +9,7 @@ interface CalendarEvent {
   title: string;
   description?: string;
   place?: string;
-  start: string; // ISO
-  end?: string; // ISO
+  date: string; // ISO date
   allDay?: boolean;
   category?: string;
 }
@@ -30,8 +29,7 @@ const CalendarManagement: React.FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [place, setPlace] = useState('');
-  const [start, setStart] = useState('');
-  const [end, setEnd] = useState('');
+  const [date, setDate] = useState('');
   const [allDay, setAllDay] = useState(false);
   const [category, setCategory] = useState('');
 
@@ -55,10 +53,8 @@ const CalendarManagement: React.FC = () => {
   const openNew = () => {
     setEditing(null);
     setTitle(''); setDescription(''); setPlace('');
-    const startDefault = new Date(); startDefault.setMinutes(0,0,0);
-    const endDefault = new Date(startDefault); endDefault.setHours(startDefault.getHours() + 1);
-    setStart(formatISO(startDefault));
-    setEnd(formatISO(endDefault));
+    const today = new Date();
+    setDate(today.toISOString().slice(0, 10)); // YYYY-MM-DD format
     setAllDay(false); setCategory('');
     setModalOpen(true);
   };
@@ -68,8 +64,7 @@ const CalendarManagement: React.FC = () => {
     setTitle(ev.title || '');
     setDescription(ev.description || '');
     setPlace(ev.place || '');
-    setStart(ev.start);
-    setEnd(ev.end || ev.start);
+    setDate(ev.date);
     setAllDay(!!ev.allDay);
     setCategory(ev.category || '');
     setModalOpen(true);
@@ -77,12 +72,25 @@ const CalendarManagement: React.FC = () => {
 
   const submit = async () => {
     try {
-      if (!title.trim() || !start) { toast.error('Title and start are required'); return; }
+      if (!title.trim() || !date) { toast.error('Title and date are required'); return; }
+
+      // Prevent scheduling events on past dates
+      const selectedDate = new Date(date + 'T00:00:00');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
+
+      if (selectedDate < today) {
+        toast.error('Cannot schedule events on past dates');
+        return;
+      }
+
+      const eventData = { title, description, place, date, allDay, category };
+
       if (editing) {
-        await calendarAPI.update(editing.id, { title, description, place, start, end, allDay, category });
+        await calendarAPI.update(editing.id, eventData);
         toast.success('Event updated');
       } else {
-        await calendarAPI.create({ title, description, place, start, end, allDay, category });
+        await calendarAPI.create(eventData);
         toast.success('Event created');
       }
       setModalOpen(false);
@@ -106,7 +114,7 @@ const CalendarManagement: React.FC = () => {
   const grouped = useMemo(() => {
     const map: Record<string, CalendarEvent[]> = {};
     events.forEach(e => {
-      const key = new Date(e.start).toISOString().slice(0,10);
+      const key = e.date;
       if (!map[key]) map[key] = [];
       map[key].push(e);
     });
@@ -143,7 +151,7 @@ const CalendarManagement: React.FC = () => {
                         <div style={{ fontWeight: 600 }}>{ev.title}</div>
                         <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>
                           {ev.place ? `${ev.place} • ` : ''}
-                          {new Date(ev.start).toLocaleString()} {ev.end ? `- ${new Date(ev.end).toLocaleString()}` : ''}
+                          {ev.allDay ? 'All day' : 'Event scheduled'}
                         </div>
                         {ev.description && <div style={{ marginTop: 4 }}>{ev.description}</div>}
                       </div>
@@ -169,12 +177,10 @@ const CalendarManagement: React.FC = () => {
                 <input value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="Title" style={{ padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
                 <input value={place} onChange={(e)=>setPlace(e.target.value)} placeholder="Place" style={{ padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
                 <textarea value={description} onChange={(e)=>setDescription(e.target.value)} placeholder="Description" rows={3} style={{ padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
-                <label style={{ fontSize: 12, color: 'var(--gray-600)' }}>Start</label>
-                <input type="datetime-local" value={start.slice(0,16)} onChange={(e)=>setStart(new Date(e.target.value).toISOString())} style={{ padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
-                <label style={{ fontSize: 12, color: 'var(--gray-600)' }}>End</label>
-                <input type="datetime-local" value={end.slice(0,16)} onChange={(e)=>setEnd(new Date(e.target.value).toISOString())} style={{ padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                <label style={{ fontSize: 12, color: 'var(--gray-600)' }}>Date</label>
+                <input type="date" value={date} onChange={(e)=>setDate(e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <input type="checkbox" checked={allDay} onChange={(e)=>setAllDay(e.target.checked)} /> All day
+                  <input type="checkbox" checked={allDay} onChange={(e)=>setAllDay(e.target.checked)} /> All day event
                 </label>
                 <input value={category} onChange={(e)=>setCategory(e.target.value)} placeholder="Category (optional)" style={{ padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
               </div>

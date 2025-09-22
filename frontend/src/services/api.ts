@@ -157,15 +157,14 @@ export const calendarAPI = {
     title: string;
     description?: string;
     place?: string;
-    start: string; // ISO
-    end?: string; // ISO
+    date: string; // YYYY-MM-DD
     allDay?: boolean;
     category?: string;
   }) => {
     const response = await api.post('/calendar-events', payload);
     return response.data;
   },
-  update: async (id: string, payload: Partial<{ title: string; description: string; place: string; start: string; end: string; allDay: boolean; category: string }>) => {
+  update: async (id: string, payload: Partial<{ title: string; description: string; place: string; date: string; allDay: boolean; category: string }>) => {
     const response = await api.put(`/calendar-events/${id}`, payload);
     return response.data;
   },

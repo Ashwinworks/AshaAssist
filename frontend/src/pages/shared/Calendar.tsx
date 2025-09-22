@@ -10,8 +10,7 @@ interface CalendarEvent {
   title: string;
   description?: string;
   place?: string;
-  start: string; // ISO
-  end?: string; // ISO
+  date: string; // YYYY-MM-DD
   allDay?: boolean;
   category?: string;
 }
@@ -79,8 +78,7 @@ const Calendar: React.FC = () => {
   const eventsByDay = useMemo(() => {
     const map: Record<string, CalendarEvent[]> = {};
     events.forEach(ev => {
-      const start = new Date(ev.start);
-      const key = start.toISOString().slice(0,10); // YYYY-MM-DD
+      const key = ev.date; // Already in YYYY-MM-DD format
       if (!map[key]) map[key] = [];
       map[key].push(ev);
     });
@@ -229,7 +227,7 @@ const Calendar: React.FC = () => {
                       <div style={{ fontWeight: 700 }}>{ev.title}</div>
                       {ev.place && <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>{ev.place}</div>}
                       <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>
-                        {new Date(ev.start).toLocaleString()} {ev.end ? `- ${new Date(ev.end).toLocaleString()}` : ''}
+                        {ev.allDay ? 'All day event' : 'Event scheduled'}
                       </div>
                       {ev.description && <p style={{ marginTop: 6 }}>{ev.description}</p>}
                     </div>

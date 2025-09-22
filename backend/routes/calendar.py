@@ -30,20 +30,33 @@ def init_calendar_routes(app, collections):
                         end = datetime(year + 1, 1, 1)
                     else:
                         end = datetime(year, mon + 1, 1)
-                    query = {'start': {'$lt': end}, 'end': {'$gte': start}}
+                    query = {'date': {'$gte': start.date().isoformat(), '$lt': end.date().isoformat()}}
                 except Exception:
                     pass
             
-            cursor = collections['calendar_events'].find(query).sort('start', 1)
+            cursor = collections['calendar_events'].find(query).sort('date', 1)
             events = []
             for doc in cursor:
+                # Handle both old format (start/end) and new format (date)
+                if doc.get('date'):
+                    event_date = doc.get('date')
+                    if isinstance(event_date, datetime):
+                        event_date = event_date.date().isoformat()
+                elif doc.get('start'):
+                    start_dt = doc.get('start')
+                    if isinstance(start_dt, datetime):
+                        event_date = start_dt.date().isoformat()
+                    else:
+                        event_date = start_dt.split('T')[0] if 'T' in str(start_dt) else str(start_dt)
+                else:
+                    event_date = None
+
                 events.append({
                     'id': str(doc['_id']),
                     'title': doc.get('title', ''),
                     'description': doc.get('description', ''),
                     'place': doc.get('place', ''),
-                    'start': doc.get('start').isoformat() if isinstance(doc.get('start'), datetime) else doc.get('start'),
-                    'end': doc.get('end').isoformat() if isinstance(doc.get('end'), datetime) else doc.get('end'),
+                    'date': event_date,
                     'allDay': bool(doc.get('allDay', False)),
                     'category': doc.get('category', ''),
                     'createdBy': str(doc.get('createdBy')) if doc.get('createdBy') else None,
@@ -65,25 +78,33 @@ def init_calendar_routes(app, collections):
             user_id = get_jwt_identity()
             data = request.get_json() or {}
             title = (data.get('title') or '').strip()
-            start = data.get('start')
-            end = data.get('end') or start
-            
-            if not title or not start:
-                return jsonify({'error': 'Title and start are required'}), 400
-            
-            # Parse dates
-            start_dt = parse_datetime(start)
-            end_dt = parse_datetime(end)
-            
-            if not start_dt or not end_dt:
-                return jsonify({'error': 'Invalid start/end datetime'}), 400
-            
+            event_date = data.get('date')
+
+            if not title or not event_date:
+                return jsonify({'error': 'Title and date are required'}), 400
+
+            # Validate date format and prevent past dates
+            try:
+                if isinstance(event_date, str):
+                    # Parse YYYY-MM-DD format
+                    year, month, day = map(int, event_date.split('-'))
+                    date_obj = datetime(year, month, day)
+                else:
+                    date_obj = event_date
+
+                # Check if date is in the past
+                today = datetime.now(timezone.utc).date()
+                if date_obj.date() < today:
+                    return jsonify({'error': 'Cannot schedule events on past dates'}), 400
+
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Invalid date format'}), 400
+
             doc = {
                 'title': title,
                 'description': (data.get('description') or '').strip(),
                 'place': (data.get('place') or '').strip(),
-                'start': start_dt,
-                'end': end_dt,
+                'date': event_date,  # Store as string YYYY-MM-DD
                 'allDay': bool(data.get('allDay', False)),
                 'category': (data.get('category') or '').strip(),
                 'createdBy': ObjectId(user_id),
@@ -107,23 +128,30 @@ def init_calendar_routes(app, collections):
             
             data = request.get_json() or {}
             updates = {}
-            
+
             for field in ['title', 'description', 'place', 'category']:
                 if field in data:
                     updates[field] = (data.get(field) or '').strip()
-            
-            if 'start' in data:
-                dt = parse_datetime(data['start'])
-                if not dt: 
-                    return jsonify({'error': 'Invalid start'}), 400
-                updates['start'] = dt
-            
-            if 'end' in data:
-                dt = parse_datetime(data['end'])
-                if not dt: 
-                    return jsonify({'error': 'Invalid end'}), 400
-                updates['end'] = dt
-            
+
+            if 'date' in data:
+                try:
+                    event_date = data['date']
+                    if isinstance(event_date, str):
+                        # Parse YYYY-MM-DD format
+                        year, month, day = map(int, event_date.split('-'))
+                        date_obj = datetime(year, month, day)
+                    else:
+                        date_obj = event_date
+
+                    # Check if date is in the past
+                    today = datetime.now(timezone.utc).date()
+                    if date_obj.date() < today:
+                        return jsonify({'error': 'Cannot schedule events on past dates'}), 400
+
+                    updates['date'] = event_date  # Store as string YYYY-MM-DD
+                except (ValueError, TypeError):
+                    return jsonify({'error': 'Invalid date format'}), 400
+
             if 'allDay' in data:
                 updates['allDay'] = bool(data['allDay'])
             
