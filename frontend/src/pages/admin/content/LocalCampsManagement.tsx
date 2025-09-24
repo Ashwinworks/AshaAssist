@@ -10,7 +10,6 @@ import {
   Calendar,
   Users,
   MapPin,
-  Clock,
   Stethoscope,
 } from 'lucide-react';
 

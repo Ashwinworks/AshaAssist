@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import AshaLayout from './AshaLayout';
-import { Package, Truck, CheckCircle, Clock, User, MapPin, Phone, Search } from 'lucide-react';
+import { Package, Truck, CheckCircle, Clock, MapPin, Phone, Search } from 'lucide-react';
 
 const SupplyDistribution: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');

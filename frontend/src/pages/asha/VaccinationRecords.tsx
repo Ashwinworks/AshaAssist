@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import AshaLayout from './AshaLayout';
-import { Search, Edit, Plus, Baby, Syringe, Calendar, CheckCircle, AlertCircle, Clock, Filter, User, Phone, Mail } from 'lucide-react';
+import { Search, Syringe, Calendar, CheckCircle, AlertCircle, Clock, Filter, User, Phone, Mail } from 'lucide-react';
 import { vaccinationAPI } from '../../services/api';
 
 // Types for vaccination records
@@ -86,14 +86,7 @@ const VaccinationRecords: React.FC = () => {
     return Array.from(userMap.values());
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'Completed': return <CheckCircle size={16} color="var(--green-600)" />;
-      case 'Pending': return <Clock size={16} color="var(--blue-600)" />;
-      case 'Cancelled': return <AlertCircle size={16} color="var(--red-600)" />;
-      default: return <Clock size={16} color="var(--gray-600)" />;
-    }
-  };
+
 
   const getStatusColor = (status: string) => {
     switch (status) {

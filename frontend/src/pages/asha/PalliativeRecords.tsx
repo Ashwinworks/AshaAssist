@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import AshaLayout from './AshaLayout';
-import { 
-  Search, Edit, Plus, Heart, Activity, Thermometer, Pill, FileText, Clock, 
-  Filter, Eye, Download, X, Image as ImageIcon, Calendar, User, Phone, Mail,
+import {
+  Search, Activity, Thermometer, FileText,
+  Filter, Eye, Download, X, Image as ImageIcon, User, Phone, Mail,
   Stethoscope, HeartPulse, Droplets, Syringe, Clipboard
 } from 'lucide-react';
 import { palliativeAPI } from '../../services/api';

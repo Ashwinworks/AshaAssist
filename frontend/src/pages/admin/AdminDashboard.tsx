@@ -1,16 +1,13 @@
 import React from 'react';
 import AdminLayout from './AdminLayout';
-import { 
-  Users, 
-  UserCheck, 
-  Baby, 
-  Heart, 
-  Activity, 
-  FileText, 
-  Calendar, 
+import {
+  Users,
+  UserCheck,
+  Activity,
+  FileText,
+  Calendar,
   MessageSquare,
   TrendingUp,
-  AlertTriangle,
   CheckCircle,
   Clock
 } from 'lucide-react';

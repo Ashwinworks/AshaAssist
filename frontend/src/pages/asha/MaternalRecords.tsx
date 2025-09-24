@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import AshaLayout from './AshaLayout';
-import { Search, Edit, Plus, Calendar, Baby, Heart, Activity, FileText, Filter, User, Phone, Mail, Clock } from 'lucide-react';
+import { Search, Calendar, Baby, FileText, Filter, User, Phone, Mail, Clock } from 'lucide-react';
 import { maternityAPI } from '../../services/api';
 
 // Types for maternal records
@@ -26,7 +26,6 @@ const MaternalRecords: React.FC = () => {
   const [filterUserName, setFilterUserName] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  const [selectedRecord, setSelectedRecord] = useState<MaternalRecord | null>(null);
 
   // Load records from backend
   useEffect(() => {

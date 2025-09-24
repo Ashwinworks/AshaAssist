@@ -14,8 +14,6 @@ interface CalendarEvent {
   category?: string;
 }
 
-const formatISO = (d: Date) => d.toISOString();
-
 const CalendarManagement: React.FC = () => {
   const today = new Date();
   const [cursor, setCursor] = useState(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1)));

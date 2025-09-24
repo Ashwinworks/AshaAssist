@@ -6,12 +6,65 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from pymongo.errors import DuplicateKeyError
 from bson import ObjectId
 from flask_jwt_extended import create_access_token
+from firebase_admin import auth as firebase_auth
 from utils.validators import validate_email, validate_phone, validate_user_type, validate_beneficiary_category
 from utils.helpers import normalize_inputs
 
 class AuthService:
     def __init__(self, users_collection):
         self.users_collection = users_collection
+
+    def create_firebase_user(self, email, password=None, display_name=None):
+        """Create a user in Firebase Auth"""
+        try:
+            user_data = {
+                'email': email,
+                'email_verified': False,
+                'display_name': display_name,
+            }
+
+            if password:
+                user_data['password'] = password
+
+            firebase_user = firebase_auth.create_user(**user_data)
+            return firebase_user.uid
+        except Exception as e:
+            print(f"Failed to create Firebase user: {e}")
+            return None
+
+    def migrate_user_to_firebase(self, user_id, password):
+        """Migrate an existing MongoDB user to Firebase Auth"""
+        try:
+            user = self.users_collection.find_one({'_id': ObjectId(user_id)})
+            if not user:
+                return False, "User not found"
+
+            if user.get('firebaseUid'):
+                return True, "User already migrated to Firebase"
+
+            # Create Firebase user
+            firebase_uid = self.create_firebase_user(
+                email=user['email'],
+                password=password,
+                display_name=user.get('name')
+            )
+
+            if firebase_uid:
+                # Update MongoDB user with Firebase UID
+                self.users_collection.update_one(
+                    {'_id': ObjectId(user_id)},
+                    {'$set': {
+                        'firebaseUid': firebase_uid,
+                        'authProvider': 'firebase',
+                        'updatedAt': datetime.now(timezone.utc)
+                    }}
+                )
+                return True, "User migrated to Firebase successfully"
+            else:
+                return False, "Failed to create Firebase user"
+
+        except Exception as e:
+            return False, f"Migration failed: {str(e)}"
 
     def register_user(self, data):
         """Register a new user"""
@@ -56,6 +109,16 @@ class AuthService:
         # Hash password
         hashed_password = generate_password_hash(data['password'])
         
+        # Create Firebase user first
+        firebase_uid = self.create_firebase_user(
+            email=data['email'],
+            password=data['password'],  # Use original password for Firebase
+            display_name=data['name']
+        )
+
+        if not firebase_uid:
+            return {'error': 'Failed to create user account. Please try again.'}, 500
+
         # Create user document
         user_doc = {
             'email': data['email'],
@@ -64,22 +127,30 @@ class AuthService:
             'phone': data['phone'],
             'userType': data['userType'],
             'beneficiaryCategory': data['beneficiaryCategory'] if data['userType'] == 'user' else None,
+            'firebaseUid': firebase_uid,
+            'authProvider': 'firebase',
             'isFirstLogin': True,
             'profileCompleted': False,
             'createdAt': datetime.now(timezone.utc),
             'updatedAt': datetime.now(timezone.utc),
             'isActive': True
         }
-        
+
         # Insert user
         try:
             result = self.users_collection.insert_one(user_doc)
         except DuplicateKeyError as e:
+            # If MongoDB insertion fails, try to delete the Firebase user
+            try:
+                firebase_auth.delete_user(firebase_uid)
+            except:
+                pass  # Ignore Firebase cleanup errors
+
             # Determine which field caused the duplicate key
             error_text = str(e)
             field = 'email' if 'email' in error_text else ('phone' if 'phone' in error_text else 'field')
             return {'error': f'User with this {field} already exists'}, 409
-        
+
         # Create access token
         access_token = create_access_token(
             identity=str(result.inserted_id),
@@ -89,7 +160,7 @@ class AuthService:
                 'name': data['name']
             }
         )
-        
+
         return {
             'message': 'User registered successfully',
             'access_token': access_token,

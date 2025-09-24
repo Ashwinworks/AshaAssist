@@ -142,7 +142,7 @@ const HealthBlogs: React.FC = () => {
     }
   };
 
-  const navigate = useNavigate();
+
 
   return (
     <AshaLayout title="Health Blogs">

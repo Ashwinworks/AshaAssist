@@ -111,7 +111,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }) => {
     try {
       setLoading(true);
-      const response = await authAPI.register(userData);
+      await authAPI.register(userData);
 
       // User data is stored in database, but we don't auto-login
       // User needs to manually login after registration

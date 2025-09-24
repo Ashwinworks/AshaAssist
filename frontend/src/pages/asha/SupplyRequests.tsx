@@ -1,6 +1,6 @@
 import React from 'react';
 import AshaLayout from './AshaLayout';
-import { Package, Clock, CheckCircle, XCircle, User, MapPin, Phone } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, User, MapPin, Phone } from 'lucide-react';
 
 const SupplyRequests: React.FC = () => {
   // Mock data for demonstration

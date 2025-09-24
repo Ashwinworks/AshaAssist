@@ -45,7 +45,7 @@ const RegisterPage: React.FC = () => {
     },
   });
 
-  const watchUserType = watch('userType');
+
   const watchPassword = watch('password');
   const watchConfirmPassword = watch('confirmPassword');
   const watchName = watch('name');
@@ -286,13 +286,13 @@ const RegisterPage: React.FC = () => {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                         message: 'Please enter a valid email address',
                       },
-                      validate: (value) => {
+                      validate: () => {
                         if (emailError) {
                           return emailError;
                         }
                         return true;
                       },
-                      onChange: (e) => {
+                      onChange: () => {
                         setEmailError(null); // Clear error on change
                         trigger('email');
                       },

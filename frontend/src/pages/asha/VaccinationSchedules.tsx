@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import AshaLayout from './AshaLayout';
-import { Plus, Calendar, Syringe, MapPin, Clock, Users, Eye, Edit, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import { Plus, Calendar, Syringe, MapPin, Clock, Users, Eye, Edit, CheckCircle, XCircle } from 'lucide-react';
 import { vaccinationAPI } from '../../services/api';
 
 interface ScheduleForm {
@@ -155,8 +155,7 @@ const VaccinationSchedules: React.FC = () => {
     }
   };
 
-  const upcomingCount = useMemo(() => schedules.filter(s => s.status === 'Scheduled').length, [schedules]);
-  const totalVaccines = useMemo(() => schedules.reduce((sum, s) => sum + (s.vaccines?.length || 0), 0), [schedules]);
+
 
   const getStatusColor = (status: string) => {
     switch (status) {

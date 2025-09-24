@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
 import AdminLayout from '../AdminLayout';
-import { 
-  Search, 
-  Eye, 
-  Edit, 
-  CheckCircle, 
-  XCircle, 
-  Trash2, 
-  Calendar, 
-  User, 
+import {
+  Search,
+  Eye,
+  Edit,
+  CheckCircle,
+  XCircle,
+  Trash2,
+  Calendar,
   Users,
   MapPin,
-  Clock,
   BookOpen
 } from 'lucide-react';
 
