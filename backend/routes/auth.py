@@ -87,6 +87,7 @@ def init_auth_routes(app, collections):
                     identity=str(existing_user['_id']),
                     additional_claims={
                         'userType': existing_user['userType'],
+                        'beneficiaryCategory': existing_user.get('beneficiaryCategory'),
                         'email': existing_user['email'],
                         'name': existing_user['name']
                     }
@@ -132,6 +133,7 @@ def init_auth_routes(app, collections):
                     identity=str(result.inserted_id),
                     additional_claims={
                         'userType': 'user',
+                        'beneficiaryCategory': 'maternity',  # Default for new Google users
                         'email': email,
                         'name': name
                     }

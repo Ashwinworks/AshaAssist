@@ -156,6 +156,7 @@ class AuthService:
             identity=str(result.inserted_id),
             additional_claims={
                 'userType': data['userType'],
+                'beneficiaryCategory': data.get('beneficiaryCategory') if data['userType'] == 'user' else None,
                 'email': data['email'],
                 'name': data['name']
             }
@@ -202,6 +203,7 @@ class AuthService:
             identity=str(user['_id']),
             additional_claims={
                 'userType': user['userType'],
+                'beneficiaryCategory': user.get('beneficiaryCategory'),
                 'email': user['email'],
                 'name': user['name']
             }

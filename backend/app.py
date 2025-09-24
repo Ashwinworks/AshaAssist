@@ -26,6 +26,7 @@ from routes.blogs import init_blogs_routes
 from routes.vaccination import init_vaccination_routes
 from routes.admin import init_admin_routes
 from routes.general import init_general_routes
+from routes.visit_requests import init_visit_request_routes
 
 # Import utilities
 from utils.helpers import JSONEncoder
@@ -70,6 +71,7 @@ def create_app(config_name='default'):
     init_vaccination_routes(app, collections)
     init_admin_routes(app, collections)
     init_general_routes(app, collections)
+    init_visit_request_routes(app, collections)
     from routes.palliative import init_palliative_routes
     init_palliative_routes(app, collections)
     
