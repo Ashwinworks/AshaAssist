@@ -20,6 +20,9 @@ const CommunityClassesManagement: React.FC = () => {
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedClass, setSelectedClass] = useState<any>(null);
+  const [viewLoading, setViewLoading] = useState(false);
 
   const fetchClasses = async () => {
     try {
@@ -93,6 +96,52 @@ const CommunityClassesManagement: React.FC = () => {
       fetchClasses();
     } catch (e) {
       alert('Failed to reject class');
+    }
+  };
+
+  const handleView = async (classId: string) => {
+    try {
+      setViewLoading(true);
+      setViewModalOpen(true);
+      const data = await communityAPI.getClass(classId);
+      setSelectedClass(data.class);
+    } catch (e) {
+      alert('Failed to load class details');
+      setViewModalOpen(false);
+    } finally {
+      setViewLoading(false);
+    }
+  };
+
+  const handleEdit = async (classId: string) => {
+    try {
+      setViewLoading(true);
+      // Fetch latest details to prefill prompts
+      const data = await communityAPI.getClass(classId);
+      const item = data.class || {};
+
+      const newTitle = window.prompt('Edit title', item.title || '');
+      if (newTitle === null) return; // Cancel
+
+      const newLocation = window.prompt('Edit location', item.location || '');
+      if (newLocation === null) return; // Cancel
+
+      const newStatus = window.prompt('Edit status (Pending, Approved, Rejected, Scheduled, Completed, Cancelled)', item.status || 'Pending');
+      if (newStatus === null) return; // Cancel
+
+      const payload: any = {
+        title: newTitle.trim(),
+        location: (newLocation || '').trim(),
+        status: (newStatus || '').trim()
+      };
+
+      // Only send defined values
+      await communityAPI.updateClass(classId, payload);
+      await fetchClasses();
+    } catch (e) {
+      alert('Failed to update class');
+    } finally {
+      setViewLoading(false);
     }
   };
 
@@ -338,11 +387,12 @@ const CommunityClassesManagement: React.FC = () => {
 
                   {/* Action Buttons */}
                   <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1rem', borderTop: '1px solid var(--gray-200)' }}>
-                    <button 
+                    <button
+                      onClick={() => handleView(classItem.id)}
                       className="btn"
-                      style={{ 
-                        backgroundColor: 'var(--blue-600)', 
-                        color: 'white', 
+                      style={{
+                        backgroundColor: 'var(--blue-600)',
+                        color: 'white',
                         border: 'none',
                         fontSize: '0.875rem',
                         padding: '0.5rem 1rem',
@@ -354,11 +404,12 @@ const CommunityClassesManagement: React.FC = () => {
                       <Eye size={14} />
                       View Details
                     </button>
-                    <button 
+                    <button
+                      onClick={() => handleEdit(classItem.id)}
                       className="btn"
-                      style={{ 
-                        backgroundColor: 'var(--purple-600)', 
-                        color: 'white', 
+                      style={{
+                        backgroundColor: 'var(--purple-600)',
+                        color: 'white',
                         border: 'none',
                         fontSize: '0.875rem',
                         padding: '0.5rem 1rem',
@@ -431,6 +482,146 @@ const CommunityClassesManagement: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* View Class Modal */}
+        {viewModalOpen && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div className="card" style={{
+              maxWidth: '600px',
+              width: '90%',
+              maxHeight: '80vh',
+              overflow: 'auto',
+              margin: '1rem'
+            }}>
+              <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 className="card-title">Class Details</h3>
+                <button
+                  onClick={() => { setViewModalOpen(false); setSelectedClass(null); }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    color: 'var(--gray-500)'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+              <div className="card-content">
+                {viewLoading ? (
+                  <div style={{ textAlign: 'center', padding: '2rem' }}>
+                    <div className="loading-spinner" />
+                    <p>Loading...</p>
+                  </div>
+                ) : selectedClass ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <BookOpen size={24} color="var(--purple-600)" />
+                      <div>
+                        <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '600' }}>{selectedClass.title}</h2>
+                        <span style={{
+                          fontSize: '0.875rem',
+                          fontWeight: '600',
+                          color: getStatusColor(selectedClass.status),
+                          backgroundColor: `${getStatusColor(selectedClass.status)}20`,
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '0.25rem'
+                        }}>
+                          {selectedClass.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
+                      <div className="card" style={{ padding: '1rem', backgroundColor: 'var(--blue-25)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <Calendar size={16} color="var(--blue-600)" />
+                          <strong style={{ color: 'var(--blue-700)' }}>Schedule Details</strong>
+                        </div>
+                        <div style={{ fontSize: '0.875rem', color: 'var(--gray-700)' }}>
+                          <div><strong>Date:</strong> {selectedClass.date}</div>
+                          <div><strong>Time:</strong> {selectedClass.time}</div>
+                          <div><strong>Category:</strong> {selectedClass.category}</div>
+                          <div><strong>Created:</strong> {selectedClass.createdAt}</div>
+                        </div>
+                      </div>
+
+                      <div className="card" style={{ padding: '1rem', backgroundColor: 'var(--green-25)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <MapPin size={16} color="var(--green-600)" />
+                          <strong style={{ color: 'var(--green-700)' }}>Location & Instructor</strong>
+                        </div>
+                        <div style={{ fontSize: '0.875rem', color: 'var(--gray-700)' }}>
+                          <div><strong>Location:</strong> {selectedClass.location}</div>
+                          <div><strong>Instructor:</strong> {selectedClass.instructor || '—'}</div>
+                          <div><strong>Target Audience:</strong> {selectedClass.targetAudience}</div>
+                          <div><strong>Last Updated:</strong> {selectedClass.lastUpdated}</div>
+                        </div>
+                      </div>
+
+                      <div className="card" style={{ padding: '1rem', backgroundColor: 'var(--purple-25)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <Users size={16} color="var(--purple-600)" />
+                          <strong style={{ color: 'var(--purple-700)' }}>Attendance</strong>
+                        </div>
+                        <div style={{ fontSize: '0.875rem', color: 'var(--gray-700)' }}>
+                          <div><strong>Max Participants:</strong> {selectedClass.maxParticipants || 0}</div>
+                          <div><strong>Registered:</strong> {selectedClass.registeredParticipants || 0}</div>
+                          <div><strong>Published Date:</strong> {selectedClass.publishedDate}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {selectedClass.description && (
+                      <div>
+                        <h4 style={{ marginBottom: '0.5rem', color: 'var(--gray-900)' }}>Description</h4>
+                        <p style={{ margin: 0, color: 'var(--gray-700)', lineHeight: '1.5' }}>{selectedClass.description}</p>
+                      </div>
+                    )}
+
+                    {Array.isArray(selectedClass.topics) && selectedClass.topics.length > 0 && (
+                      <div>
+                        <h4 style={{ marginBottom: '0.5rem', color: 'var(--gray-900)' }}>Topics</h4>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                          {selectedClass.topics.map((topic: string, index: number) => (
+                            <span
+                              key={index}
+                              style={{
+                                backgroundColor: 'var(--blue-100)',
+                                color: 'var(--blue-800)',
+                                padding: '0.25rem 0.5rem',
+                                borderRadius: '0.25rem',
+                                fontSize: '0.875rem'
+                              }}
+                            >
+                              {topic}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '2rem' }}>
+                    <p>Failed to load class details.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AdminLayout>
   );

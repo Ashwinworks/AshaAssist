@@ -348,6 +348,10 @@ export const communityAPI = {
     const response = await api.put(`/community-classes/${id}`, payload);
     return response.data as { message: string };
   },
+  getClass: async (id: string) => {
+    const response = await api.get(`/community-classes/${id}`);
+    return response.data as { class: any };
+  },
   deleteClass: async (id: string) => {
     const response = await api.delete(`/community-classes/${id}`);
     return response.data as { message: string };
@@ -377,6 +381,10 @@ export const communityAPI = {
   updateCamp: async (id: string, payload: Partial<{ title: string; campType: string; date: string; time: string; location: string; organizer: string; services: string[]; targetAudience: string; expectedParticipants: number; registeredParticipants: number; description: string; requirements: string; contactPerson: string; status: string }>) => {
     const response = await api.put(`/local-camps/${id}`, payload);
     return response.data as { message: string };
+  },
+  getCamp: async (id: string) => {
+    const response = await api.get(`/local-camps/${id}`);
+    return response.data as { camp: any };
   },
   deleteCamp: async (id: string) => {
     const response = await api.delete(`/local-camps/${id}`);

@@ -111,6 +111,91 @@ const LocalCampsManagement: React.FC = () => {
     }
   };
 
+  const handleView = async (campId: string) => {
+    try {
+      const data = await communityAPI.getCamp(campId);
+      const camp = data.camp || {};
+      alert(`Camp Details\n\nTitle: ${camp.title}\nDate: ${camp.date}\nTime: ${camp.time}\nLocation: ${camp.location}\nOrganizer: ${camp.organizer || ''}\nStatus: ${camp.status || ''}`);
+    } catch (e) {
+      alert('Failed to load camp details');
+    }
+  };
+
+  const handleEdit = async (campId: string) => {
+    try {
+      // Get latest to prefill
+      const data = await communityAPI.getCamp(campId);
+      const item = data.camp || {};
+
+      const newTitle = window.prompt('Edit title', item.title || '');
+      if (newTitle === null) return;
+
+      const newDate = window.prompt('Edit date (YYYY-MM-DD)', item.date || '');
+      if (newDate === null) return;
+
+      const newTime = window.prompt('Edit time (e.g., 10:00 AM)', item.time || '');
+      if (newTime === null) return;
+
+      const newLocation = window.prompt('Edit location', item.location || '');
+      if (newLocation === null) return;
+
+      const newOrganizer = window.prompt('Edit organizer', item.organizer || '');
+      if (newOrganizer === null) return;
+
+      const newCampType = window.prompt('Edit camp type', item.campType || '');
+      if (newCampType === null) return;
+
+      const newServices = window.prompt('Edit services (comma-separated)', Array.isArray(item.services) ? item.services.join(', ') : '');
+      if (newServices === null) return;
+
+      const newTargetAudience = window.prompt('Edit target audience', item.targetAudience || '');
+      if (newTargetAudience === null) return;
+
+      const newExpected = window.prompt('Edit expected participants', String(item.expectedParticipants ?? ''));
+      if (newExpected === null) return;
+
+      const newRegistered = window.prompt('Edit registered participants', String(item.registeredParticipants ?? ''));
+      if (newRegistered === null) return;
+
+      const newDescription = window.prompt('Edit description', item.description || '');
+      if (newDescription === null) return;
+
+      const newRequirements = window.prompt('Edit requirements', item.requirements || '');
+      if (newRequirements === null) return;
+
+      const newContactPerson = window.prompt('Edit contact person', item.contactPerson || '');
+      if (newContactPerson === null) return;
+
+      const newStatus = window.prompt('Edit status (Pending, Approved, Rejected, Scheduled, Completed, Cancelled, Postponed)', item.status || 'Pending');
+      if (newStatus === null) return;
+
+      const payload: any = {
+        title: (newTitle || '').trim(),
+        date: (newDate || '').trim(),
+        time: (newTime || '').trim(),
+        location: (newLocation || '').trim(),
+        organizer: (newOrganizer || '').trim(),
+        campType: (newCampType || '').trim(),
+        services: (newServices || '')
+          .split(',')
+          .map((s) => s.trim())
+          .filter((s) => !!s),
+        targetAudience: (newTargetAudience || '').trim(),
+        expectedParticipants: Number.isNaN(parseInt(newExpected)) ? 0 : parseInt(newExpected),
+        registeredParticipants: Number.isNaN(parseInt(newRegistered)) ? 0 : parseInt(newRegistered),
+        description: (newDescription || '').trim(),
+        requirements: (newRequirements || '').trim(),
+        contactPerson: (newContactPerson || '').trim(),
+        status: (newStatus || '').trim(),
+      };
+
+      await communityAPI.updateCamp(campId, payload);
+      await fetchCamps();
+    } catch (e) {
+      alert('Failed to update camp');
+    }
+  };
+
   const handleDelete = async (campId: string) => {
     if (!window.confirm('Delete this camp? This cannot be undone.')) return;
     try {
@@ -356,6 +441,7 @@ const LocalCampsManagement: React.FC = () => {
                   >
                     <button
                       title="View"
+                      onClick={() => handleView(camp.id)}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -371,6 +457,7 @@ const LocalCampsManagement: React.FC = () => {
                     </button>
                     <button
                       title="Edit"
+                      onClick={() => handleEdit(camp.id)}
                       style={{
                         display: 'flex',
                         alignItems: 'center',

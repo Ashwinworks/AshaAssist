@@ -84,7 +84,7 @@ def init_community_routes(app, collections):
                 'maxParticipants': int(data.get('maxParticipants') or 0),
                 'registeredParticipants': int(data.get('registeredParticipants') or 0),
                 'targetAudience': (data.get('targetAudience') or '').strip(),
-                'status': (data.get('status') or 'Scheduled').strip(),
+                'status': (data.get('status') or 'Pending').strip(),
                 'description': (data.get('description') or '').strip(),
                 'topics': [t.strip() for t in (data.get('topics') or []) if isinstance(t, str) and t.strip()],
                 'publishedDate': data.get('publishedDate') or date,
@@ -183,7 +183,7 @@ def init_community_routes(app, collections):
                 'targetAudience': (data.get('targetAudience') or '').strip(),
                 'expectedParticipants': int(data.get('expectedParticipants') or 0),
                 'registeredParticipants': int(data.get('registeredParticipants') or 0),
-                'status': (data.get('status') or 'Scheduled').strip(),
+                'status': (data.get('status') or 'Pending').strip(),
                 'description': (data.get('description') or '').strip(),
                 'requirements': (data.get('requirements') or '').strip(),
                 'contactPerson': (data.get('contactPerson') or '').strip(),
@@ -330,6 +330,51 @@ def init_community_routes(app, collections):
             return jsonify({ 'message': 'Camp updated' }), 200
         except Exception as e:
             return jsonify({'error': f'Failed to update camp: {str(e)}'}), 500
+
+    @community_bp.route('/api/community-classes/<item_id>', methods=['GET'])
+    @jwt_required()
+    def get_community_class(item_id):
+        """Get a single community class by id"""
+        try:
+            try:
+                _id = ObjectId(item_id)
+            except Exception:
+                return jsonify({'error': 'Invalid class id'}), 400
+
+            doc = collections['community_classes'].find_one({'_id': _id})
+            if not doc:
+                return jsonify({'error': 'Class not found'}), 404
+
+            # Convert ObjectId to string for JSON serialization
+            doc['id'] = str(doc.get('_id'))
+            doc.pop('_id', None)
+
+            return jsonify({'class': doc}), 200
+        except Exception as e:
+            return jsonify({'error': f'Failed to get class: {str(e)}'}), 500
+
+    @community_bp.route('/api/local-camps/<item_id>', methods=['GET'])
+    @jwt_required()
+    def get_local_camp(item_id):
+        """Get a single local camp by id"""
+        try:
+            try:
+                _id = ObjectId(item_id)
+            except Exception:
+                return jsonify({'error': 'Invalid camp id'}), 400
+
+            doc = collections['local_camps'].find_one({'_id': _id})
+            if not doc:
+                return jsonify({'error': 'Camp not found'}), 404
+
+            # Convert ObjectId to string for JSON serialization
+            doc['id'] = str(doc.get('_id'))
+            doc.pop('_id', None)
+
+            return jsonify({'camp': doc}), 200
+        except Exception as e:
+            return jsonify({'error': f'Failed to get camp: {str(e)}'}), 500
+
     @community_bp.route('/api/community-classes/<item_id>', methods=['DELETE'])
     @jwt_required()
     def delete_community_class(item_id):
