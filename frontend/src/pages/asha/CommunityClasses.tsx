@@ -1,81 +1,50 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import AshaLayout from './AshaLayout';
 import { Plus, GraduationCap, Calendar, MapPin, Clock, Users, Edit, Eye } from 'lucide-react';
+import { communityAPI } from '../../services/api';
 
 const CommunityClasses: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [classes, setClasses] = useState<any[]>([]);
 
-  // Mock data for demonstration
-  const communityClasses = [
-    {
-      id: 1,
-      title: 'Maternal Nutrition During Pregnancy',
-      category: 'Maternity Care',
-      date: '2024-01-22',
-      time: '3:00 PM - 5:00 PM',
-      location: 'Community Hall, Ward 12',
-      instructor: 'Dr. Priya Sharma (Nutritionist)',
-      maxParticipants: 30,
-      registeredParticipants: 24,
-      targetAudience: 'Pregnant women and their families',
-      status: 'Scheduled',
-      description: 'Learn about proper nutrition during pregnancy, essential vitamins, and healthy meal planning for expecting mothers.',
-      topics: ['Balanced Diet', 'Iron & Folic Acid', 'Weight Management', 'Food Safety'],
-      publishedDate: '2024-01-10',
-      lastUpdated: '2024-01-15'
-    },
-    {
-      id: 2,
-      title: 'Newborn Care and Breastfeeding',
-      category: 'Child Health',
-      date: '2024-01-25',
-      time: '10:00 AM - 12:00 PM',
-      location: 'Primary Health Center, Ward 12',
-      instructor: 'Sister Meera (Certified Lactation Consultant)',
-      maxParticipants: 25,
-      registeredParticipants: 19,
-      targetAudience: 'New mothers and pregnant women',
-      status: 'Scheduled',
-      description: 'Comprehensive training on newborn care, proper breastfeeding techniques, and early childhood development.',
-      topics: ['Breastfeeding Positions', 'Newborn Hygiene', 'Sleep Patterns', 'Warning Signs'],
-      publishedDate: '2024-01-12',
-      lastUpdated: '2024-01-14'
-    },
-    {
-      id: 3,
-      title: 'Managing Chronic Pain in Elderly',
-      category: 'Palliative Care',
-      date: '2024-01-18',
-      time: '2:00 PM - 4:00 PM',
-      location: 'Senior Citizens Center, Sector B',
-      instructor: 'Dr. Rajesh Kumar (Palliative Care Specialist)',
-      maxParticipants: 20,
-      registeredParticipants: 20,
-      targetAudience: 'Elderly patients and their caregivers',
-      status: 'Completed',
-      description: 'Learn effective pain management techniques, medication compliance, and comfort care strategies.',
-      topics: ['Pain Assessment', 'Medication Management', 'Physical Therapy', 'Emotional Support'],
-      publishedDate: '2024-01-05',
-      lastUpdated: '2024-01-18'
-    },
-    {
-      id: 4,
-      title: 'Family Planning and Contraception',
-      category: 'Reproductive Health',
-      date: '2024-01-28',
-      time: '11:00 AM - 1:00 PM',
-      location: 'Women\'s Health Center, Ward 12',
-      instructor: 'Dr. Sunita Devi (Gynecologist)',
-      maxParticipants: 35,
-      registeredParticipants: 12,
-      targetAudience: 'Couples and women of reproductive age',
-      status: 'Scheduled',
-      description: 'Comprehensive session on family planning methods, contraceptive options, and reproductive health.',
-      topics: ['Contraceptive Methods', 'Family Planning', 'Reproductive Health', 'Counseling'],
-      publishedDate: '2024-01-16',
-      lastUpdated: '2024-01-16'
+  const [form, setForm] = useState({
+    title: '',
+    category: '',
+    date: '',
+    time: '',
+    location: '',
+    instructor: '',
+    maxParticipants: '',
+    targetAudience: '',
+    topics: '',
+    description: ''
+  });
+  const [viewing, setViewing] = useState<any | null>(null);
+  const [editing, setEditing] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({
+    title: '', category: '', date: '', time: '', location: '', instructor: '', maxParticipants: '', targetAudience: '', topics: '', description: ''
+  });
+
+  const communityClasses = classes;
+
+  const fetchClasses = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const res = await communityAPI.listClasses();
+      setClasses(res.classes || []);
+    } catch (e: any) {
+      setError(e?.response?.data?.error || 'Failed to load classes');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchClasses();
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -110,6 +79,11 @@ const CommunityClasses: React.FC = () => {
   return (
     <AshaLayout title="Community Class Details">
       <div>
+        {error && (
+          <div className="card" style={{ border: '1px solid var(--red-200)', background: 'var(--red-50)', color: 'var(--red-700)', padding: '0.75rem', marginBottom: '1rem' }}>
+            {error}
+          </div>
+        )}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <div>
             <p style={{ color: 'var(--gray-600)', fontSize: '1.125rem', margin: 0 }}>
@@ -170,7 +144,37 @@ const CommunityClasses: React.FC = () => {
               <h2 className="card-title" style={{ color: 'var(--purple-700)' }}>Create New Community Class</h2>
             </div>
             <div className="card-content">
-              <form style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+              <form 
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  try {
+                    setError('');
+                    const created = await communityAPI.createClass({
+                      title: form.title,
+                      category: form.category || 'General Health',
+                      date: form.date,
+                      time: form.time,
+                      location: form.location,
+                      instructor: form.instructor,
+                      maxParticipants: form.maxParticipants ? parseInt(form.maxParticipants) : undefined,
+                      targetAudience: form.targetAudience,
+                      description: form.description,
+                      topics: form.topics ? form.topics.split(',').map(t => t.trim()).filter(Boolean) : []
+                    });
+                    // Show immediately
+                    if (created?.class) {
+                      setClasses(prev => [created.class, ...prev]);
+                    }
+                    setShowCreateForm(false);
+                    setForm({ title: '', category: '', date: '', time: '', location: '', instructor: '', maxParticipants: '', targetAudience: '', topics: '', description: '' });
+                    // Optionally refresh for consistency
+                    // fetchClasses();
+                  } catch (err: any) {
+                    setError(err?.response?.data?.error || 'Failed to publish class');
+                  }
+                }}
+                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}
+              >
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--gray-700)' }}>
                     Class Title
@@ -178,6 +182,8 @@ const CommunityClasses: React.FC = () => {
                   <input 
                     type="text" 
                     placeholder="Enter class title..."
+                    value={form.title}
+                    onChange={(e) => setForm({ ...form, title: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
                   />
                 </div>
@@ -186,7 +192,11 @@ const CommunityClasses: React.FC = () => {
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--gray-700)' }}>
                     Category
                   </label>
-                  <select style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}>
+                  <select 
+                    value={form.category}
+                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                    style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
+                  >
                     <option value="">Select category...</option>
                     <option value="maternity">Maternity Care</option>
                     <option value="child">Child Health</option>
@@ -202,6 +212,9 @@ const CommunityClasses: React.FC = () => {
                   </label>
                   <input 
                     type="date" 
+                    min={new Date().toISOString().split('T')[0]}
+                    value={form.date}
+                    onChange={(e) => setForm({ ...form, date: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
                   />
                 </div>
@@ -213,6 +226,8 @@ const CommunityClasses: React.FC = () => {
                   <input 
                     type="text" 
                     placeholder="e.g., 3:00 PM - 5:00 PM"
+                    value={form.time}
+                    onChange={(e) => setForm({ ...form, time: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
                   />
                 </div>
@@ -224,6 +239,8 @@ const CommunityClasses: React.FC = () => {
                   <input 
                     type="text" 
                     placeholder="Venue address..."
+                    value={form.location}
+                    onChange={(e) => setForm({ ...form, location: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
                   />
                 </div>
@@ -235,6 +252,8 @@ const CommunityClasses: React.FC = () => {
                   <input 
                     type="text" 
                     placeholder="Instructor name and credentials"
+                    value={form.instructor}
+                    onChange={(e) => setForm({ ...form, instructor: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
                   />
                 </div>
@@ -246,6 +265,8 @@ const CommunityClasses: React.FC = () => {
                   <input 
                     type="number" 
                     placeholder="Maximum number of participants"
+                    value={form.maxParticipants}
+                    onChange={(e) => setForm({ ...form, maxParticipants: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
                   />
                 </div>
@@ -257,6 +278,8 @@ const CommunityClasses: React.FC = () => {
                   <input 
                     type="text" 
                     placeholder="e.g., Pregnant women and families"
+                    value={form.targetAudience}
+                    onChange={(e) => setForm({ ...form, targetAudience: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
                   />
                 </div>
@@ -268,6 +291,8 @@ const CommunityClasses: React.FC = () => {
                   <input 
                     type="text" 
                     placeholder="e.g., Balanced Diet, Iron & Folic Acid, Weight Management"
+                    value={form.topics}
+                    onChange={(e) => setForm({ ...form, topics: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
                   />
                 </div>
@@ -279,6 +304,8 @@ const CommunityClasses: React.FC = () => {
                   <textarea 
                     rows={3}
                     placeholder="Detailed description of the class..."
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
                     style={{ 
                       width: '100%', 
                       padding: '0.75rem', 
@@ -447,7 +474,7 @@ const CommunityClasses: React.FC = () => {
                       <strong style={{ color: 'var(--gray-700)', fontSize: '0.875rem' }}>Topics to be Covered:</strong>
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      {classItem.topics.map((topic, index) => (
+                      {classItem.topics.map((topic: string, index: number) => (
                         <span 
                           key={index}
                           style={{
@@ -483,12 +510,28 @@ const CommunityClasses: React.FC = () => {
                           alignItems: 'center',
                           gap: '0.25rem'
                         }}
+                      onClick={() => setViewing(classItem)}
                       >
                         <Eye size={14} />
                         View Details
                       </button>
                       <button 
                         className="btn"
+                        onClick={() => {
+                          setEditing(classItem);
+                          setEditForm({
+                            title: classItem.title || '',
+                            category: classItem.category || '',
+                            date: classItem.date || '',
+                            time: classItem.time || '',
+                            location: classItem.location || '',
+                            instructor: classItem.instructor || '',
+                            maxParticipants: String(classItem.maxParticipants ?? ''),
+                            targetAudience: classItem.targetAudience || '',
+                            topics: Array.isArray(classItem.topics) ? classItem.topics.join(', ') : '',
+                            description: classItem.description || ''
+                          });
+                        }}
                         style={{ 
                           backgroundColor: 'var(--green-600)', 
                           color: 'white', 
@@ -503,6 +546,29 @@ const CommunityClasses: React.FC = () => {
                         <Edit size={14} />
                         Edit
                       </button>
+                      <button
+                        className="btn"
+                        onClick={async () => {
+                          try {
+                            await communityAPI.deleteClass(classItem.id);
+                            setClasses(prev => prev.filter(c => c.id !== classItem.id));
+                          } catch (err: any) {
+                            setError(err?.response?.data?.error || 'Failed to delete class');
+                          }
+                        }}
+                        style={{
+                          backgroundColor: 'var(--red-600)',
+                          color: 'white',
+                          border: 'none',
+                          fontSize: '0.75rem',
+                          padding: '0.5rem 0.75rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem'
+                        }}
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -510,6 +576,92 @@ const CommunityClasses: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* View Modal */}
+        {viewing && (
+          <div style={{ position: 'fixed', inset: 0 as any, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+            <div className="card" style={{ width: 'min(720px, 92vw)' }}>
+              <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 className="card-title" style={{ margin: 0 }}>{viewing.title}</h3>
+                <button className="btn" onClick={() => setViewing(null)}>Close</button>
+              </div>
+              <div className="card-content" style={{ display: 'grid', gap: '0.5rem' }}>
+                <div><strong>Category:</strong> {viewing.category}</div>
+                <div><strong>Date:</strong> {viewing.date} • <strong>Time:</strong> {viewing.time}</div>
+                <div><strong>Location:</strong> {viewing.location}</div>
+                {viewing.instructor && <div><strong>Instructor:</strong> {viewing.instructor}</div>}
+                {viewing.targetAudience && <div><strong>Target Audience:</strong> {viewing.targetAudience}</div>}
+                {Array.isArray(viewing.topics) && viewing.topics.length > 0 && (
+                  <div>
+                    <strong>Topics:</strong> {viewing.topics.join(', ')}
+                  </div>
+                )}
+                {viewing.description && <div style={{ whiteSpace: 'pre-wrap' }}>{viewing.description}</div>}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Modal */}
+        {editing && (
+          <div style={{ position: 'fixed', inset: 0 as any, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+            <div className="card" style={{ width: 'min(720px, 92vw)' }}>
+              <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 className="card-title" style={{ margin: 0 }}>Edit Class</h3>
+                <button className="btn" onClick={() => setEditing(null)}>Close</button>
+              </div>
+              <div className="card-content">
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  try {
+                    await communityAPI.updateClass(editing.id, {
+                      title: editForm.title,
+                      category: editForm.category,
+                      date: editForm.date,
+                      time: editForm.time,
+                      location: editForm.location,
+                      instructor: editForm.instructor,
+                      maxParticipants: editForm.maxParticipants ? parseInt(editForm.maxParticipants) : undefined,
+                      targetAudience: editForm.targetAudience,
+                      description: editForm.description,
+                      topics: editForm.topics ? editForm.topics.split(',').map(t => t.trim()).filter(Boolean) : undefined,
+                    });
+                    setClasses(prev => prev.map(c => c.id === editing.id ? { ...c, ...{
+                      title: editForm.title,
+                      category: editForm.category,
+                      date: editForm.date,
+                      time: editForm.time,
+                      location: editForm.location,
+                      instructor: editForm.instructor,
+                      maxParticipants: editForm.maxParticipants ? parseInt(editForm.maxParticipants) : c.maxParticipants,
+                      targetAudience: editForm.targetAudience,
+                      description: editForm.description,
+                      topics: editForm.topics ? editForm.topics.split(',').map(t => t.trim()).filter(Boolean) : c.topics,
+                    } } : c));
+                    setEditing(null);
+                  } catch (err: any) {
+                    setError(err?.response?.data?.error || 'Failed to update class');
+                  }
+                }} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.75rem' }}>
+                  <input value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} placeholder="Title" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                  <input value={editForm.category} onChange={e => setEditForm({ ...editForm, category: e.target.value })} placeholder="Category" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                  <input type="date" min={new Date().toISOString().split('T')[0]} value={editForm.date} onChange={e => setEditForm({ ...editForm, date: e.target.value })} style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                  <input value={editForm.time} onChange={e => setEditForm({ ...editForm, time: e.target.value })} placeholder="Time" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                  <input value={editForm.location} onChange={e => setEditForm({ ...editForm, location: e.target.value })} placeholder="Location" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                  <input value={editForm.instructor} onChange={e => setEditForm({ ...editForm, instructor: e.target.value })} placeholder="Instructor" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                  <input type="number" value={editForm.maxParticipants} onChange={e => setEditForm({ ...editForm, maxParticipants: e.target.value })} placeholder="Max Participants" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                  <input value={editForm.targetAudience} onChange={e => setEditForm({ ...editForm, targetAudience: e.target.value })} placeholder="Target Audience" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                  <input value={editForm.topics} onChange={e => setEditForm({ ...editForm, topics: e.target.value })} placeholder="Topics (comma separated)" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                  <textarea value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })} placeholder="Description" rows={3} style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8, gridColumn: '1 / -1' }} />
+                  <div style={{ display: 'flex', gap: 8, gridColumn: '1 / -1' }}>
+                    <button className="btn" type="submit" style={{ background: 'var(--green-600)', color: 'white', border: 'none' }}>Save</button>
+                    <button className="btn" type="button" onClick={() => setEditing(null)} style={{ border: '1px solid var(--gray-300)', background: 'white' }}>Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AshaLayout>
   );

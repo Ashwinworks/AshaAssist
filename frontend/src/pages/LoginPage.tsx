@@ -50,10 +50,10 @@ const LoginPage: React.FC = () => {
         {/* Left Side - Branding */}
         <div className="auth-branding">
           <div className="auth-branding-content">
-            <div className="auth-logo">
+            <Link to="/" className="auth-logo">
               <Heart className="logo-icon" />
               <span className="logo-text">AshaAssist</span>
-            </div>
+            </Link>
             <h1 className="auth-branding-title">
               Welcome Back to Your Healthcare Community
             </h1>

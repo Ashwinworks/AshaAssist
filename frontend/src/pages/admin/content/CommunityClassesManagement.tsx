@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../AdminLayout';
 import {
   Search,
@@ -12,86 +12,44 @@ import {
   MapPin,
   BookOpen
 } from 'lucide-react';
+import { communityAPI } from '../../../services/api';
 
 const CommunityClassesManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [classes, setClasses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data for demonstration
-  const communityClasses = [
-    {
-      id: 1,
-      title: 'Maternal Health Awareness Session',
-      author: 'Dr. Priya Sharma',
-      authorId: 1,
-      date: '2024-01-22',
-      time: '2:00 PM - 4:00 PM',
-      location: 'Ward 12 Community Hall',
-      topic: 'Prenatal Care and Nutrition',
-      targetAudience: 'Pregnant women and new mothers',
-      expectedAttendees: 30,
-      registeredAttendees: 22,
-      status: 'Scheduled',
-      approvalStatus: 'Approved',
-      description: 'Comprehensive session on prenatal care, nutrition during pregnancy, and postnatal recovery.',
-      materials: ['Presentation slides', 'Nutrition charts', 'Information pamphlets'],
-      publishedDate: '2024-01-12',
-      lastUpdated: '2024-01-15',
-      approvedBy: 'Admin',
-      approvalDate: '2024-01-12'
-    },
-    {
-      id: 2,
-      title: 'Child Immunization Workshop',
-      author: 'Sister Meera Devi',
-      authorId: 2,
-      date: '2024-01-28',
-      time: '10:00 AM - 12:00 PM',
-      location: 'Government School, Sector A',
-      topic: 'Importance of Timely Vaccination',
-      targetAudience: 'Parents with children under 5',
-      expectedAttendees: 40,
-      registeredAttendees: 28,
-      status: 'Scheduled',
-      approvalStatus: 'Pending',
-      description: 'Educational workshop on vaccination schedules, importance of immunization, and addressing vaccine hesitancy.',
-      materials: ['Vaccination schedule charts', 'Q&A handouts', 'Certificate of attendance'],
-      publishedDate: null,
-      lastUpdated: '2024-01-17',
-      approvedBy: null,
-      approvalDate: null
-    },
-    {
-      id: 3,
-      title: 'Elderly Care and Palliative Support',
-      author: 'Sunita Kumari',
-      authorId: 3,
-      date: '2024-01-18',
-      time: '3:00 PM - 5:00 PM',
-      location: 'Community Center, Ward 12',
-      topic: 'Home Care for Elderly Patients',
-      targetAudience: 'Family caregivers',
-      expectedAttendees: 25,
-      registeredAttendees: 25,
-      status: 'Completed',
-      approvalStatus: 'Approved',
-      description: 'Training session for family members on providing quality care for elderly and bedridden patients.',
-      materials: ['Care guidelines', 'Emergency contact list', 'Basic medical supplies info'],
-      publishedDate: '2024-01-08',
-      lastUpdated: '2024-01-18',
-      approvedBy: 'Admin',
-      approvalDate: '2024-01-08'
+  const fetchClasses = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const params: any = {};
+      if (filterStatus !== 'all') params.status = filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1);
+      const data = await communityAPI.listClasses(params);
+      setClasses(data.classes || []);
+    } catch (e: any) {
+      setError(e?.response?.data?.error || 'Failed to load classes');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const filteredClasses = communityClasses.filter(classItem => {
-    const matchesSearch = classItem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         classItem.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         classItem.topic.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    if (filterStatus === 'all') return matchesSearch;
-    return matchesSearch && classItem.approvalStatus.toLowerCase() === filterStatus;
-  });
+  useEffect(() => {
+    fetchClasses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterStatus]);
+
+  const filteredClasses = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return classes;
+    return classes.filter((c) =>
+      (c.title || '').toLowerCase().includes(term) ||
+      (c.instructor || '').toLowerCase().includes(term) ||
+      (c.location || '').toLowerCase().includes(term)
+    );
+  }, [classes, searchTerm]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -120,16 +78,32 @@ const CommunityClassesManagement: React.FC = () => {
     }
   };
 
-  const handleApprove = (classId: number) => {
-    console.log(`Approving class ${classId}`);
+  const handleApprove = async (classId: string) => {
+    try {
+      await communityAPI.updateClass(classId, { status: 'Approved' });
+      fetchClasses();
+    } catch (e) {
+      alert('Failed to approve class');
+    }
   };
 
-  const handleReject = (classId: number) => {
-    console.log(`Rejecting class ${classId}`);
+  const handleReject = async (classId: string) => {
+    try {
+      await communityAPI.updateClass(classId, { status: 'Rejected' });
+      fetchClasses();
+    } catch (e) {
+      alert('Failed to reject class');
+    }
   };
 
-  const handleDelete = (classId: number) => {
-    console.log(`Deleting class ${classId}`);
+  const handleDelete = async (classId: string) => {
+    if (!window.confirm('Delete this class? This cannot be undone.')) return;
+    try {
+      await communityAPI.deleteClass(classId);
+      fetchClasses();
+    } catch (e) {
+      alert('Failed to delete class');
+    }
   };
 
   return (
@@ -181,29 +155,44 @@ const CommunityClassesManagement: React.FC = () => {
           </div>
         </div>
 
+        {/* Loading / Error */}
+        {loading && (
+          <div className="card-content" style={{ padding: '2rem', textAlign: 'center' }}>
+            <div className="loading-spinner" />
+            <p>Loading...</p>
+          </div>
+        )}
+        {error && (
+          <div className="card-content" style={{ padding: '1rem' }}>
+            <div className="card" style={{ padding: '1rem', borderLeft: '4px solid var(--red-600)' }}>
+              <p style={{ color: 'var(--red-700)', margin: 0 }}>{error}</p>
+            </div>
+          </div>
+        )}
+
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
             <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--yellow-600)', marginBottom: '0.5rem' }}>
-              {communityClasses.filter(c => c.approvalStatus === 'Pending').length}
+              {classes.filter((c) => (c.status || '').toLowerCase() === 'pending').length}
             </div>
             <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Pending Approval</div>
           </div>
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
             <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--green-600)', marginBottom: '0.5rem' }}>
-              {communityClasses.filter(c => c.approvalStatus === 'Approved').length}
+              {classes.filter((c) => (c.status || '').toLowerCase() === 'approved').length}
             </div>
             <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Approved</div>
           </div>
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
             <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--blue-600)', marginBottom: '0.5rem' }}>
-              {communityClasses.reduce((sum, c) => sum + c.expectedAttendees, 0)}
+              {classes.reduce((sum, c) => sum + (c.maxParticipants || 0), 0)}
             </div>
             <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Expected Attendees</div>
           </div>
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
             <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--purple-600)', marginBottom: '0.5rem' }}>
-              {communityClasses.reduce((sum, c) => sum + c.registeredAttendees, 0)}
+              {classes.reduce((sum, c) => sum + (c.registeredParticipants || 0), 0)}
             </div>
             <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Registered</div>
           </div>
@@ -216,23 +205,21 @@ const CommunityClassesManagement: React.FC = () => {
           </div>
           <div className="card-content">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {filteredClasses.map((classItem) => (
+              {filteredClasses.map((classItem: any) => (
                 <div 
-                  key={classItem.id} 
+                  key={classItem.id}
                   className="card" 
                   style={{ 
                     padding: '1.5rem', 
                     border: '1px solid var(--gray-200)',
-                    borderLeft: `4px solid ${getStatusColor(classItem.approvalStatus)}`
+                    borderLeft: `4px solid ${getStatusColor(classItem.status)}`
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
                         <BookOpen size={20} color="var(--purple-600)" />
-                        <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '600', color: 'var(--gray-900)' }}>
-                          {classItem.title}
-                        </h3>
+                        <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '600', color: 'var(--gray-900)' }}>{classItem.title}</h3>
                         <span style={{
                           fontSize: '0.75rem',
                           fontWeight: '600',
@@ -242,16 +229,6 @@ const CommunityClassesManagement: React.FC = () => {
                           borderRadius: '0.25rem'
                         }}>
                           {classItem.status}
-                        </span>
-                        <span style={{
-                          fontSize: '0.75rem',
-                          fontWeight: '600',
-                          color: getStatusColor(classItem.approvalStatus),
-                          backgroundColor: getStatusBg(classItem.approvalStatus),
-                          padding: '0.25rem 0.5rem',
-                          borderRadius: '0.25rem'
-                        }}>
-                          {classItem.approvalStatus}
                         </span>
                       </div>
                       <p style={{ margin: '0 0 1rem', color: 'var(--gray-600)', fontSize: '0.875rem', lineHeight: '1.4' }}>
@@ -270,7 +247,7 @@ const CommunityClassesManagement: React.FC = () => {
                       <div style={{ fontSize: '0.875rem', color: 'var(--gray-700)' }}>
                         <div>Date: {classItem.date}</div>
                         <div>Time: {classItem.time}</div>
-                        <div>Topic: {classItem.topic}</div>
+                        <div>Topic: {(classItem.topics && classItem.topics[0]) || '—'}</div>
                       </div>
                     </div>
 
@@ -281,7 +258,7 @@ const CommunityClassesManagement: React.FC = () => {
                       </div>
                       <div style={{ fontSize: '0.875rem', color: 'var(--gray-700)' }}>
                         <div>Location: {classItem.location}</div>
-                        <div>Instructor: {classItem.author}</div>
+                        <div>Instructor: {classItem.instructor || '—'}</div>
                         <div>Updated: {classItem.lastUpdated}</div>
                       </div>
                     </div>
@@ -293,8 +270,8 @@ const CommunityClassesManagement: React.FC = () => {
                       </div>
                       <div style={{ fontSize: '0.875rem', color: 'var(--gray-700)' }}>
                         <div>Target: {classItem.targetAudience}</div>
-                        <div>Expected: {classItem.expectedAttendees}</div>
-                        <div>Registered: {classItem.registeredAttendees}</div>
+                        <div>Expected: {classItem.maxParticipants || 0}</div>
+                        <div>Registered: {classItem.registeredParticipants || 0}</div>
                         <div style={{ marginTop: '0.5rem' }}>
                           <div style={{ 
                             width: '100%', 
@@ -304,45 +281,47 @@ const CommunityClassesManagement: React.FC = () => {
                             overflow: 'hidden'
                           }}>
                             <div style={{ 
-                              width: `${(classItem.registeredAttendees / classItem.expectedAttendees) * 100}%`, 
+                              width: `${Math.min(100, ((classItem.registeredParticipants || 0) / Math.max(1, (classItem.maxParticipants || 0))) * 100)}%`, 
                               height: '100%', 
                               backgroundColor: 'var(--purple-600)',
                               borderRadius: '3px'
                             }} />
                           </div>
                           <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', marginTop: '0.25rem' }}>
-                            {Math.round((classItem.registeredAttendees / classItem.expectedAttendees) * 100)}% registered
+                            {Math.round(((classItem.registeredParticipants || 0) / Math.max(1, (classItem.maxParticipants || 0))) * 100)}% registered
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Materials */}
-                  <div style={{ marginBottom: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                      <BookOpen size={14} color="var(--gray-600)" />
-                      <strong style={{ color: 'var(--gray-700)', fontSize: '0.875rem' }}>Materials & Resources:</strong>
+                  {/* Topics */}
+                  {Array.isArray(classItem.topics) && classItem.topics.length > 0 && (
+                    <div style={{ marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <BookOpen size={14} color="var(--gray-600)" />
+                        <strong style={{ color: 'var(--gray-700)', fontSize: '0.875rem' }}>Topics:</strong>
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        {classItem.topics.map((topic: string, index: number) => (
+                          <span
+                            key={index}
+                            style={{
+                              fontSize: '0.75rem',
+                              fontWeight: '500',
+                              color: 'var(--purple-700)',
+                              backgroundColor: 'var(--purple-50)',
+                              padding: '0.25rem 0.5rem',
+                              borderRadius: '0.25rem',
+                              border: '1px solid var(--purple-200)'
+                            }}
+                          >
+                            {topic}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      {classItem.materials.map((material, index) => (
-                        <span 
-                          key={index}
-                          style={{
-                            fontSize: '0.75rem',
-                            fontWeight: '500',
-                            color: 'var(--purple-700)',
-                            backgroundColor: 'var(--purple-50)',
-                            padding: '0.25rem 0.5rem',
-                            borderRadius: '0.25rem',
-                            border: '1px solid var(--purple-200)'
-                          }}
-                        >
-                          {material}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+                  )}
 
                   {/* Approval Info */}
                   {classItem.approvalStatus === 'Approved' && (
@@ -391,7 +370,7 @@ const CommunityClassesManagement: React.FC = () => {
                       <Edit size={14} />
                       Edit
                     </button>
-                    {classItem.approvalStatus === 'Pending' && (
+                    {(classItem.status || '').toLowerCase() === 'pending' && (
                       <>
                         <button 
                           onClick={() => handleApprove(classItem.id)}

@@ -27,6 +27,7 @@ from routes.vaccination import init_vaccination_routes
 from routes.admin import init_admin_routes
 from routes.general import init_general_routes
 from routes.visit_requests import init_visit_request_routes
+from routes.community import init_community_routes
 
 # Import utilities
 from utils.helpers import JSONEncoder
@@ -74,6 +75,7 @@ def create_app(config_name='default'):
     init_visit_request_routes(app, collections)
     from routes.palliative import init_palliative_routes
     init_palliative_routes(app, collections)
+    init_community_routes(app, collections)
     
     # Serve uploaded files
     @app.route('/uploads/<path:filename>')

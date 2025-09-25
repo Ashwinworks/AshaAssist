@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../AdminLayout';
 import {
   Search,
@@ -12,85 +12,45 @@ import {
   MapPin,
   Stethoscope,
 } from 'lucide-react';
+import { communityAPI } from '../../../services/api';
 
 // Admin page to review/approve local health camps announced by ASHA workers
 const LocalCampsManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all'); // pending | approved | rejected | all
+  const [filterStatus, setFilterStatus] = useState('all'); // all | pending | approved | rejected | scheduled | completed
+  const [camps, setCamps] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data (replace later with API data)
-  const localCamps = [
-    {
-      id: 1,
-      title: 'Free Blood Pressure & Diabetes Screening Camp',
-      organizer: 'Government Hospital Ward 12',
-      date: '2024-01-24',
-      time: '9:00 AM - 4:00 PM',
-      location: 'Ward 12 Community Center, Main Hall',
-      services: ['Blood Pressure Check', 'Blood Sugar Test', 'BMI Measurement', 'Health Counseling'],
-      targetAudience: 'Adults above 30 years',
-      expectedParticipants: 150,
-      registeredParticipants: 89,
-      status: 'Scheduled',
-      approvalStatus: 'Approved',
-      description:
-        'Free health screening camp for early detection of hypertension and diabetes. All tests are completely free of cost.',
-      publishedDate: '2024-01-12',
-      lastUpdated: '2024-01-16',
-      approvedBy: 'Admin',
-      approvalDate: '2024-01-12',
-    },
-    {
-      id: 2,
-      title: 'Eye Care and Vision Testing Camp',
-      organizer: 'Lions Club & District Hospital',
-      date: '2024-01-27',
-      time: '10:00 AM - 3:00 PM',
-      location: 'Government School, Ward 12, Sector A',
-      services: ['Vision Testing', 'Eye Examination', 'Cataract Screening', 'Free Spectacles'],
-      targetAudience: 'All age groups, especially elderly',
-      expectedParticipants: 100,
-      registeredParticipants: 67,
-      status: 'Scheduled',
-      approvalStatus: 'Pending',
-      description:
-        'Comprehensive eye care camp with free vision testing and spectacles for those in need.',
-      publishedDate: null,
-      lastUpdated: '2024-01-15',
-      approvedBy: null,
-      approvalDate: null,
-    },
-    {
-      id: 3,
-      title: "Women's Health and Wellness Camp",
-      organizer: 'State Health Department',
-      date: '2024-01-20',
-      time: '11:00 AM - 5:00 PM',
-      location: "Women's Health Center, Ward 12",
-      services: ['Cervical Cancer Screening', 'Breast Examination', 'Anemia Testing', 'Nutrition Counseling'],
-      targetAudience: 'Women aged 18-65 years',
-      expectedParticipants: 80,
-      registeredParticipants: 80,
-      status: 'Completed',
-      approvalStatus: 'Approved',
-      description:
-        "Comprehensive women's health screening with focus on preventive care and early detection.",
-      publishedDate: '2024-01-08',
-      lastUpdated: '2024-01-20',
-      approvedBy: 'Admin',
-      approvalDate: '2024-01-08',
-    },
-  ];
+  const fetchCamps = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const params: any = {};
+      if (filterStatus !== 'all') params.status = filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1);
+      const data = await communityAPI.listCamps(params);
+      setCamps(data.camps || []);
+    } catch (e: any) {
+      setError(e?.response?.data?.error || 'Failed to load camps');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const filteredCamps = localCamps.filter((camp) => {
-    const matchesSearch =
-      camp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      camp.organizer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      camp.location.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    fetchCamps();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterStatus]);
 
-    if (filterStatus === 'all') return matchesSearch;
-    return matchesSearch && camp.approvalStatus.toLowerCase() === filterStatus;
-  });
+  const filteredCamps = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return camps;
+    return camps.filter((camp) =>
+      (camp.title || '').toLowerCase().includes(term) ||
+      (camp.organizer || '').toLowerCase().includes(term) ||
+      (camp.location || '').toLowerCase().includes(term)
+    );
+  }, [camps, searchTerm]);
 
   const getApprovalColor = (status: string) => {
     switch (status) {
@@ -133,16 +93,32 @@ const LocalCampsManagement: React.FC = () => {
     }
   };
 
-  const handleApprove = (campId: number) => {
-    console.log(`Approving camp ${campId}`);
+  const handleApprove = async (campId: string) => {
+    try {
+      await communityAPI.updateCamp(campId, { status: 'Approved' });
+      fetchCamps();
+    } catch (e) {
+      alert('Failed to approve camp');
+    }
   };
 
-  const handleReject = (campId: number) => {
-    console.log(`Rejecting camp ${campId}`);
+  const handleReject = async (campId: string) => {
+    try {
+      await communityAPI.updateCamp(campId, { status: 'Rejected' });
+      fetchCamps();
+    } catch (e) {
+      alert('Failed to reject camp');
+    }
   };
 
-  const handleDelete = (campId: number) => {
-    console.log(`Deleting camp ${campId}`);
+  const handleDelete = async (campId: string) => {
+    if (!window.confirm('Delete this camp? This cannot be undone.')) return;
+    try {
+      await communityAPI.deleteCamp(campId);
+      fetchCamps();
+    } catch (e) {
+      alert('Failed to delete camp');
+    }
   };
 
   return (
@@ -196,6 +172,21 @@ const LocalCampsManagement: React.FC = () => {
           </div>
         </div>
 
+        {/* Loading / Error */}
+        {loading && (
+          <div className="card-content" style={{ padding: '2rem', textAlign: 'center' }}>
+            <div className="loading-spinner" />
+            <p>Loading...</p>
+          </div>
+        )}
+        {error && (
+          <div className="card-content" style={{ padding: '1rem' }}>
+            <div className="card" style={{ padding: '1rem', borderLeft: '4px solid var(--red-600)' }}>
+              <p style={{ color: 'var(--red-700)', margin: 0 }}>{error}</p>
+            </div>
+          </div>
+        )}
+
         {/* Stats */}
         <div
           style={{
@@ -207,25 +198,25 @@ const LocalCampsManagement: React.FC = () => {
         >
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
             <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--yellow-600)', marginBottom: '0.5rem' }}>
-              {localCamps.filter((c) => c.approvalStatus === 'Pending').length}
+              {camps.filter((c) => (c.status || '').toLowerCase() === 'pending').length}
             </div>
             <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Pending Approval</div>
           </div>
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
             <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--green-600)', marginBottom: '0.5rem' }}>
-              {localCamps.filter((c) => c.approvalStatus === 'Approved').length}
+              {camps.filter((c) => (c.status || '').toLowerCase() === 'approved').length}
             </div>
             <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Approved</div>
           </div>
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
             <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--blue-600)', marginBottom: '0.5rem' }}>
-              {localCamps.reduce((sum, c) => sum + c.expectedParticipants, 0)}
+              {camps.reduce((sum, c) => sum + (c.expectedParticipants || 0), 0)}
             </div>
             <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Expected Participants</div>
           </div>
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
             <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--purple-600)', marginBottom: '0.5rem' }}>
-              {localCamps.reduce((sum, c) => sum + c.registeredParticipants, 0)}
+              {camps.reduce((sum, c) => sum + (c.registeredParticipants || 0), 0)}
             </div>
             <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Registered</div>
           </div>
@@ -238,14 +229,14 @@ const LocalCampsManagement: React.FC = () => {
           </div>
           <div className="card-content">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {filteredCamps.map((camp) => (
+              {filteredCamps.map((camp: any) => (
                 <div
                   key={camp.id}
                   className="card"
                   style={{
                     padding: '1.5rem',
                     border: '1px solid var(--gray-200)',
-                    borderLeft: `4px solid ${getApprovalColor(camp.approvalStatus)}`,
+                    borderLeft: `4px solid ${getApprovalColor(camp.status)}`,
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
@@ -325,8 +316,8 @@ const LocalCampsManagement: React.FC = () => {
                         <strong style={{ color: 'var(--purple-700)' }}>Participation</strong>
                       </div>
                       <div style={{ fontSize: '0.875rem', color: 'var(--gray-700)' }}>
-                        <div>Expected: {camp.expectedParticipants}</div>
-                        <div>Registered: {camp.registeredParticipants}</div>
+                        <div>Expected: {camp.expectedParticipants || 0}</div>
+                        <div>Registered: {camp.registeredParticipants || 0}</div>
                         <div style={{ marginTop: '0.5rem' }}>
                           <div
                             style={{
@@ -339,7 +330,7 @@ const LocalCampsManagement: React.FC = () => {
                           >
                             <div
                               style={{
-                                width: `${(camp.registeredParticipants / camp.expectedParticipants) * 100}%`,
+                                width: `${Math.min(100, ((camp.registeredParticipants || 0) / Math.max(1, (camp.expectedParticipants || 0))) * 100)}%`,
                                 height: '100%',
                                 backgroundColor: 'var(--purple-600)',
                                 borderRadius: '3px',
@@ -347,7 +338,7 @@ const LocalCampsManagement: React.FC = () => {
                             />
                           </div>
                           <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)', marginTop: '0.25rem' }}>
-                            {camp.registeredParticipants} of {camp.expectedParticipants} registered
+                            {camp.registeredParticipants || 0} of {camp.expectedParticipants || 0} registered
                           </div>
                         </div>
                       </div>
@@ -394,7 +385,7 @@ const LocalCampsManagement: React.FC = () => {
                     >
                       <Edit size={16} /> Edit
                     </button>
-                    {camp.approvalStatus !== 'Approved' && (
+                    {(camp.status || '').toLowerCase() !== 'approved' && (
                       <button
                         title="Approve"
                         onClick={() => handleApprove(camp.id)}
@@ -413,7 +404,7 @@ const LocalCampsManagement: React.FC = () => {
                         <CheckCircle size={16} /> Approve
                       </button>
                     )}
-                    {camp.approvalStatus !== 'Rejected' && (
+                    {(camp.status || '').toLowerCase() !== 'rejected' && (
                       <button
                         title="Reject"
                         onClick={() => handleReject(camp.id)}

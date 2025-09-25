@@ -322,6 +322,68 @@ export const healthBlogsAPI = {
   }
 };
 
+// Community Classes & Local Camps API (ASHA/Admin create, all list)
+export const communityAPI = {
+  listClasses: async (params?: { status?: string; dateFrom?: string; dateTo?: string }) => {
+    const response = await api.get('/community-classes', { params });
+    return response.data as { classes: any[] };
+  },
+  createClass: async (payload: {
+    title: string;
+    category?: string;
+    date: string;
+    time: string;
+    location: string;
+    instructor?: string;
+    maxParticipants?: number;
+    targetAudience?: string;
+    description?: string;
+    topics?: string[];
+    status?: string;
+  }) => {
+    const response = await api.post('/community-classes', payload);
+    return response.data as { message: string; class: any };
+  },
+  updateClass: async (id: string, payload: Partial<{ title: string; category: string; date: string; time: string; location: string; instructor: string; maxParticipants: number; registeredParticipants: number; targetAudience: string; description: string; topics: string[]; status: string }>) => {
+    const response = await api.put(`/community-classes/${id}`, payload);
+    return response.data as { message: string };
+  },
+  deleteClass: async (id: string) => {
+    const response = await api.delete(`/community-classes/${id}`);
+    return response.data as { message: string };
+  },
+  listCamps: async (params?: { status?: string; dateFrom?: string; dateTo?: string }) => {
+    const response = await api.get('/local-camps', { params });
+    return response.data as { camps: any[] };
+  },
+  createCamp: async (payload: {
+    title: string;
+    campType?: string;
+    date: string;
+    time: string;
+    location: string;
+    organizer?: string;
+    services?: string[];
+    targetAudience?: string;
+    expectedParticipants?: number;
+    description?: string;
+    requirements?: string;
+    contactPerson?: string;
+    status?: string;
+  }) => {
+    const response = await api.post('/local-camps', payload);
+    return response.data as { message: string; camp: any };
+  },
+  updateCamp: async (id: string, payload: Partial<{ title: string; campType: string; date: string; time: string; location: string; organizer: string; services: string[]; targetAudience: string; expectedParticipants: number; registeredParticipants: number; description: string; requirements: string; contactPerson: string; status: string }>) => {
+    const response = await api.put(`/local-camps/${id}`, payload);
+    return response.data as { message: string };
+  },
+  deleteCamp: async (id: string) => {
+    const response = await api.delete(`/local-camps/${id}`);
+    return response.data as { message: string };
+  }
+};
+
 // Palliative Records API
 export const palliativeAPI = {
   listRecords: async (params?: { testType?: string }) => {

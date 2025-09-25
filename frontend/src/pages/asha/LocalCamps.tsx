@@ -1,89 +1,52 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AshaLayout from './AshaLayout';
 import { Plus, MapPin, Calendar, Clock, Users, Activity, Edit, Eye, Stethoscope } from 'lucide-react';
+import { communityAPI } from '../../services/api';
 
 const LocalCamps: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [camps, setCamps] = useState<any[]>([]);
 
-  // Mock data for demonstration
-  const healthCamps = [
-    {
-      id: 1,
-      title: 'Free Blood Pressure & Diabetes Screening Camp',
-      campType: 'Screening',
-      date: '2024-01-24',
-      time: '9:00 AM - 4:00 PM',
-      location: 'Ward 12 Community Center, Main Hall',
-      organizer: 'Government Hospital Ward 12',
-      services: ['Blood Pressure Check', 'Blood Sugar Test', 'BMI Measurement', 'Health Counseling'],
-      targetAudience: 'Adults above 30 years',
-      expectedParticipants: 150,
-      registeredParticipants: 89,
-      status: 'Scheduled',
-      description: 'Free health screening camp for early detection of hypertension and diabetes. All tests are completely free of cost.',
-      requirements: 'Bring Aadhaar card and any previous medical reports',
-      contactPerson: 'Dr. Rajesh Kumar - 9876543210',
-      publishedDate: '2024-01-12',
-      lastUpdated: '2024-01-16'
-    },
-    {
-      id: 2,
-      title: 'Eye Care and Vision Testing Camp',
-      campType: 'Specialized',
-      date: '2024-01-27',
-      time: '10:00 AM - 3:00 PM',
-      location: 'Government School, Ward 12, Sector A',
-      organizer: 'Lions Club & District Hospital',
-      services: ['Vision Testing', 'Eye Examination', 'Cataract Screening', 'Free Spectacles'],
-      targetAudience: 'All age groups, especially elderly',
-      expectedParticipants: 100,
-      registeredParticipants: 67,
-      status: 'Scheduled',
-      description: 'Comprehensive eye care camp with free vision testing and spectacles for those in need.',
-      requirements: 'No prior registration required',
-      contactPerson: 'Dr. Priya Sharma - 9876543211',
-      publishedDate: '2024-01-14',
-      lastUpdated: '2024-01-15'
-    },
-    {
-      id: 3,
-      title: 'Women\'s Health and Wellness Camp',
-      campType: 'Specialized',
-      date: '2024-01-20',
-      time: '11:00 AM - 5:00 PM',
-      location: 'Women\'s Health Center, Ward 12',
-      organizer: 'State Health Department',
-      services: ['Cervical Cancer Screening', 'Breast Examination', 'Anemia Testing', 'Nutrition Counseling'],
-      targetAudience: 'Women aged 18-65 years',
-      expectedParticipants: 80,
-      registeredParticipants: 80,
-      status: 'Completed',
-      description: 'Comprehensive women\'s health screening with focus on preventive care and early detection.',
-      requirements: 'Women only, bring health card if available',
-      contactPerson: 'Dr. Sunita Devi - 9876543212',
-      publishedDate: '2024-01-08',
-      lastUpdated: '2024-01-20'
-    },
-    {
-      id: 4,
-      title: 'General Health Check-up Camp',
-      campType: 'General',
-      date: '2024-01-30',
-      time: '8:00 AM - 2:00 PM',
-      location: 'Primary Health Center, Ward 12',
-      organizer: 'Rotary Club & PHC Ward 12',
-      services: ['General Check-up', 'Blood Tests', 'ECG', 'Consultation', 'Medicine Distribution'],
-      targetAudience: 'All community members',
-      expectedParticipants: 200,
-      registeredParticipants: 45,
-      status: 'Scheduled',
-      description: 'Comprehensive health check-up camp with basic diagnostic tests and free medicines.',
-      requirements: 'Fasting required for blood tests (8-10 hours)',
-      contactPerson: 'Dr. Amit Singh - 9876543213',
-      publishedDate: '2024-01-18',
-      lastUpdated: '2024-01-18'
+  const [form, setForm] = useState({
+    title: '',
+    campType: '',
+    date: '',
+    time: '',
+    location: '',
+    organizer: '',
+    services: '',
+    targetAudience: '',
+    expectedParticipants: '',
+    contactPerson: '',
+    requirements: '',
+    description: ''
+  });
+  const [viewing, setViewing] = useState<any | null>(null);
+  const [editing, setEditing] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({
+    title: '', campType: '', date: '', time: '', location: '', organizer: '', services: '', targetAudience: '', expectedParticipants: '', contactPerson: '', requirements: '', description: ''
+  });
+
+  const healthCamps = camps;
+
+  const fetchCamps = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const res = await communityAPI.listCamps();
+      setCamps(res.camps || []);
+    } catch (e: any) {
+      setError(e?.response?.data?.error || 'Failed to load camps');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchCamps();
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -117,6 +80,11 @@ const LocalCamps: React.FC = () => {
   return (
     <AshaLayout title="Local Camp Announcements">
       <div>
+        {error && (
+          <div className="card" style={{ border: '1px solid var(--red-200)', background: 'var(--red-50)', color: 'var(--red-700)', padding: '0.75rem', marginBottom: '1rem' }}>
+            {error}
+          </div>
+        )}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <div>
             <p style={{ color: 'var(--gray-600)', fontSize: '1.125rem', margin: 0 }}>
@@ -177,7 +145,39 @@ const LocalCamps: React.FC = () => {
               <h2 className="card-title" style={{ color: 'var(--green-700)' }}>Announce New Health Camp</h2>
             </div>
             <div className="card-content">
-              <form style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+              <form 
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  try {
+                    setError('');
+                    const created = await communityAPI.createCamp({
+                      title: form.title,
+                      campType: form.campType || 'General',
+                      date: form.date,
+                      time: form.time,
+                      location: form.location,
+                      organizer: form.organizer,
+                      services: form.services ? form.services.split(',').map(s => s.trim()).filter(Boolean) : [],
+                      targetAudience: form.targetAudience,
+                      expectedParticipants: form.expectedParticipants ? parseInt(form.expectedParticipants) : undefined,
+                      contactPerson: form.contactPerson,
+                      requirements: form.requirements,
+                      description: form.description,
+                    });
+                    // Show immediately
+                    if (created?.camp) {
+                      setCamps(prev => [created.camp, ...prev]);
+                    }
+                    setShowCreateForm(false);
+                    setForm({ title: '', campType: '', date: '', time: '', location: '', organizer: '', services: '', targetAudience: '', expectedParticipants: '', contactPerson: '', requirements: '', description: '' });
+                    // Optionally refresh for consistency
+                    // fetchCamps();
+                  } catch (err: any) {
+                    setError(err?.response?.data?.error || 'Failed to publish camp');
+                  }
+                }}
+                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}
+              >
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--gray-700)' }}>
                     Camp Title
@@ -185,6 +185,8 @@ const LocalCamps: React.FC = () => {
                   <input 
                     type="text" 
                     placeholder="Enter camp title..."
+                    value={form.title}
+                    onChange={(e) => setForm({ ...form, title: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
                   />
                 </div>
@@ -193,7 +195,11 @@ const LocalCamps: React.FC = () => {
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--gray-700)' }}>
                     Camp Type
                   </label>
-                  <select style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}>
+                  <select 
+                    value={form.campType}
+                    onChange={(e) => setForm({ ...form, campType: e.target.value })}
+                    style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
+                  >
                     <option value="">Select type...</option>
                     <option value="general">General Health Check-up</option>
                     <option value="screening">Health Screening</option>
@@ -208,6 +214,9 @@ const LocalCamps: React.FC = () => {
                   </label>
                   <input 
                     type="date" 
+                    min={new Date().toISOString().split('T')[0]}
+                    value={form.date}
+                    onChange={(e) => setForm({ ...form, date: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
                   />
                 </div>
@@ -219,6 +228,8 @@ const LocalCamps: React.FC = () => {
                   <input 
                     type="text" 
                     placeholder="e.g., 9:00 AM - 4:00 PM"
+                    value={form.time}
+                    onChange={(e) => setForm({ ...form, time: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
                   />
                 </div>
@@ -230,6 +241,8 @@ const LocalCamps: React.FC = () => {
                   <input 
                     type="text" 
                     placeholder="Venue address..."
+                    value={form.location}
+                    onChange={(e) => setForm({ ...form, location: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
                   />
                 </div>
@@ -241,6 +254,8 @@ const LocalCamps: React.FC = () => {
                   <input 
                     type="text" 
                     placeholder="Organizing institution/NGO"
+                    value={form.organizer}
+                    onChange={(e) => setForm({ ...form, organizer: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
                   />
                 </div>
@@ -252,6 +267,8 @@ const LocalCamps: React.FC = () => {
                   <input 
                     type="text" 
                     placeholder="e.g., Adults above 30 years"
+                    value={form.targetAudience}
+                    onChange={(e) => setForm({ ...form, targetAudience: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
                   />
                 </div>
@@ -263,6 +280,8 @@ const LocalCamps: React.FC = () => {
                   <input 
                     type="text" 
                     placeholder="Name and phone number"
+                    value={form.contactPerson}
+                    onChange={(e) => setForm({ ...form, contactPerson: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
                   />
                 </div>
@@ -274,6 +293,8 @@ const LocalCamps: React.FC = () => {
                   <input 
                     type="text" 
                     placeholder="e.g., Blood Pressure Check, Blood Sugar Test, BMI Measurement"
+                    value={form.services}
+                    onChange={(e) => setForm({ ...form, services: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
                   />
                 </div>
@@ -285,6 +306,8 @@ const LocalCamps: React.FC = () => {
                   <input 
                     type="text" 
                     placeholder="e.g., Bring Aadhaar card, Fasting required"
+                    value={form.requirements}
+                    onChange={(e) => setForm({ ...form, requirements: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
                   />
                 </div>
@@ -296,6 +319,8 @@ const LocalCamps: React.FC = () => {
                   <textarea 
                     rows={3}
                     placeholder="Detailed description of the health camp..."
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
                     style={{ 
                       width: '100%', 
                       padding: '0.75rem', 
@@ -345,7 +370,7 @@ const LocalCamps: React.FC = () => {
           <div className="card-header">
             <h2 className="card-title">Published Health Camp Announcements</h2>
           </div>
-          <div className="card-content">
+              <div className="card-content">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               {healthCamps.map((camp) => (
                 <div 
@@ -465,7 +490,7 @@ const LocalCamps: React.FC = () => {
                       <strong style={{ color: 'var(--gray-700)', fontSize: '0.875rem' }}>Services Offered:</strong>
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      {camp.services.map((service, index) => (
+                      {camp.services.map((service: string, index: number) => (
                         <span 
                           key={index}
                           style={{
@@ -513,12 +538,30 @@ const LocalCamps: React.FC = () => {
                           alignItems: 'center',
                           gap: '0.25rem'
                         }}
+                      onClick={() => setViewing(camp)}
                       >
                         <Eye size={14} />
                         View Details
                       </button>
                       <button 
                         className="btn"
+                        onClick={() => {
+                          setEditing(camp);
+                          setEditForm({
+                            title: camp.title || '',
+                            campType: camp.campType || '',
+                            date: camp.date || '',
+                            time: camp.time || '',
+                            location: camp.location || '',
+                            organizer: camp.organizer || '',
+                            services: Array.isArray(camp.services) ? camp.services.join(', ') : '',
+                            targetAudience: camp.targetAudience || '',
+                            expectedParticipants: String(camp.expectedParticipants ?? ''),
+                            contactPerson: camp.contactPerson || '',
+                            requirements: camp.requirements || '',
+                            description: camp.description || ''
+                          });
+                        }}
                         style={{ 
                           backgroundColor: 'var(--green-600)', 
                           color: 'white', 
@@ -533,6 +576,29 @@ const LocalCamps: React.FC = () => {
                         <Edit size={14} />
                         Edit
                       </button>
+                      <button
+                        className="btn"
+                        onClick={async () => {
+                          try {
+                            await communityAPI.deleteCamp(camp.id);
+                            setCamps(prev => prev.filter(x => x.id !== camp.id));
+                          } catch (err: any) {
+                            setError(err?.response?.data?.error || 'Failed to delete camp');
+                          }
+                        }}
+                        style={{
+                          backgroundColor: 'var(--red-600)',
+                          color: 'white',
+                          border: 'none',
+                          fontSize: '0.75rem',
+                          padding: '0.5rem 0.75rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem'
+                        }}
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -541,6 +607,99 @@ const LocalCamps: React.FC = () => {
           </div>
         </div>
       </div>
+      {/* View Modal */}
+      {viewing && (
+        <div style={{ position: 'fixed', inset: 0 as any, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+          <div className="card" style={{ width: 'min(720px, 92vw)' }}>
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 className="card-title" style={{ margin: 0 }}>{viewing.title}</h3>
+              <button className="btn" onClick={() => setViewing(null)}>Close</button>
+            </div>
+            <div className="card-content" style={{ display: 'grid', gap: '0.5rem' }}>
+              <div><strong>Type:</strong> {viewing.campType}</div>
+              <div><strong>Date:</strong> {viewing.date} • <strong>Time:</strong> {viewing.time}</div>
+              <div><strong>Location:</strong> {viewing.location}</div>
+              {viewing.organizer && <div><strong>Organizer:</strong> {viewing.organizer}</div>}
+              {viewing.contactPerson && <div><strong>Contact:</strong> {viewing.contactPerson}</div>}
+              {viewing.targetAudience && <div><strong>Target Audience:</strong> {viewing.targetAudience}</div>}
+              {Array.isArray(viewing.services) && viewing.services.length > 0 && (
+                <div>
+                  <strong>Services:</strong> {viewing.services.join(', ')}
+                </div>
+              )}
+              {viewing.requirements && <div><strong>Requirements:</strong> {viewing.requirements}</div>}
+              {viewing.description && <div style={{ whiteSpace: 'pre-wrap' }}>{viewing.description}</div>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editing && (
+        <div style={{ position: 'fixed', inset: 0 as any, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+          <div className="card" style={{ width: 'min(720px, 92vw)' }}>
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 className="card-title" style={{ margin: 0 }}>Edit Camp</h3>
+              <button className="btn" onClick={() => setEditing(null)}>Close</button>
+            </div>
+            <div className="card-content">
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  await communityAPI.updateCamp(editing.id, {
+                    title: editForm.title,
+                    campType: editForm.campType,
+                    date: editForm.date,
+                    time: editForm.time,
+                    location: editForm.location,
+                    organizer: editForm.organizer,
+                    services: editForm.services ? editForm.services.split(',').map(s => s.trim()).filter(Boolean) : undefined,
+                    targetAudience: editForm.targetAudience,
+                    expectedParticipants: editForm.expectedParticipants ? parseInt(editForm.expectedParticipants) : undefined,
+                    contactPerson: editForm.contactPerson,
+                    requirements: editForm.requirements,
+                    description: editForm.description,
+                  });
+                  setCamps(prev => prev.map(x => x.id === editing.id ? { ...x, ...{
+                    title: editForm.title,
+                    campType: editForm.campType,
+                    date: editForm.date,
+                    time: editForm.time,
+                    location: editForm.location,
+                    organizer: editForm.organizer,
+                    services: editForm.services ? editForm.services.split(',').map(s => s.trim()).filter(Boolean) : x.services,
+                    targetAudience: editForm.targetAudience,
+                    expectedParticipants: editForm.expectedParticipants ? parseInt(editForm.expectedParticipants) : x.expectedParticipants,
+                    contactPerson: editForm.contactPerson,
+                    requirements: editForm.requirements,
+                    description: editForm.description,
+                  } } : x));
+                  setEditing(null);
+                } catch (err: any) {
+                  setError(err?.response?.data?.error || 'Failed to update camp');
+                }
+              }} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.75rem' }}>
+                <input value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} placeholder="Title" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                <input value={editForm.campType} onChange={e => setEditForm({ ...editForm, campType: e.target.value })} placeholder="Camp Type" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                <input type="date" min={new Date().toISOString().split('T')[0]} value={editForm.date} onChange={e => setEditForm({ ...editForm, date: e.target.value })} style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                <input value={editForm.time} onChange={e => setEditForm({ ...editForm, time: e.target.value })} placeholder="Time" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                <input value={editForm.location} onChange={e => setEditForm({ ...editForm, location: e.target.value })} placeholder="Location" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                <input value={editForm.organizer} onChange={e => setEditForm({ ...editForm, organizer: e.target.value })} placeholder="Organizer" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                <input value={editForm.services} onChange={e => setEditForm({ ...editForm, services: e.target.value })} placeholder="Services (comma separated)" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                <input value={editForm.targetAudience} onChange={e => setEditForm({ ...editForm, targetAudience: e.target.value })} placeholder="Target Audience" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                <input type="number" value={editForm.expectedParticipants} onChange={e => setEditForm({ ...editForm, expectedParticipants: e.target.value })} placeholder="Expected Participants" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                <input value={editForm.contactPerson} onChange={e => setEditForm({ ...editForm, contactPerson: e.target.value })} placeholder="Contact Person" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                <input value={editForm.requirements} onChange={e => setEditForm({ ...editForm, requirements: e.target.value })} placeholder="Requirements" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                <textarea value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })} placeholder="Description" rows={3} style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8, gridColumn: '1 / -1' }} />
+                <div style={{ display: 'flex', gap: 8, gridColumn: '1 / -1' }}>
+                  <button className="btn" type="submit" style={{ background: 'var(--green-600)', color: 'white', border: 'none' }}>Save</button>
+                  <button className="btn" type="button" onClick={() => setEditing(null)} style={{ border: '1px solid var(--gray-300)', background: 'white' }}>Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </AshaLayout>
   );
 };

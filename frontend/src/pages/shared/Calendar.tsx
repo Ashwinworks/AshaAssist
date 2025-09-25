@@ -160,25 +160,31 @@ const Calendar: React.FC = () => {
                 )}
               </div>
               <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {dayEvents.slice(0,3).map(ev => (
+                {dayEvents.slice(0,3).map(ev => {
+                  const isClass = ev.category === 'community_class';
+                  const isCamp = ev.category === 'local_camp';
+                  const bg = isClass ? 'var(--purple-50)' : isCamp ? 'var(--green-50)' : 'var(--blue-50)';
+                  const fg = isClass ? 'var(--purple-700)' : isCamp ? 'var(--green-700)' : 'var(--blue-700)';
+                  const bd = isClass ? '1px solid var(--purple-100)' : isCamp ? '1px solid var(--green-100)' : '1px solid var(--blue-100)';
+                  return (
                   <div
                     key={ev.id}
                     style={{
                       fontSize: '0.75rem',
                       padding: '2px 6px',
                       borderRadius: 6,
-                      background: 'var(--blue-50)',
-                      color: 'var(--blue-700)',
+                      background: bg,
+                      color: fg,
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
-                      border: '1px solid var(--blue-100)'
+                      border: bd
                     }}
                     title={ev.title}
                   >
                     {ev.title}
                   </div>
-                ))}
+                )})}
                 {dayEvents.length > 3 && (
                   <div style={{ fontSize: '0.75rem', color: 'var(--gray-600)' }}>+{dayEvents.length - 3} more</div>
                 )}

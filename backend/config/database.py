@@ -28,6 +28,8 @@ def get_collections(db):
         'vaccination_bookings': db.vaccination_bookings,
         'palliative_records': db.palliative_records,
         'visit_requests': db.visit_requests,
+        'community_classes': db.community_classes,
+        'local_camps': db.local_camps,
     }
 
 def ensure_indexes(collections):
@@ -72,6 +74,16 @@ def ensure_indexes(collections):
         collections['visit_requests'].create_index([('status', 1), ('createdAt', -1)])
         collections['visit_requests'].create_index([('requestType', 1), ('status', 1)])
 
-        print("Indexes ensured: users(email unique, phone partial unique), asha_feedback(userId+createdAt), calendar_events(start,end,createdBy), health_blogs(createdBy+createdAt, category+status, status+createdAt), vaccination_schedules(date,createdBy+date), vaccination_bookings(scheduleId,userId+createdAt), palliative_records(userId+date, testType), visit_requests(userId+createdAt, status+createdAt, requestType+status)")
+        # Community classes: by date, createdBy, status
+        collections['community_classes'].create_index([('date', 1)])
+        collections['community_classes'].create_index([('createdBy', 1), ('date', -1)])
+        collections['community_classes'].create_index([('status', 1), ('date', -1)])
+
+        # Local camps: by date, createdBy, status
+        collections['local_camps'].create_index([('date', 1)])
+        collections['local_camps'].create_index([('createdBy', 1), ('date', -1)])
+        collections['local_camps'].create_index([('status', 1), ('date', -1)])
+
+        print("Indexes ensured: users(email unique, phone partial unique), asha_feedback(userId+createdAt), calendar_events(start,end,createdBy), health_blogs(createdBy+createdAt, category+status, status+createdAt), vaccination_schedules(date,createdBy+date), vaccination_bookings(scheduleId,userId+createdAt), palliative_records(userId+date, testType), visit_requests(userId+createdAt, status+createdAt, requestType+status), community_classes(date,createdBy+date,status+date), local_camps(date,createdBy+date,status+date)")
     except Exception as e:
         print(f'Warning: could not ensure indexes: {e}')
