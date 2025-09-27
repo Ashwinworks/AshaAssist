@@ -21,6 +21,10 @@ const LocalCampsManagement: React.FC = () => {
   const [camps, setCamps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingCamp, setEditingCamp] = useState<any>(null);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editFormData, setEditFormData] = useState<any>({});
 
   const fetchCamps = async () => {
     try {
@@ -123,77 +127,74 @@ const LocalCampsManagement: React.FC = () => {
 
   const handleEdit = async (campId: string) => {
     try {
-      // Get latest to prefill
+      setEditLoading(true);
       const data = await communityAPI.getCamp(campId);
-      const item = data.camp || {};
+      const camp = data.camp || {};
+      
+      setEditingCamp(camp);
+      setEditFormData({
+        title: camp.title || '',
+        date: camp.date || '',
+        time: camp.time || '',
+        location: camp.location || '',
+        organizer: camp.organizer || '',
+        campType: camp.campType || '',
+        services: Array.isArray(camp.services) ? camp.services.join(', ') : '',
+        targetAudience: camp.targetAudience || '',
+        expectedParticipants: camp.expectedParticipants || 0,
+        registeredParticipants: camp.registeredParticipants || 0,
+        description: camp.description || '',
+        requirements: camp.requirements || '',
+        contactPerson: camp.contactPerson || '',
+        status: camp.status || 'Pending',
+      });
+      setEditModalOpen(true);
+    } catch (e) {
+      alert('Failed to load camp details');
+    } finally {
+      setEditLoading(false);
+    }
+  };
 
-      const newTitle = window.prompt('Edit title', item.title || '');
-      if (newTitle === null) return;
-
-      const newDate = window.prompt('Edit date (YYYY-MM-DD)', item.date || '');
-      if (newDate === null) return;
-
-      const newTime = window.prompt('Edit time (e.g., 10:00 AM)', item.time || '');
-      if (newTime === null) return;
-
-      const newLocation = window.prompt('Edit location', item.location || '');
-      if (newLocation === null) return;
-
-      const newOrganizer = window.prompt('Edit organizer', item.organizer || '');
-      if (newOrganizer === null) return;
-
-      const newCampType = window.prompt('Edit camp type', item.campType || '');
-      if (newCampType === null) return;
-
-      const newServices = window.prompt('Edit services (comma-separated)', Array.isArray(item.services) ? item.services.join(', ') : '');
-      if (newServices === null) return;
-
-      const newTargetAudience = window.prompt('Edit target audience', item.targetAudience || '');
-      if (newTargetAudience === null) return;
-
-      const newExpected = window.prompt('Edit expected participants', String(item.expectedParticipants ?? ''));
-      if (newExpected === null) return;
-
-      const newRegistered = window.prompt('Edit registered participants', String(item.registeredParticipants ?? ''));
-      if (newRegistered === null) return;
-
-      const newDescription = window.prompt('Edit description', item.description || '');
-      if (newDescription === null) return;
-
-      const newRequirements = window.prompt('Edit requirements', item.requirements || '');
-      if (newRequirements === null) return;
-
-      const newContactPerson = window.prompt('Edit contact person', item.contactPerson || '');
-      if (newContactPerson === null) return;
-
-      const newStatus = window.prompt('Edit status (Pending, Approved, Rejected, Scheduled, Completed, Cancelled, Postponed)', item.status || 'Pending');
-      if (newStatus === null) return;
-
+  const handleSaveEdit = async () => {
+    try {
+      setEditLoading(true);
       const payload: any = {
-        title: (newTitle || '').trim(),
-        date: (newDate || '').trim(),
-        time: (newTime || '').trim(),
-        location: (newLocation || '').trim(),
-        organizer: (newOrganizer || '').trim(),
-        campType: (newCampType || '').trim(),
-        services: (newServices || '')
+        title: editFormData.title.trim(),
+        date: editFormData.date.trim(),
+        time: editFormData.time.trim(),
+        location: editFormData.location.trim(),
+        organizer: editFormData.organizer.trim(),
+        campType: editFormData.campType.trim(),
+        services: editFormData.services
           .split(',')
-          .map((s) => s.trim())
-          .filter((s) => !!s),
-        targetAudience: (newTargetAudience || '').trim(),
-        expectedParticipants: Number.isNaN(parseInt(newExpected)) ? 0 : parseInt(newExpected),
-        registeredParticipants: Number.isNaN(parseInt(newRegistered)) ? 0 : parseInt(newRegistered),
-        description: (newDescription || '').trim(),
-        requirements: (newRequirements || '').trim(),
-        contactPerson: (newContactPerson || '').trim(),
-        status: (newStatus || '').trim(),
+          .map((s: string) => s.trim())
+          .filter((s: string) => !!s),
+        targetAudience: editFormData.targetAudience.trim(),
+        expectedParticipants: Number.isNaN(parseInt(editFormData.expectedParticipants)) ? 0 : parseInt(editFormData.expectedParticipants),
+        registeredParticipants: Number.isNaN(parseInt(editFormData.registeredParticipants)) ? 0 : parseInt(editFormData.registeredParticipants),
+        description: editFormData.description.trim(),
+        requirements: editFormData.requirements.trim(),
+        contactPerson: editFormData.contactPerson.trim(),
+        status: editFormData.status.trim(),
       };
 
-      await communityAPI.updateCamp(campId, payload);
+      await communityAPI.updateCamp(editingCamp.id, payload);
       await fetchCamps();
+      setEditModalOpen(false);
+      setEditingCamp(null);
+      setEditFormData({});
     } catch (e) {
       alert('Failed to update camp');
+    } finally {
+      setEditLoading(false);
     }
+  };
+
+  const handleCancelEdit = () => {
+    setEditModalOpen(false);
+    setEditingCamp(null);
+    setEditFormData({});
   };
 
   const handleDelete = async (campId: string) => {
@@ -341,19 +342,7 @@ const LocalCampsManagement: React.FC = () => {
                             borderRadius: '0.25rem',
                           }}
                         >
-                          {camp.status}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '0.75rem',
-                            fontWeight: '600',
-                            color: getApprovalColor(camp.approvalStatus),
-                            backgroundColor: getApprovalBg(camp.approvalStatus),
-                            padding: '0.25rem 0.5rem',
-                            borderRadius: '0.25rem',
-                          }}
-                        >
-                          {camp.approvalStatus}
+                          {camp.status === 'pending' ? 'Pending' : camp.status === 'approved' ? 'Approved' : camp.status === 'rejected' ? 'Rejected' : camp.status}
                         </span>
                       </div>
                       <p style={{ margin: '0 0 1rem', color: 'var(--gray-600)', fontSize: '0.875rem', lineHeight: '1.4' }}>
@@ -533,6 +522,328 @@ const LocalCampsManagement: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Edit Camp Modal */}
+        {editModalOpen && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div className="card" style={{
+              maxWidth: '800px',
+              width: '90%',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              margin: '1rem'
+            }}>
+              <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 className="card-title">Edit Camp</h3>
+                <button
+                  onClick={handleCancelEdit}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    color: 'var(--gray-500)'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+              <div className="card-content" style={{ padding: '1.5rem' }}>
+                {editLoading ? (
+                  <div style={{ textAlign: 'center', padding: '2rem' }}>
+                    <div className="loading-spinner" />
+                    <p>Loading...</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Title *</label>
+                      <input
+                        type="text"
+                        value={editFormData.title || ''}
+                        onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Date *</label>
+                      <input
+                        type="date"
+                        value={editFormData.date || ''}
+                        onChange={(e) => setEditFormData({...editFormData, date: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Time</label>
+                      <input
+                        type="text"
+                        placeholder="e.g., 10:00 AM"
+                        value={editFormData.time || ''}
+                        onChange={(e) => setEditFormData({...editFormData, time: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Location *</label>
+                      <input
+                        type="text"
+                        value={editFormData.location || ''}
+                        onChange={(e) => setEditFormData({...editFormData, location: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Organizer</label>
+                      <input
+                        type="text"
+                        value={editFormData.organizer || ''}
+                        onChange={(e) => setEditFormData({...editFormData, organizer: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Camp Type</label>
+                      <input
+                        type="text"
+                        value={editFormData.campType || ''}
+                        onChange={(e) => setEditFormData({...editFormData, campType: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Services (comma-separated)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g., Health Checkup, Vaccination, Consultation"
+                        value={editFormData.services || ''}
+                        onChange={(e) => setEditFormData({...editFormData, services: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Target Audience</label>
+                      <input
+                        type="text"
+                        value={editFormData.targetAudience || ''}
+                        onChange={(e) => setEditFormData({...editFormData, targetAudience: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Expected Participants</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editFormData.expectedParticipants || 0}
+                        onChange={(e) => setEditFormData({...editFormData, expectedParticipants: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Registered Participants</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editFormData.registeredParticipants || 0}
+                        onChange={(e) => setEditFormData({...editFormData, registeredParticipants: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Contact Person</label>
+                      <input
+                        type="text"
+                        value={editFormData.contactPerson || ''}
+                        onChange={(e) => setEditFormData({...editFormData, contactPerson: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Status</label>
+                      <select
+                        value={editFormData.status || 'Pending'}
+                        onChange={(e) => setEditFormData({...editFormData, status: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                        <option value="Scheduled">Scheduled</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                        <option value="Postponed">Postponed</option>
+                      </select>
+                    </div>
+                    
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Description</label>
+                      <textarea
+                        value={editFormData.description || ''}
+                        onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+                        rows={3}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem',
+                          resize: 'vertical'
+                        }}
+                      />
+                    </div>
+                    
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Requirements</label>
+                      <textarea
+                        value={editFormData.requirements || ''}
+                        onChange={(e) => setEditFormData({...editFormData, requirements: e.target.value})}
+                        rows={3}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem',
+                          resize: 'vertical'
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid var(--gray-200)' }}>
+                  <button
+                    onClick={handleCancelEdit}
+                    disabled={editLoading}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      border: '1px solid var(--gray-300)',
+                      background: 'white',
+                      color: 'var(--gray-700)',
+                      borderRadius: '0.5rem',
+                      cursor: editLoading ? 'not-allowed' : 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={editLoading || !editFormData.title || !editFormData.location}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      border: 'none',
+                      background: editLoading || !editFormData.title || !editFormData.location ? 'var(--gray-400)' : 'var(--blue-600)',
+                      color: 'white',
+                      borderRadius: '0.5rem',
+                      cursor: editLoading || !editFormData.title || !editFormData.location ? 'not-allowed' : 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '500'
+                    }}
+                  >
+                    {editLoading ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AdminLayout>
   );

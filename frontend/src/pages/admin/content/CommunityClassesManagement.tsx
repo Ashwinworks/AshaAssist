@@ -23,6 +23,10 @@ const CommunityClassesManagement: React.FC = () => {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<any>(null);
   const [viewLoading, setViewLoading] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingClass, setEditingClass] = useState<any>(null);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editFormData, setEditFormData] = useState<any>({});
 
   const fetchClasses = async () => {
     try {
@@ -115,34 +119,70 @@ const CommunityClassesManagement: React.FC = () => {
 
   const handleEdit = async (classId: string) => {
     try {
-      setViewLoading(true);
-      // Fetch latest details to prefill prompts
+      setEditLoading(true);
       const data = await communityAPI.getClass(classId);
-      const item = data.class || {};
+      const classItem = data.class || {};
+      
+      setEditingClass(classItem);
+      setEditFormData({
+        title: classItem.title || '',
+        date: classItem.date || '',
+        time: classItem.time || '',
+        location: classItem.location || '',
+        instructor: classItem.instructor || '',
+        category: classItem.category || '',
+        topics: Array.isArray(classItem.topics) ? classItem.topics.join(', ') : '',
+        targetAudience: classItem.targetAudience || '',
+        maxParticipants: classItem.maxParticipants || 0,
+        registeredParticipants: classItem.registeredParticipants || 0,
+        description: classItem.description || '',
+        status: classItem.status || 'Pending',
+      });
+      setEditModalOpen(true);
+    } catch (e) {
+      alert('Failed to load class details');
+    } finally {
+      setEditLoading(false);
+    }
+  };
 
-      const newTitle = window.prompt('Edit title', item.title || '');
-      if (newTitle === null) return; // Cancel
-
-      const newLocation = window.prompt('Edit location', item.location || '');
-      if (newLocation === null) return; // Cancel
-
-      const newStatus = window.prompt('Edit status (Pending, Approved, Rejected, Scheduled, Completed, Cancelled)', item.status || 'Pending');
-      if (newStatus === null) return; // Cancel
-
+  const handleSaveEdit = async () => {
+    try {
+      setEditLoading(true);
       const payload: any = {
-        title: newTitle.trim(),
-        location: (newLocation || '').trim(),
-        status: (newStatus || '').trim()
+        title: editFormData.title.trim(),
+        date: editFormData.date.trim(),
+        time: editFormData.time.trim(),
+        location: editFormData.location.trim(),
+        instructor: editFormData.instructor.trim(),
+        category: editFormData.category.trim(),
+        topics: editFormData.topics
+          .split(',')
+          .map((t: string) => t.trim())
+          .filter((t: string) => !!t),
+        targetAudience: editFormData.targetAudience.trim(),
+        maxParticipants: Number.isNaN(parseInt(editFormData.maxParticipants)) ? 0 : parseInt(editFormData.maxParticipants),
+        registeredParticipants: Number.isNaN(parseInt(editFormData.registeredParticipants)) ? 0 : parseInt(editFormData.registeredParticipants),
+        description: editFormData.description.trim(),
+        status: editFormData.status.trim(),
       };
 
-      // Only send defined values
-      await communityAPI.updateClass(classId, payload);
+      await communityAPI.updateClass(editingClass.id, payload);
       await fetchClasses();
+      setEditModalOpen(false);
+      setEditingClass(null);
+      setEditFormData({});
     } catch (e) {
       alert('Failed to update class');
     } finally {
-      setViewLoading(false);
+      setEditLoading(false);
     }
+  };
+
+  const handleCancelEdit = () => {
+    setEditModalOpen(false);
+    setEditingClass(null);
+    setEditFormData({});
   };
 
   const handleDelete = async (classId: string) => {
@@ -407,19 +447,21 @@ const CommunityClassesManagement: React.FC = () => {
                     <button
                       onClick={() => handleEdit(classItem.id)}
                       className="btn"
+                      disabled={editLoading}
                       style={{
-                        backgroundColor: 'var(--purple-600)',
+                        backgroundColor: editLoading ? 'var(--gray-400)' : 'var(--purple-600)',
                         color: 'white',
                         border: 'none',
                         fontSize: '0.875rem',
                         padding: '0.5rem 1rem',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.5rem'
+                        gap: '0.5rem',
+                        cursor: editLoading ? 'not-allowed' : 'pointer'
                       }}
                     >
                       <Edit size={14} />
-                      Edit
+                      {editLoading ? 'Loading...' : 'Edit'}
                     </button>
                     {(classItem.status || '').toLowerCase() === 'pending' && (
                       <>
@@ -618,6 +660,294 @@ const CommunityClassesManagement: React.FC = () => {
                     <p>Failed to load class details.</p>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Class Modal */}
+        {editModalOpen && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1001
+          }}>
+            <div className="card" style={{
+              maxWidth: '800px',
+              width: '90%',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              margin: '1rem'
+            }}>
+              <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 className="card-title">Edit Community Class</h3>
+                <button
+                  onClick={handleCancelEdit}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    color: 'var(--gray-500)'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+              <div className="card-content" style={{ padding: '1.5rem' }}>
+                {editLoading ? (
+                  <div style={{ textAlign: 'center', padding: '2rem' }}>
+                    <div className="loading-spinner" />
+                    <p>Loading...</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Title *</label>
+                      <input
+                        type="text"
+                        value={editFormData.title || ''}
+                        onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Date *</label>
+                      <input
+                        type="date"
+                        value={editFormData.date || ''}
+                        onChange={(e) => setEditFormData({...editFormData, date: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Time</label>
+                      <input
+                        type="text"
+                        placeholder="e.g., 10:00 AM"
+                        value={editFormData.time || ''}
+                        onChange={(e) => setEditFormData({...editFormData, time: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Location *</label>
+                      <input
+                        type="text"
+                        value={editFormData.location || ''}
+                        onChange={(e) => setEditFormData({...editFormData, location: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Instructor</label>
+                      <input
+                        type="text"
+                        value={editFormData.instructor || ''}
+                        onChange={(e) => setEditFormData({...editFormData, instructor: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Category</label>
+                      <input
+                        type="text"
+                        value={editFormData.category || ''}
+                        onChange={(e) => setEditFormData({...editFormData, category: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Topics (comma-separated)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g., Nutrition, Child Care, Hygiene"
+                        value={editFormData.topics || ''}
+                        onChange={(e) => setEditFormData({...editFormData, topics: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Target Audience</label>
+                      <input
+                        type="text"
+                        value={editFormData.targetAudience || ''}
+                        onChange={(e) => setEditFormData({...editFormData, targetAudience: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Max Participants</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editFormData.maxParticipants || 0}
+                        onChange={(e) => setEditFormData({...editFormData, maxParticipants: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Registered Participants</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editFormData.registeredParticipants || 0}
+                        onChange={(e) => setEditFormData({...editFormData, registeredParticipants: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Status</label>
+                      <select
+                        value={editFormData.status || 'Pending'}
+                        onChange={(e) => setEditFormData({...editFormData, status: e.target.value})}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem'
+                        }}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                        <option value="Scheduled">Scheduled</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
+                    </div>
+                    
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Description</label>
+                      <textarea
+                        value={editFormData.description || ''}
+                        onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+                        rows={4}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: '1px solid var(--gray-300)',
+                          borderRadius: '0.5rem',
+                          fontSize: '1rem',
+                          resize: 'vertical'
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid var(--gray-200)' }}>
+                  <button
+                    onClick={handleCancelEdit}
+                    disabled={editLoading}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      border: '1px solid var(--gray-300)',
+                      background: 'white',
+                      color: 'var(--gray-700)',
+                      borderRadius: '0.5rem',
+                      cursor: editLoading ? 'not-allowed' : 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={editLoading || !editFormData.title || !editFormData.location}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      border: 'none',
+                      background: editLoading || !editFormData.title || !editFormData.location ? 'var(--gray-400)' : 'var(--purple-600)',
+                      color: 'white',
+                      borderRadius: '0.5rem',
+                      cursor: editLoading || !editFormData.title || !editFormData.location ? 'not-allowed' : 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '500'
+                    }}
+                  >
+                    {editLoading ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
