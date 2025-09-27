@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import AdminLayout from './AdminLayout';
-import { Search, Star, User, TrendingUp, TrendingDown } from 'lucide-react';
+import { Search, Star, User, TrendingUp, TrendingDown, X } from 'lucide-react';
 import { adminAPI } from '../../services/api';
 
 interface AdminFeedbackItem {
@@ -24,6 +24,53 @@ const Feedbacks: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [feedbacks, setFeedbacks] = useState<AdminFeedbackItem[]>([]);
+
+  // Responsive styles
+  const searchContainerStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    flex: 1,
+    minWidth: '320px',
+    position: 'relative' as const,
+    '@media (max-width: 768px)': {
+      minWidth: '100%',
+      flex: '1 1 100%'
+    }
+  };
+
+  const searchInputStyle = {
+    width: '100%',
+    padding: '0.875rem 0.875rem 0.875rem 2.75rem',
+    border: '2px solid var(--gray-200)',
+    borderRadius: '0.75rem',
+    fontSize: '1rem',
+    backgroundColor: 'white',
+    transition: 'all 0.2s ease-in-out',
+    outline: 'none',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+  };
+
+  const filterSelectStyle = {
+    padding: '0.875rem 1rem',
+    border: '2px solid var(--gray-200)',
+    borderRadius: '0.75rem',
+    fontSize: '0.875rem',
+    fontWeight: '500',
+    minWidth: '140px',
+    backgroundColor: 'white',
+    color: 'var(--gray-700)',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease-in-out',
+    outline: 'none',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+    appearance: 'none' as const,
+    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+    backgroundPosition: 'right 0.75rem center',
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: '1rem',
+    paddingRight: '2.5rem'
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -95,42 +142,152 @@ const Feedbacks: React.FC = () => {
         {/* Search and Filters */}
         <div className="card" style={{ marginBottom: '2rem' }}>
           <div className="card-content" style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: '300px' }}>
-                <Search size={20} color="var(--gray-400)" />
-                <input
-                  type="text"
-                  placeholder="Search by user name, email, or comment..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{
-                    flex: 1,
-                    padding: '0.75rem',
-                    border: '1px solid var(--gray-300)',
-                    borderRadius: '0.5rem',
-                    fontSize: '1rem',
-                  }}
-                />
+            <div className="search-container" style={{ 
+              display: 'flex', 
+              gap: '1.5rem', 
+              alignItems: 'center', 
+              flexWrap: 'wrap',
+              justifyContent: 'flex-start'
+            }}>
+              {/* Search Input Container */}
+              <div className="search-input-container" style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.75rem', 
+                flex: 2, 
+                minWidth: '400px',
+                position: 'relative'
+              }}>
+                <div style={{
+                  position: 'relative',
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>
+                  <Search 
+                    size={20} 
+                    color="var(--gray-400)" 
+                    style={{
+                      position: 'absolute',
+                      left: '0.75rem',
+                      zIndex: 1,
+                      pointerEvents: 'none'
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search feedbacks..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={searchInputStyle}
+                    onFocus={(e) => {
+                      (e.target as HTMLInputElement).style.borderColor = 'var(--primary-500)';
+                      (e.target as HTMLInputElement).style.boxShadow = '0 0 0 3px rgba(14, 165, 233, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      (e.target as HTMLInputElement).style.borderColor = 'var(--gray-200)';
+                      (e.target as HTMLInputElement).style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+                    }}
+                    onMouseEnter={(e) => {
+                      if (document.activeElement !== e.target) {
+                        (e.target as HTMLInputElement).style.borderColor = 'var(--gray-300)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (document.activeElement !== e.target) {
+                        (e.target as HTMLInputElement).style.borderColor = 'var(--gray-200)';
+                      }
+                    }}
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      style={{
+                        position: 'absolute',
+                        right: '0.75rem',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '0.25rem',
+                        borderRadius: '0.25rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--gray-400)',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'var(--gray-100)';
+                        e.currentTarget.style.color = 'var(--gray-600)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = 'var(--gray-400)';
+                      }}
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
               </div>
-              <select
-                value={filterRating}
-                onChange={(e) => setFilterRating(e.target.value)}
-                style={{
-                  padding: '0.75rem',
-                  border: '1px solid var(--gray-300)',
-                  borderRadius: '0.5rem',
-                  fontSize: '0.875rem',
-                  minWidth: '120px',
-                }}
-              >
-                <option value="all">All Ratings</option>
-                <option value="5">5 Stars</option>
-                <option value="4">4 Stars</option>
-                <option value="3">3 Stars</option>
-                <option value="2">2 Stars</option>
-                <option value="1">1 Star</option>
-              </select>
+
+              {/* Filter Dropdown */}
+              <div className="filter-dropdown" style={{ position: 'relative', flex: '0 0 auto' }}>
+                <select
+                  value={filterRating}
+                  onChange={(e) => setFilterRating(e.target.value)}
+                  style={filterSelectStyle}
+                  onFocus={(e) => {
+                    (e.target as HTMLSelectElement).style.borderColor = 'var(--primary-500)';
+                    (e.target as HTMLSelectElement).style.boxShadow = '0 0 0 3px rgba(14, 165, 233, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    (e.target as HTMLSelectElement).style.borderColor = 'var(--gray-200)';
+                    (e.target as HTMLSelectElement).style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+                  }}
+                  onMouseEnter={(e) => {
+                    if (document.activeElement !== e.target) {
+                      (e.target as HTMLSelectElement).style.borderColor = 'var(--gray-300)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (document.activeElement !== e.target) {
+                      (e.target as HTMLSelectElement).style.borderColor = 'var(--gray-200)';
+                    }
+                  }}
+                >
+                  <option value="all">All Ratings</option>
+                  <option value="5">5 Stars</option>
+                  <option value="4">4 Stars</option>
+                  <option value="3">3 Stars</option>
+                  <option value="2">2 Stars</option>
+                  <option value="1">1 Star</option>
+                </select>
+              </div>
             </div>
+
+            {/* Search Results Summary */}
+            {searchTerm && (
+              <div style={{
+                marginTop: '1rem',
+                padding: '0.75rem 1rem',
+                backgroundColor: 'var(--blue-50)',
+                border: '1px solid var(--blue-200)',
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                color: 'var(--blue-700)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <Search size={16} />
+                <span>
+                  Found {filteredFeedbacks.length} feedback{filteredFeedbacks.length !== 1 ? 's' : ''} 
+                  {searchTerm && ` matching "${searchTerm}"`}
+                  {filterRating !== 'all' && ` with ${filterRating} star${filterRating !== '1' ? 's' : ''}`}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

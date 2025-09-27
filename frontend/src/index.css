@@ -432,6 +432,23 @@ body {
   .card-footer {
     padding: 1rem;
   }
+
+  /* Search bar responsive styles */
+  .search-container {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+
+  .search-input-container {
+    min-width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+
+  .filter-dropdown {
+    min-width: 100% !important;
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
 }
 
 /* Custom Scrollbar */

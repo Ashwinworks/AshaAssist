@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import AdminLayout from './AdminLayout';
 import { adminAPI } from '../../services/api';
-import { Users, Search, Filter, Phone, Mail, CheckCircle, XCircle, ChevronLeft, ChevronRight, RefreshCw, Trash2 } from 'lucide-react';
+import { Users, Search, Filter, Phone, Mail, CheckCircle, XCircle, ChevronLeft, ChevronRight, RefreshCw, Trash2, X } from 'lucide-react';
 
 interface UserRow {
   id: string;
@@ -29,6 +29,40 @@ const UsersManagement: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total, pageSize]);
+
+  // Style objects for consistent styling
+  const searchInputStyle = {
+    width: '100%',
+    padding: '0.875rem 0.875rem 0.875rem 2.75rem',
+    border: '2px solid var(--gray-200)',
+    borderRadius: '0.75rem',
+    fontSize: '1rem',
+    backgroundColor: 'white',
+    transition: 'all 0.2s ease-in-out',
+    outline: 'none',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+  };
+
+  const filterSelectStyle = {
+    padding: '0.875rem 1rem',
+    border: '2px solid var(--gray-200)',
+    borderRadius: '0.75rem',
+    fontSize: '0.875rem',
+    fontWeight: '500',
+    minWidth: '140px',
+    backgroundColor: 'white',
+    color: 'var(--gray-700)',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease-in-out',
+    outline: 'none',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+    appearance: 'none' as const,
+    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+    backgroundPosition: 'right 0.75rem center',
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: '1rem',
+    paddingRight: '2.5rem'
+  };
 
   const fetchUsers = async () => {
     try {
@@ -98,56 +132,218 @@ const UsersManagement: React.FC = () => {
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="card" style={{ marginBottom: '1rem' }}>
-          <div className="card-content" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-            <form onSubmit={onSearch} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flex: 1, minWidth: 260 }}>
-              <div style={{ position: 'relative', flex: 1 }}>
-                <Search size={16} style={{ position: 'absolute', top: 10, left: 10, color: 'var(--gray-500)' }} />
-                <input
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="Search name, email, phone"
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem 0.75rem 0.5rem 2rem',
-                    border: '1px solid var(--gray-300)',
-                    borderRadius: '0.375rem',
-                    outline: 'none'
-                  }}
-                />
+        {/* Search and Filters */}
+        <div className="card" style={{ marginBottom: '2rem' }}>
+          <div className="card-content" style={{ padding: '1.5rem' }}>
+            <div className="search-container" style={{ 
+              display: 'flex', 
+              gap: '1.5rem', 
+              alignItems: 'center', 
+              flexWrap: 'wrap',
+              justifyContent: 'flex-start'
+            }}>
+              {/* Search Input Container */}
+              <div className="search-input-container" style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.75rem', 
+                flex: 2, 
+                minWidth: '400px',
+                position: 'relative'
+              }}>
+                <form onSubmit={onSearch} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                  <div style={{
+                    position: 'relative',
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}>
+                    <Search 
+                      size={20} 
+                      color="var(--gray-400)" 
+                      style={{
+                        position: 'absolute',
+                        left: '0.75rem',
+                        zIndex: 1,
+                        pointerEvents: 'none'
+                      }}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Search users..."
+                      value={q}
+                      onChange={(e) => setQ(e.target.value)}
+                      style={searchInputStyle}
+                      onFocus={(e) => {
+                        (e.target as HTMLInputElement).style.borderColor = 'var(--primary-500)';
+                        (e.target as HTMLInputElement).style.boxShadow = '0 0 0 3px rgba(14, 165, 233, 0.1)';
+                      }}
+                      onBlur={(e) => {
+                        (e.target as HTMLInputElement).style.borderColor = 'var(--gray-200)';
+                        (e.target as HTMLInputElement).style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+                      }}
+                      onMouseEnter={(e) => {
+                        if (document.activeElement !== e.target) {
+                          (e.target as HTMLInputElement).style.borderColor = 'var(--gray-300)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (document.activeElement !== e.target) {
+                          (e.target as HTMLInputElement).style.borderColor = 'var(--gray-200)';
+                        }
+                      }}
+                    />
+                    {q && (
+                      <button
+                        type="button"
+                        onClick={() => setQ('')}
+                        style={{
+                          position: 'absolute',
+                          right: '0.75rem',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          padding: '0.25rem',
+                          borderRadius: '0.25rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'var(--gray-400)',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--gray-100)';
+                          e.currentTarget.style.color = 'var(--gray-600)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                          e.currentTarget.style.color = 'var(--gray-400)';
+                        }}
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                </form>
               </div>
-              <button className="btn" type="submit" style={{ backgroundColor: 'var(--blue-600)', color: 'white', border: 'none', padding: '0.5rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Filter size={16} />
-                Apply
-              </button>
-            </form>
 
-            <select
-              value={category}
-              onChange={(e) => { setCategory(e.target.value as any); setPage(1); }}
-              style={{ padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: '0.375rem' }}
-            >
-              <option value="all">All Categories</option>
-              <option value="maternity">Maternity</option>
-              <option value="palliative">Palliative</option>
-            </select>
+              {/* Filter Dropdowns */}
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flex: '0 0 auto' }}>
+                <div style={{ position: 'relative' }}>
+                  <select
+                    value={category}
+                    onChange={(e) => { setCategory(e.target.value as any); setPage(1); }}
+                    style={filterSelectStyle}
+                    onFocus={(e) => {
+                      (e.target as HTMLSelectElement).style.borderColor = 'var(--primary-500)';
+                      (e.target as HTMLSelectElement).style.boxShadow = '0 0 0 3px rgba(14, 165, 233, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      (e.target as HTMLSelectElement).style.borderColor = 'var(--gray-200)';
+                      (e.target as HTMLSelectElement).style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+                    }}
+                    onMouseEnter={(e) => {
+                      if (document.activeElement !== e.target) {
+                        (e.target as HTMLSelectElement).style.borderColor = 'var(--gray-300)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (document.activeElement !== e.target) {
+                        (e.target as HTMLSelectElement).style.borderColor = 'var(--gray-200)';
+                      }
+                    }}
+                  >
+                    <option value="all">All Categories</option>
+                    <option value="maternity">Maternity</option>
+                    <option value="palliative">Palliative</option>
+                  </select>
+                </div>
 
-            <select
-              value={status}
-              onChange={(e) => { setStatus(e.target.value as any); setPage(1); }}
-              style={{ padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: '0.375rem' }}
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+                <div style={{ position: 'relative' }}>
+                  <select
+                    value={status}
+                    onChange={(e) => { setStatus(e.target.value as any); setPage(1); }}
+                    style={filterSelectStyle}
+                    onFocus={(e) => {
+                      (e.target as HTMLSelectElement).style.borderColor = 'var(--primary-500)';
+                      (e.target as HTMLSelectElement).style.boxShadow = '0 0 0 3px rgba(14, 165, 233, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      (e.target as HTMLSelectElement).style.borderColor = 'var(--gray-200)';
+                      (e.target as HTMLSelectElement).style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+                    }}
+                    onMouseEnter={(e) => {
+                      if (document.activeElement !== e.target) {
+                        (e.target as HTMLSelectElement).style.borderColor = 'var(--gray-300)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (document.activeElement !== e.target) {
+                        (e.target as HTMLSelectElement).style.borderColor = 'var(--gray-200)';
+                      }
+                    }}
+                  >
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
 
-            <button className="btn" onClick={() => fetchUsers()} title="Refresh"
-              style={{ backgroundColor: 'var(--gray-100)', color: 'var(--gray-800)', border: '1px solid var(--gray-300)', padding: '0.5rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <RefreshCw size={16} />
-              Refresh
-            </button>
+                <button 
+                  className="btn" 
+                  onClick={() => fetchUsers()} 
+                  title="Refresh"
+                  style={{ 
+                    backgroundColor: 'var(--gray-100)', 
+                    color: 'var(--gray-800)', 
+                    border: '2px solid var(--gray-200)', 
+                    padding: '0.875rem 1rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.5rem',
+                    borderRadius: '0.75rem',
+                    fontWeight: '500',
+                    transition: 'all 0.2s ease-in-out',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--gray-200)';
+                    e.currentTarget.style.borderColor = 'var(--gray-300)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--gray-100)';
+                    e.currentTarget.style.borderColor = 'var(--gray-200)';
+                  }}
+                >
+                  <RefreshCw size={16} />
+                  Refresh
+                </button>
+              </div>
+            </div>
+
+            {/* Search Results Summary */}
+            {q && (
+              <div style={{
+                marginTop: '1rem',
+                padding: '0.75rem 1rem',
+                backgroundColor: 'var(--blue-50)',
+                border: '1px solid var(--blue-200)',
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                color: 'var(--blue-700)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <Search size={16} />
+                <span>
+                  Found {users.length} user{users.length !== 1 ? 's' : ''} 
+                  {q && ` matching "${q}"`}
+                  {category !== 'all' && ` in ${category} category`}
+                  {status !== 'all' && ` with ${status} status`}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
