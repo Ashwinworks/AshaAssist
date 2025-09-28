@@ -111,3 +111,72 @@ class SeedService:
                 print("Demo health blogs already present; no seeding needed.")
         except Exception as e:
             print(f"Error seeding demo health blogs: {e}")
+
+    def create_sample_supply_requests(self):
+        """Create sample supply requests for testing"""
+        try:
+            # Check if we already have sample requests
+            existing_count = self.collections['supply_requests'].count_documents({})
+            if existing_count > 0:
+                print("Sample supply requests already exist; skipping seeding.")
+                return
+
+            # Get some sample users
+            users = list(self.collections['users'].find({}, {'_id': 1, 'name': 1, 'beneficiaryCategory': 1}).limit(4))
+            if len(users) < 2:
+                print("Not enough users for sample supply requests; skipping seeding.")
+                return
+
+            now = datetime.now(timezone.utc)
+
+            sample_requests = [
+                {
+                    'userId': users[0]['_id'],
+                    'supplyName': 'Amrutham Podi',
+                    'description': 'Need Amrutham Podi for my baby as prescribed by the doctor.',
+                    'category': 'maternity',
+                    'proofFile': '/uploads/sample_proof.pdf',
+                    'status': 'pending',
+                    'createdAt': now,
+                    'updatedAt': now
+                },
+                {
+                    'userId': users[0]['_id'],
+                    'supplyName': 'Diapers',
+                    'description': 'Requesting baby diapers for newborn care.',
+                    'category': 'maternity',
+                    'proofFile': '/uploads/sample_proof.pdf',
+                    'status': 'approved',
+                    'createdAt': now,
+                    'updatedAt': now,
+                    'reviewedBy': users[1]['_id'] if len(users) > 1 else None,
+                    'reviewNotes': 'Approved based on medical certificate.'
+                },
+                {
+                    'userId': users[1]['_id'] if len(users) > 1 else users[0]['_id'],
+                    'supplyName': 'Adult diapers',
+                    'description': 'Need adult diapers for palliative care patient.',
+                    'category': 'palliative',
+                    'proofFile': '/uploads/sample_proof.pdf',
+                    'status': 'pending',
+                    'createdAt': now,
+                    'updatedAt': now
+                },
+                {
+                    'userId': users[1]['_id'] if len(users) > 1 else users[0]['_id'],
+                    'supplyName': 'BP Monitor',
+                    'description': 'Blood pressure monitoring kit needed for regular check-ups.',
+                    'category': 'palliative',
+                    'proofFile': '/uploads/sample_proof.pdf',
+                    'status': 'rejected',
+                    'createdAt': now,
+                    'updatedAt': now,
+                    'reviewedBy': users[0]['_id'],
+                    'reviewNotes': 'Insufficient medical documentation provided.'
+                }
+            ]
+
+            self.collections['supply_requests'].insert_many(sample_requests)
+            print(f"✓ Seeded {len(sample_requests)} sample supply requests.")
+        except Exception as e:
+            print(f"Error seeding sample supply requests: {e}")

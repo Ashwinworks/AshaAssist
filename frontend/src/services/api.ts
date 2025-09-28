@@ -143,6 +143,16 @@ export const adminAPI = {
   updateUserStatus: async (id: string, isActive: boolean) => {
     const response = await api.put(`/admin/users/${id}/status`, { isActive });
     return response.data as { message: string; isActive: boolean };
+  },
+  // Supply Requests Management
+  getSupplyRequests: async (query?: string) => {
+    const url = query ? `/supply-requests${query}` : '/supply-requests';
+    const response = await api.get(url);
+    return response.data as { requests: any[]; pagination: { page: number; limit: number; total: number; pages: number } };
+  },
+  updateSupplyRequest: async (id: string, payload: { status: 'approved' | 'rejected'; reviewNotes?: string }) => {
+    const response = await api.put(`/supply-requests/${id}`, payload);
+    return response.data as { message: string };
   }
 };
 
@@ -422,15 +432,21 @@ export const palliativeAPI = {
     const response = await api.delete(`/palliative/records/${id}`);
     return response.data as { message: string };
   },
-  getAllRecords: async (params?: { 
-    testType?: string; 
-    userName?: string; 
-    dateFrom?: string; 
-    dateTo?: string; 
+  getAllRecords: async (params?: {
+    testType?: string;
+    userName?: string;
+    dateFrom?: string;
+    dateTo?: string;
   }) => {
     const response = await api.get('/palliative/records/all', { params });
     return response.data as { records: any[] };
   }
 };
 
-export default api;
+// Supply Requests API
+export const supplyAPI = {
+  submitRequest: async (payload: FormData) => {
+    const response = await api.post('/supply-requests', payload, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return response.data;
+  }
+};

@@ -29,6 +29,7 @@ import VaccinationSchedulesManagement from './pages/admin/content/VaccinationSch
 import CommunityClassesManagement from './pages/admin/content/CommunityClassesManagement';
 import LocalCampsManagement from './pages/admin/content/LocalCampsManagement';
 import Feedbacks from './pages/admin/Feedbacks';
+import SupplyRequestsManagement from './pages/admin/SupplyRequestsManagement';
 
 import CategorySelection from './components/CategorySelection';
 
@@ -551,6 +552,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <Feedbacks />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/supply-requests"
+        element={
+          <ProtectedRoute>
+            <SupplyRequestsManagement />
           </ProtectedRoute>
         }
       />

@@ -27,6 +27,7 @@ from routes.vaccination import init_vaccination_routes
 from routes.admin import init_admin_routes
 from routes.general import init_general_routes
 from routes.visit_requests import init_visit_request_routes
+from routes.supply import init_supply_routes
 from routes.community import init_community_routes
 
 # Import utilities
@@ -63,7 +64,10 @@ def create_app(config_name='default'):
     
     # Seed default health blogs
     seed_service.create_default_health_blogs()
-    
+
+    # Seed sample supply requests
+    seed_service.create_sample_supply_requests()
+
     # Initialize routes
     init_auth_routes(app, collections)
     init_maternity_routes(app, collections)
@@ -73,6 +77,7 @@ def create_app(config_name='default'):
     init_admin_routes(app, collections)
     init_general_routes(app, collections)
     init_visit_request_routes(app, collections)
+    init_supply_routes(app, collections)
     from routes.palliative import init_palliative_routes
     init_palliative_routes(app, collections)
     init_community_routes(app, collections)

@@ -58,9 +58,15 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
         { path: '/admin/content/local-camps', label: 'Local Camps' }
       ]
     },
-    { 
-      path: '/admin/feedbacks', 
-      icon: MessageSquare, 
+    {
+      path: '/admin/supply-requests',
+      icon: FileText,
+      label: 'Supply Requests',
+      color: 'var(--orange-600)'
+    },
+    {
+      path: '/admin/feedbacks',
+      icon: MessageSquare,
       label: 'Feedbacks',
       color: 'var(--yellow-600)'
     },
