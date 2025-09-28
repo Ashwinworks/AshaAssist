@@ -13,7 +13,7 @@ const navigationItems = [
 
   { id: 'blogs', label: 'Health Blogs', icon: BookOpen, path: '/maternity/blogs' },
   { id: 'calendar', label: 'Integrated Calendar', icon: Calendar, path: '/maternity/calendar' },
-  { id: 'supplies', label: 'Supply Requests', icon: Package, path: '/maternity/supplies' },
+  { id: 'supplies', label: 'Request Supplies', icon: Package, path: '/maternity/supplies' },
   { id: 'visits', label: 'Antenatal Visits', icon: UserCheck, path: '/maternity/visits' },
   { id: 'visit-requests', label: 'Visit Requests', icon: UserCheck, path: '/maternity/visit-requests' },
   { id: 'vaccinations', label: 'Vaccination Booking', icon: Syringe, path: '/maternity/vaccinations' },

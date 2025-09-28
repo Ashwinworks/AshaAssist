@@ -448,5 +448,19 @@ export const supplyAPI = {
   submitRequest: async (payload: FormData) => {
     const response = await api.post('/supply-requests', payload, { headers: { 'Content-Type': 'multipart/form-data' } });
     return response.data;
+  },
+  getUserRequests: async () => {
+    const response = await api.get('/supply-requests/user');
+    return response.data as { requests: any[] };
+  },
+  getApprovedRequests: async () => {
+    const response = await api.get('/supply-requests/approved');
+    return response.data as { requests: any[] };
+  },
+  scheduleDelivery: async (requestId: string, expectedDeliveryDate: string) => {
+    const response = await api.put(`/supply-requests/${requestId}/schedule`, {
+      expectedDeliveryDate
+    });
+    return response.data as { message: string };
   }
 };

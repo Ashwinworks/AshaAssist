@@ -20,6 +20,7 @@ interface SupplyRequest {
   };
   reviewedBy?: string;
   reviewNotes?: string;
+  expectedDeliveryDate?: string;
 }
 
 const SupplyRequestsManagement: React.FC = () => {
@@ -186,6 +187,11 @@ const SupplyRequestsManagement: React.FC = () => {
                           <strong>Review Notes:</strong> {request.reviewNotes}
                         </p>
                       )}
+                      {request.expectedDeliveryDate && (
+                        <p style={{ margin: '0.5rem 0', fontSize: '0.875rem', color: 'var(--gray-600)' }}>
+                          <strong>Expected Delivery:</strong> {new Date(request.expectedDeliveryDate).toLocaleDateString()}
+                        </p>
+                      )}
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                       <button
@@ -270,6 +276,11 @@ const SupplyRequestsManagement: React.FC = () => {
                 <div>
                   <strong>Review Notes:</strong>
                   <p style={{ marginTop: '0.5rem' }}>{selectedRequest.reviewNotes}</p>
+                </div>
+              )}
+              {selectedRequest.expectedDeliveryDate && (
+                <div>
+                  <strong>Expected Delivery:</strong> {new Date(selectedRequest.expectedDeliveryDate).toLocaleDateString()}
                 </div>
               )}
               <div>

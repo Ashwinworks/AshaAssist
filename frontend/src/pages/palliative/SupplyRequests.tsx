@@ -1,13 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PalliativeLayout from './PalliativeLayout';
 import { useAuth } from '../../context/AuthContext';
 import { supplyAPI } from '../../services/api';
 import toast from 'react-hot-toast';
+import { Eye, Package } from 'lucide-react';
 
 interface Supply {
   name: string;
   description: string;
   eligibility: string;
+}
+
+interface SupplyRequest {
+  _id: string;
+  supplyName: string;
+  description: string;
+  category: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  updatedAt: string;
+  reviewNotes?: string;
+  expectedDeliveryDate?: string;
+  scheduledAt?: string;
+  scheduledBy?: string;
 }
 
 const SupplyRequests: React.FC = () => {
@@ -17,6 +32,10 @@ const SupplyRequests: React.FC = () => {
   const [description, setDescription] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [requests, setRequests] = useState<SupplyRequest[]>([]);
+  const [requestsLoading, setRequestsLoading] = useState(true);
+  const [selectedRequest, setSelectedRequest] = useState<SupplyRequest | null>(null);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
 
   const maternalSupplies: Supply[] = [
     {
@@ -111,6 +130,40 @@ const SupplyRequests: React.FC = () => {
 
   const supplies = user?.beneficiaryCategory === 'maternity' ? maternalSupplies : palliativeSupplies;
 
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const fetchRequests = async () => {
+    try {
+      const response = await supplyAPI.getUserRequests();
+      setRequests(response.requests || []);
+    } catch (error: any) {
+      toast.error('Failed to fetch your supply requests');
+      console.error(error);
+    } finally {
+      setRequestsLoading(false);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'var(--yellow-600)';
+      case 'approved': return 'var(--green-600)';
+      case 'rejected': return 'var(--red-600)';
+      default: return 'var(--gray-600)';
+    }
+  };
+
+  const getStatusBgColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'var(--yellow-50)';
+      case 'approved': return 'var(--green-50)';
+      case 'rejected': return 'var(--red-50)';
+      default: return 'var(--gray-50)';
+    }
+  };
+
   const handleRequestClick = (supply: Supply) => {
     setSelectedSupply(supply);
     setModalOpen(true);
@@ -141,11 +194,21 @@ const SupplyRequests: React.FC = () => {
       setDescription('');
       setFile(null);
       setSelectedSupply(null);
+      fetchRequests();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to submit request');
     } finally {
       setLoading(false);
     }
+  };
+
+  const openViewModal = (request: SupplyRequest) => {
+    setSelectedRequest(request);
+    setViewModalOpen(true);
+  };
+
+  const getRequestForSupply = (supplyName: string) => {
+    return requests.find(request => request.supplyName === supplyName);
   };
 
   return (
@@ -160,34 +223,90 @@ const SupplyRequests: React.FC = () => {
             Select from the available supplies below and submit your request with necessary documentation.
           </p>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-            gap: '1rem'
-          }}>
-            {supplies.map((supply, index) => (
-              <div key={index} className="card" style={{ margin: 0 }}>
-                <div className="card-header">
-                  <h3 className="card-title" style={{ fontSize: '1rem' }}>{supply.name}</h3>
-                </div>
-                <div className="card-content">
-                  <p style={{ fontSize: '0.875rem', color: 'var(--gray-600)', marginBottom: '0.5rem' }}>
-                    {supply.description}
-                  </p>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--blue-600)', marginBottom: '1rem' }}>
-                    <strong>Eligibility:</strong> {supply.eligibility}
-                  </p>
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => handleRequestClick(supply)}
-                    style={{ width: '100%' }}
-                  >
-                    Request
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+          {requestsLoading ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              Loading your requests...
+            </div>
+          ) : (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+              gap: '1rem'
+            }}>
+              {supplies.map((supply, index) => {
+                const existingRequest = getRequestForSupply(supply.name);
+                return (
+                  <div key={index} className="card" style={{ margin: 0 }}>
+                    <div className="card-header">
+                      <h3 className="card-title" style={{ fontSize: '1rem' }}>{supply.name}</h3>
+                      {existingRequest && (
+                        <span
+                          style={{
+                            padding: '0.25rem 0.5rem',
+                            borderRadius: '12px',
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold',
+                            color: getStatusColor(existingRequest.status),
+                            backgroundColor: getStatusBgColor(existingRequest.status),
+                            marginLeft: '0.5rem'
+                          }}
+                        >
+                          {existingRequest.status.toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="card-content">
+                      <p style={{ fontSize: '0.875rem', color: 'var(--gray-600)', marginBottom: '0.5rem' }}>
+                        {supply.description}
+                      </p>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--blue-600)', marginBottom: '1rem' }}>
+                        <strong>Eligibility:</strong> {supply.eligibility}
+                      </p>
+
+                      {existingRequest ? (
+                        <div style={{ marginBottom: '1rem' }}>
+                          <p style={{ margin: '0.5rem 0', fontSize: '0.875rem', color: 'var(--gray-500)' }}>
+                            Requested on: {new Date(existingRequest.createdAt).toLocaleDateString()}
+                          </p>
+                          {existingRequest.status === 'approved' && existingRequest.expectedDeliveryDate && (
+                            <p style={{ margin: '0.5rem 0', fontSize: '0.875rem', color: 'var(--green-600)', fontWeight: 'bold' }}>
+                              Expected Delivery: {new Date(existingRequest.expectedDeliveryDate).toLocaleDateString()}
+                            </p>
+                          )}
+                          {existingRequest.status === 'rejected' && existingRequest.reviewNotes && (
+                            <p style={{ margin: '0.5rem 0', fontSize: '0.875rem', color: 'var(--red-600)' }}>
+                              <strong>Rejection Reason:</strong> {existingRequest.reviewNotes}
+                            </p>
+                          )}
+                          {existingRequest.status === 'approved' && !existingRequest.expectedDeliveryDate && (
+                            <p style={{ margin: '0.5rem 0', fontSize: '0.875rem', color: 'var(--orange-600)' }}>
+                              Approved - Delivery scheduling in progress
+                            </p>
+                          )}
+                          <button
+                            className="btn"
+                            onClick={() => openViewModal(existingRequest)}
+                            style={{ width: '100%', marginTop: '0.5rem' }}
+                          >
+                            <Eye size={16} style={{ marginRight: '0.5rem' }} />
+                            View Details
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          className="btn btn-primary"
+                          onClick={() => handleRequestClick(supply)}
+                          style={{ width: '100%' }}
+                        >
+                          Request
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
@@ -246,6 +365,64 @@ const SupplyRequests: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* View Request Modal */}
+      {viewModalOpen && selectedRequest && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.4)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="card" style={{ width: '90%', maxWidth: '600px', background: 'white', padding: '1rem', border: '1px solid var(--gray-200)' }}>
+            <div className="card-header">
+              <h3 className="card-title">{selectedRequest.supplyName}</h3>
+            </div>
+            <div className="card-content" style={{ display: 'grid', gap: '1rem' }}>
+              <div>
+                <strong>Status:</strong> {selectedRequest.status}
+              </div>
+              <div>
+                <strong>Description:</strong>
+                <p style={{ marginTop: '0.5rem' }}>{selectedRequest.description}</p>
+              </div>
+              <div>
+                <strong>Requested on:</strong> {new Date(selectedRequest.createdAt).toLocaleString()}
+              </div>
+              {selectedRequest.expectedDeliveryDate && (
+                <div>
+                  <strong>Expected Delivery:</strong> {new Date(selectedRequest.expectedDeliveryDate).toLocaleDateString()}
+                </div>
+              )}
+              {selectedRequest.scheduledAt && (
+                <div>
+                  <strong>Scheduled At:</strong> {new Date(selectedRequest.scheduledAt).toLocaleString()}
+                </div>
+              )}
+              {selectedRequest.scheduledBy && (
+                <div>
+                  <strong>Scheduled By:</strong> {selectedRequest.scheduledBy}
+                </div>
+              )}
+              {selectedRequest.reviewNotes && (
+                <div>
+                  <strong>Review Notes:</strong>
+                  <p style={{ marginTop: '0.5rem' }}>{selectedRequest.reviewNotes}</p>
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+              <button className="btn" onClick={() => setViewModalOpen(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </PalliativeLayout>
   );
 };

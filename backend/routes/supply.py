@@ -200,10 +200,110 @@ def get_user_supply_requests():
             req['_id'] = str(req['_id'])
             req['createdAt'] = req['createdAt'].isoformat() if req.get('createdAt') else None
             req['updatedAt'] = req['updatedAt'].isoformat() if req.get('updatedAt') else None
+            req['expectedDeliveryDate'] = req['expectedDeliveryDate'].isoformat() if req.get('expectedDeliveryDate') else None
+            req['scheduledAt'] = req['scheduledAt'].isoformat() if req.get('scheduledAt') else None
+            if req.get('scheduledBy'):
+                req['scheduledBy'] = str(req['scheduledBy'])
 
         return jsonify({'requests': requests}), 200
 
     except Exception as e:
         print(f"Error getting user supply requests: {e}")
+        traceback.print_exc()
+        return jsonify({'error': 'Internal server error'}), 500
+
+@supply_bp.route('/supply-requests/approved', methods=['GET'])
+@require_auth
+def get_approved_supply_requests():
+    """Get approved supply requests for ASHA workers to schedule delivery"""
+    try:
+        db = request.db
+
+        # Get approved requests that haven't been scheduled yet or need rescheduling
+        requests = list(db['supply_requests'].find({
+            'status': 'approved',
+            '$or': [
+                {'expectedDeliveryDate': {'$exists': False}},
+                {'expectedDeliveryDate': None}
+            ]
+        }).sort('createdAt', -1))
+
+        # Convert ObjectId to string and format dates, add user details
+        for req in requests:
+            req['_id'] = str(req['_id'])
+            req['userId'] = str(req['userId'])
+            req['createdAt'] = req['createdAt'].isoformat() if req.get('createdAt') else None
+            req['updatedAt'] = req['updatedAt'].isoformat() if req.get('updatedAt') else None
+            req['reviewedBy'] = str(req['reviewedBy']) if req.get('reviewedBy') else None
+
+            # Get user details
+            user = db['users'].find_one({'_id': ObjectId(req['userId'])})
+            if user:
+                req['user'] = {
+                    'name': user.get('name', 'Unknown User'),
+                    'email': user.get('email', 'unknown@example.com'),
+                    'beneficiaryCategory': user.get('beneficiaryCategory', 'unknown'),
+                    'phone': user.get('phone', ''),
+                    'address': user.get('address', '')
+                }
+            else:
+                req['user'] = {
+                    'name': 'Unknown User',
+                    'email': 'unknown@example.com',
+                    'beneficiaryCategory': 'unknown',
+                    'phone': '',
+                    'address': ''
+                }
+
+        return jsonify({'requests': requests}), 200
+
+    except Exception as e:
+        print(f"Error getting approved supply requests: {e}")
+        traceback.print_exc()
+        return jsonify({'error': 'Internal server error'}), 500
+
+@supply_bp.route('/supply-requests/<request_id>/schedule', methods=['PUT'])
+@require_auth
+def schedule_supply_delivery(request_id):
+    """Schedule delivery for an approved supply request"""
+    try:
+        db = request.db
+        asha_worker_id = request.user_id
+
+        # Get request data
+        data = request.get_json()
+        expected_delivery_date = data.get('expectedDeliveryDate')
+
+        if not expected_delivery_date:
+            return jsonify({'error': 'Expected delivery date is required'}), 400
+
+        # Validate that the request exists and is approved
+        request_doc = db['supply_requests'].find_one({'_id': ObjectId(request_id)})
+        if not request_doc:
+            return jsonify({'error': 'Supply request not found'}), 404
+
+        if request_doc['status'] != 'approved':
+            return jsonify({'error': 'Only approved requests can be scheduled for delivery'}), 400
+
+        # Update the request with delivery scheduling info
+        update_data = {
+            'expectedDeliveryDate': datetime.fromisoformat(expected_delivery_date.replace('Z', '+00:00')),
+            'scheduledBy': asha_worker_id,
+            'scheduledAt': datetime.now(timezone.utc),
+            'updatedAt': datetime.now(timezone.utc)
+        }
+
+        result = db['supply_requests'].update_one(
+            {'_id': ObjectId(request_id)},
+            {'$set': update_data}
+        )
+
+        if result.matched_count == 0:
+            return jsonify({'error': 'Supply request not found'}), 404
+
+        return jsonify({'message': 'Delivery scheduled successfully'}), 200
+
+    except Exception as e:
+        print(f"Error scheduling supply delivery: {e}")
         traceback.print_exc()
         return jsonify({'error': 'Internal server error'}), 500
