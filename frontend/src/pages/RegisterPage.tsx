@@ -12,7 +12,7 @@ interface RegisterFormData {
   phone: string;
   password: string;
   confirmPassword: string;
-  userType: 'user' | 'asha_worker' | 'admin';
+  userType: 'user' | 'asha_worker' | 'admin' | 'anganvaadi';
   beneficiaryCategory: 'maternity' | 'palliative';
   agreeToTerms: boolean;
 }
@@ -29,7 +29,7 @@ const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
-  const defaultUserType = searchParams.get('type') as 'user' | 'asha_worker' | 'admin' || 'user';
+  const defaultUserType = searchParams.get('type') as 'user' | 'asha_worker' | 'admin' | 'anganvaadi' || 'user';
 
   const {
     register,

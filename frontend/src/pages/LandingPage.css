@@ -55,6 +55,19 @@
 .hero {
   padding: 8rem 0 4rem;
   background: linear-gradient(135deg, var(--primary-50) 0%, var(--secondary-50) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-orb {
+  position: absolute;
+  top: 50%;
+  right: -200px;
+  width: 600px;
+  height: 600px;
+  z-index: 1;
+  opacity: 0.6;
+  transform: translateY(-50%);
 }
 
 .hero-content {
@@ -62,6 +75,8 @@
   grid-template-columns: 1fr 1fr;
   gap: 4rem;
   align-items: center;
+  position: relative;
+  z-index: 2;
 }
 
 .hero-title {

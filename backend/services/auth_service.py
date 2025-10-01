@@ -230,7 +230,7 @@ class AuthService:
         }, 200
 
     def create_default_accounts(self):
-        """Create default ASHA worker and admin accounts if they don't exist"""
+        """Create default ASHA worker, admin, and Anganvaadi accounts if they don't exist"""
         try:
             # Check if ASHA worker exists
             asha_exists = self.users_collection.find_one({"email": "asha@gmail.com"})
@@ -249,7 +249,26 @@ class AuthService:
                 }
                 self.users_collection.insert_one(asha_account)
                 print("✓ Default ASHA worker account created: asha@gmail.com / asha123")
-            
+
+            # Check if Anganvaadi worker exists
+            anganvaadi_exists = self.users_collection.find_one({"email": "anganvaadi@gmail.com"})
+            if not anganvaadi_exists:
+                anganvaadi_account = {
+                    "name": "Anganvaadi Worker - Ward 1",
+                    "email": "anganvaadi@gmail.com",
+                    "phone": "9876543212",
+                    "password": generate_password_hash("anganvaadi123"),
+                    "userType": "anganvaadi",
+                    "ward": "Ward 1",
+                    "center": "Anganvaadi Center - Ward 1",
+                    "isActive": True,
+                    "isFirstLogin": True,
+                    "createdAt": datetime.now(timezone.utc),
+                    "updatedAt": datetime.now(timezone.utc)
+                }
+                self.users_collection.insert_one(anganvaadi_account)
+                print("✓ Default Anganvaadi worker account created: anganvaadi@gmail.com / anganvaadi123")
+
             # Check if admin exists
             admin_exists = self.users_collection.find_one({"email": "admin@example.com"})
             if not admin_exists:
@@ -268,6 +287,6 @@ class AuthService:
                 }
                 self.users_collection.insert_one(admin_account)
                 print("✓ Default admin account created: admin@example.com / admin123")
-                
+
         except Exception as e:
             print(f"Error creating default accounts: {e}")

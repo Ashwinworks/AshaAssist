@@ -10,6 +10,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import MaternityDashboard from './pages/MaternityDashboard';
 import PalliativeDashboard from './pages/PalliativeDashboard';
 import AshaWorkerDashboard from './pages/AshaWorkerDashboard';
+import AnganvaadiDashboard from './pages/anganvaadi/AnganvaadiDashboard';
 import AshaCalendarManagement from './pages/asha/CalendarManagement';
 import VaccinationSchedules from './pages/asha/VaccinationSchedules';
 import AshaVisitRequests from './pages/asha/VisitRequests';
@@ -78,7 +79,7 @@ const DashboardRedirect: React.FC = () => {
 
   // Redirect based on user type and beneficiary category
   console.log('DashboardRedirect - user authenticated, redirecting based on role:', user.userType, 'and category:', user.beneficiaryCategory);
-  
+
   switch (user.userType) {
     case 'user':
       // Further redirect based on beneficiary category
@@ -92,6 +93,8 @@ const DashboardRedirect: React.FC = () => {
       }
     case 'asha_worker':
       return <Navigate to="/asha-dashboard" replace />;
+    case 'anganvaadi':
+      return <Navigate to="/anganvaadi-dashboard" replace />;
     case 'admin':
       return <Navigate to="/admin/dashboard" replace />;
     default:
@@ -156,6 +159,8 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         }
       case 'asha_worker':
         return <Navigate to="/asha-dashboard" replace />;
+      case 'anganvaadi':
+        return <Navigate to="/anganvaadi-dashboard" replace />;
       case 'admin':
         return <Navigate to="/admin/dashboard" replace />;
       default:
@@ -242,6 +247,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <AshaWorkerDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/anganvaadi-dashboard"
+        element={
+          <ProtectedRoute>
+            <AnganvaadiDashboard />
           </ProtectedRoute>
         }
       />

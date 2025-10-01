@@ -8,7 +8,7 @@ interface UserRow {
   name: string;
   email: string;
   phone?: string;
-  userType: 'user' | 'asha_worker' | 'admin';
+  userType: 'user' | 'asha_worker' | 'admin' | 'anganvaadi';
   beneficiaryCategory?: 'maternity' | 'palliative';
   isActive: boolean;
   createdAt?: string;

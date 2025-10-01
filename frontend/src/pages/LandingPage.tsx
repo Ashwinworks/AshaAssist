@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Users, Calendar, Shield, Phone, Mail, ArrowRight, TrendingUp, FileText, Bell } from 'lucide-react';
+import Orb from '../components/Orb';
 import './LandingPage.css';
 
 const LandingPage: React.FC = () => {
@@ -28,6 +29,14 @@ const LandingPage: React.FC = () => {
 
       {/* Hero Section */}
       <section className="hero">
+        <div className="hero-orb">
+          <Orb
+            hue={240}
+            hoverIntensity={0.5}
+            rotateOnHover={true}
+            forceHoverState={false}
+          />
+        </div>
         <div className="container">
           <div className="hero-content">
             <div className="hero-text">

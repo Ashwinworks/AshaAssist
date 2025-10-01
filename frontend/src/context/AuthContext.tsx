@@ -7,7 +7,7 @@ interface User {
   id: string;
   email: string;
   name: string;
-  userType: 'user' | 'asha_worker' | 'admin';
+  userType: 'user' | 'asha_worker' | 'admin' | 'anganvaadi';
   beneficiaryCategory?: 'maternity' | 'palliative';
   isFirstLogin: boolean;
   profileCompleted: boolean;
