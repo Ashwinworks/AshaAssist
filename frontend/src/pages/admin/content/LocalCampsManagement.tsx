@@ -11,6 +11,8 @@ import {
   Users,
   MapPin,
   Stethoscope,
+  BookOpen,
+  Tent,
 } from 'lucide-react';
 import { communityAPI } from '../../../services/api';
 
@@ -25,6 +27,9 @@ const LocalCampsManagement: React.FC = () => {
   const [editingCamp, setEditingCamp] = useState<any>(null);
   const [editLoading, setEditLoading] = useState(false);
   const [editFormData, setEditFormData] = useState<any>({});
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedCamp, setSelectedCamp] = useState<any>(null);
+  const [viewLoading, setViewLoading] = useState(false);
 
   const fetchCamps = async () => {
     try {
@@ -97,6 +102,25 @@ const LocalCampsManagement: React.FC = () => {
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'var(--yellow-600)';
+      case 'approved':
+      case 'scheduled':
+        return 'var(--blue-600)';
+      case 'completed':
+        return 'var(--green-600)';
+      case 'rejected':
+      case 'cancelled':
+        return 'var(--red-600)';
+      case 'postponed':
+        return 'var(--orange-600)';
+      default:
+        return 'var(--gray-600)';
+    }
+  };
+
   const handleApprove = async (campId: string) => {
     try {
       await communityAPI.updateCamp(campId, { status: 'Approved' });
@@ -116,12 +140,16 @@ const LocalCampsManagement: React.FC = () => {
   };
 
   const handleView = async (campId: string) => {
+    setViewLoading(true);
+    setViewModalOpen(true);
     try {
       const data = await communityAPI.getCamp(campId);
-      const camp = data.camp || {};
-      alert(`Camp Details\n\nTitle: ${camp.title}\nDate: ${camp.date}\nTime: ${camp.time}\nLocation: ${camp.location}\nOrganizer: ${camp.organizer || ''}\nStatus: ${camp.status || ''}`);
+      setSelectedCamp(data.camp || {});
     } catch (e) {
       alert('Failed to load camp details');
+      setViewModalOpen(false);
+    } finally {
+      setViewLoading(false);
     }
   };
 
@@ -840,6 +868,154 @@ const LocalCampsManagement: React.FC = () => {
                     {editLoading ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* View Camp Modal */}
+        {viewModalOpen && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div className="card" style={{
+              maxWidth: '600px',
+              width: '90%',
+              maxHeight: '80vh',
+              overflow: 'auto',
+              margin: '1rem'
+            }}>
+              <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 className="card-title">Camp Details</h3>
+                <button
+                  onClick={() => { setViewModalOpen(false); setSelectedCamp(null); }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    color: 'var(--gray-500)'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+              <div className="card-content">
+                {viewLoading ? (
+                  <div style={{ textAlign: 'center', padding: '2rem' }}>
+                    <div className="loading-spinner" />
+                    <p>Loading...</p>
+                  </div>
+                ) : selectedCamp ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <Tent size={24} color="var(--purple-600)" />
+                      <div>
+                        <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '600' }}>{selectedCamp.title}</h2>
+                        <span style={{
+                          fontSize: '0.875rem',
+                          fontWeight: '600',
+                          color: getStatusColor(selectedCamp.status),
+                          backgroundColor: `${getStatusColor(selectedCamp.status)}20`,
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '0.25rem'
+                        }}>
+                          {selectedCamp.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
+                      <div className="card" style={{ padding: '1rem', backgroundColor: 'var(--blue-25)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <Calendar size={16} color="var(--blue-600)" />
+                          <strong style={{ color: 'var(--blue-700)' }}>Schedule Details</strong>
+                        </div>
+                        <div style={{ fontSize: '0.875rem', color: 'var(--gray-700)' }}>
+                          <div><strong>Date:</strong> {selectedCamp.date}</div>
+                          <div><strong>Time:</strong> {selectedCamp.time}</div>
+                          <div><strong>Camp Type:</strong> {selectedCamp.campType}</div>
+                          <div><strong>Created:</strong> {selectedCamp.createdAt}</div>
+                        </div>
+                      </div>
+
+                      <div className="card" style={{ padding: '1rem', backgroundColor: 'var(--green-25)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <MapPin size={16} color="var(--green-600)" />
+                          <strong style={{ color: 'var(--green-700)' }}>Location & Organizer</strong>
+                        </div>
+                        <div style={{ fontSize: '0.875rem', color: 'var(--gray-700)' }}>
+                          <div><strong>Location:</strong> {selectedCamp.location}</div>
+                          <div><strong>Organizer:</strong> {selectedCamp.organizer || '—'}</div>
+                          <div><strong>Contact Person:</strong> {selectedCamp.contactPerson || '—'}</div>
+                          <div><strong>Last Updated:</strong> {selectedCamp.lastUpdated}</div>
+                        </div>
+                      </div>
+
+                      <div className="card" style={{ padding: '1rem', backgroundColor: 'var(--purple-25)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <Users size={16} color="var(--purple-600)" />
+                          <strong style={{ color: 'var(--purple-700)' }}>Attendance</strong>
+                        </div>
+                        <div style={{ fontSize: '0.875rem', color: 'var(--gray-700)' }}>
+                          <div><strong>Expected Participants:</strong> {selectedCamp.expectedParticipants || 0}</div>
+                          <div><strong>Registered:</strong> {selectedCamp.registeredParticipants || 0}</div>
+                          <div><strong>Target Audience:</strong> {selectedCamp.targetAudience}</div>
+                          <div><strong>Published Date:</strong> {selectedCamp.publishedDate}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {selectedCamp.description && (
+                      <div>
+                        <h4 style={{ marginBottom: '0.5rem', color: 'var(--gray-900)' }}>Description</h4>
+                        <p style={{ margin: 0, color: 'var(--gray-700)', lineHeight: '1.5' }}>{selectedCamp.description}</p>
+                      </div>
+                    )}
+
+                    {selectedCamp.requirements && (
+                      <div>
+                        <h4 style={{ marginBottom: '0.5rem', color: 'var(--gray-900)' }}>Requirements</h4>
+                        <p style={{ margin: 0, color: 'var(--gray-700)', lineHeight: '1.5' }}>{selectedCamp.requirements}</p>
+                      </div>
+                    )}
+
+                    {Array.isArray(selectedCamp.services) && selectedCamp.services.length > 0 && (
+                      <div>
+                        <h4 style={{ marginBottom: '0.5rem', color: 'var(--gray-900)' }}>Services</h4>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                          {selectedCamp.services.map((service: string, index: number) => (
+                            <span
+                              key={index}
+                              style={{
+                                backgroundColor: 'var(--blue-100)',
+                                color: 'var(--blue-800)',
+                                padding: '0.25rem 0.5rem',
+                                borderRadius: '0.25rem',
+                                fontSize: '0.875rem'
+                              }}
+                            >
+                              {service}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '2rem' }}>
+                    <p>Failed to load camp details.</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

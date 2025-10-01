@@ -3,7 +3,7 @@ import PalliativeLayout from './PalliativeLayout';
 import { useAuth } from '../../context/AuthContext';
 import { supplyAPI } from '../../services/api';
 import toast from 'react-hot-toast';
-import { Eye, Package } from 'lucide-react';
+import { Eye, Package, RefreshCw } from 'lucide-react';
 
 interface Supply {
   name: string;
@@ -36,6 +36,23 @@ const SupplyRequests: React.FC = () => {
   const [requestsLoading, setRequestsLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<SupplyRequest | null>(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
+
+  const fetchRequests = async () => {
+    setRequestsLoading(true);
+    try {
+      const response = await supplyAPI.getUserRequests();
+      setRequests(response.requests || []);
+    } catch (error: any) {
+      toast.error('Failed to fetch requests');
+      console.error(error);
+    } finally {
+      setRequestsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
 
   const maternalSupplies: Supply[] = [
     {
@@ -130,22 +147,6 @@ const SupplyRequests: React.FC = () => {
 
   const supplies = user?.beneficiaryCategory === 'maternity' ? maternalSupplies : palliativeSupplies;
 
-  useEffect(() => {
-    fetchRequests();
-  }, []);
-
-  const fetchRequests = async () => {
-    try {
-      const response = await supplyAPI.getUserRequests();
-      setRequests(response.requests || []);
-    } catch (error: any) {
-      toast.error('Failed to fetch your supply requests');
-      console.error(error);
-    } finally {
-      setRequestsLoading(false);
-    }
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'var(--yellow-600)';
@@ -215,7 +216,19 @@ const SupplyRequests: React.FC = () => {
     <PalliativeLayout title="Supply Requests">
       <div className="card">
         <div className="card-header">
-          <h2 className="card-title">Request Medical Supplies</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 className="card-title">Request Medical Supplies</h2>
+            <button
+              className="btn"
+              onClick={fetchRequests}
+              disabled={requestsLoading}
+              style={{ padding: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              title="Refresh requests"
+            >
+              <RefreshCw size={16} />
+              Refresh
+            </button>
+          </div>
         </div>
         <div className="card-content">
           <p style={{ marginBottom: '2rem' }}>

@@ -40,6 +40,7 @@ def init_community_routes(app, collections):
             for doc in cursor:
                 doc['id'] = str(doc.get('_id'))
                 doc.pop('_id', None)
+                doc['createdBy'] = str(doc.get('createdBy', ''))
                 items.append(doc)
             return jsonify({'classes': items}), 200
         except Exception as e:
@@ -53,7 +54,7 @@ def init_community_routes(app, collections):
             if claims.get('userType') not in ['asha_worker', 'admin']:
                 return jsonify({'error': 'Only ASHA workers or admins can create classes'}), 403
 
-            user_id = get_jwt_identity()
+            user_id = str(get_jwt_identity())
             data = request.get_json() or {}
 
             # Required minimal fields
@@ -139,6 +140,7 @@ def init_community_routes(app, collections):
             for doc in cursor:
                 doc['id'] = str(doc.get('_id'))
                 doc.pop('_id', None)
+                doc['createdBy'] = str(doc.get('createdBy', ''))
                 items.append(doc)
             return jsonify({'camps': items}), 200
         except Exception as e:
@@ -152,7 +154,7 @@ def init_community_routes(app, collections):
             if claims.get('userType') not in ['asha_worker', 'admin']:
                 return jsonify({'error': 'Only ASHA workers or admins can announce camps'}), 403
 
-            user_id = get_jwt_identity()
+            user_id = str(get_jwt_identity())
             data = request.get_json() or {}
 
             title = (data.get('title') or '').strip()
@@ -348,6 +350,7 @@ def init_community_routes(app, collections):
             # Convert ObjectId to string for JSON serialization
             doc['id'] = str(doc.get('_id'))
             doc.pop('_id', None)
+            doc['createdBy'] = str(doc.get('createdBy', ''))
 
             return jsonify({'class': doc}), 200
         except Exception as e:
@@ -370,6 +373,7 @@ def init_community_routes(app, collections):
             # Convert ObjectId to string for JSON serialization
             doc['id'] = str(doc.get('_id'))
             doc.pop('_id', None)
+            doc['createdBy'] = str(doc.get('createdBy', ''))
 
             return jsonify({'camp': doc}), 200
         except Exception as e:
