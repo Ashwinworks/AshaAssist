@@ -455,11 +455,57 @@ export const supplyAPI = {
   },
   getApprovedRequests: async () => {
     const response = await api.get('/supply-requests/approved');
+    console.log('API response for approved requests:', response.data);
     return response.data as { requests: any[] };
+  },
+  getAllRequests: async () => {
+    const response = await api.get('/supply-requests');
+    console.log('API response for all requests:', response.data);
+    return response.data as { requests: any[] };
+  },
+  getScheduledRequests: async () => {
+    try {
+      const response = await api.get('/supply-requests/scheduled');
+      console.log('API response for scheduled requests:', response.data);
+      return response.data as { requests: any[] };
+    } catch (error) {
+      console.log('Scheduled endpoint failed, trying to get all requests and filter:', error);
+      // If scheduled endpoint doesn't exist, try to get all requests and filter
+      try {
+        const response = await api.get('/supply-requests');
+        const allRequests = response.data.requests || [];
+        const scheduledRequests = allRequests.filter((req: any) => 
+          req.expectedDeliveryDate || req.status === 'scheduled'
+        );
+        console.log('Filtered scheduled requests from all requests:', scheduledRequests);
+        return { requests: scheduledRequests };
+      } catch (allError) {
+        console.log('All requests endpoint also failed:', allError);
+        throw allError;
+      }
+    }
   },
   scheduleDelivery: async (requestId: string, expectedDeliveryDate: string) => {
     const response = await api.put(`/supply-requests/${requestId}/schedule`, {
       expectedDeliveryDate
+    });
+    return response.data as { message: string };
+  },
+  scheduleDeliveryWithLocation: async (requestId: string, expectedDeliveryDate: string, deliveryLocation: 'home' | 'ward') => {
+    const payload = {
+      expectedDeliveryDate,
+      deliveryLocation
+    };
+    console.log('API: Scheduling delivery with payload:', payload);
+    console.log('API: Request URL:', `/supply-requests/${requestId}/schedule`);
+    
+    const response = await api.put(`/supply-requests/${requestId}/schedule`, payload);
+    console.log('API: Schedule delivery response:', response.data);
+    return response.data as { message: string };
+  },
+  updateDeliveryStatus: async (requestId: string, status: 'delivered' | 'cancelled') => {
+    const response = await api.put(`/supply-requests/${requestId}/status`, {
+      deliveryStatus: status
     });
     return response.data as { message: string };
   }

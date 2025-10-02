@@ -2,18 +2,12 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Heart, LogOut, Calendar, Home, Package,
-  MessageSquare, Menu, X, ChevronDown, ChevronRight, Users, BookOpen, MapPin
+  Heart, LogOut, Calendar, Package,
+  Menu, X, BookOpen, MapPin
 } from 'lucide-react';
 
-// Navigation items for Anganvaadi workers with dropdown support
+// Navigation items for Anganvaadi workers
 const navigationItems = [
-  {
-    id: 'dashboard',
-    label: 'Dashboard',
-    icon: Home,
-    path: '/anganvaadi-dashboard'
-  },
   {
     id: 'community-classes',
     label: 'Community Classes',
@@ -27,26 +21,16 @@ const navigationItems = [
     path: '/anganvaadi/local-camps'
   },
   {
-    id: 'ration-distribution',
-    label: 'Ration Distribution',
+    id: 'ration',
+    label: 'Ration',
     icon: Package,
-    path: '/anganvaadi/ration-distribution'
+    path: '/anganvaadi/ration'
   },
   {
-    id: 'calendar',
-    label: 'Calendar',
+    id: 'vaccination-schedules',
+    label: 'Vaccination Schedules',
     icon: Calendar,
-    path: '/anganvaadi/calendar'
-  },
-  {
-    id: 'communication',
-    label: 'Communication',
-    icon: MessageSquare,
-    isDropdown: true,
-    children: [
-      { id: 'health-blogs', label: 'Health Blogs', path: '/anganvaadi/health-blogs' },
-      { id: 'announcements', label: 'Announcements', path: '/anganvaadi/announcements' }
-    ]
+    path: '/anganvaadi/vaccination-schedules'
   }
 ];
 
@@ -60,58 +44,19 @@ const AnganvaadiLayout: React.FC<AnganvaadiLayoutProps> = ({ children, title }) 
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
 
   const handleLogout = () => {
     logout();
   };
 
-  const toggleDropdown = (itemId: string) => {
-    setOpenDropdowns(prev =>
-      prev.includes(itemId)
-        ? prev.filter(id => id !== itemId)
-        : [...prev, itemId]
-    );
-  };
-
   const getCurrentPageTitle = () => {
-    // Check main navigation items first
     const currentItem = navigationItems.find(item => item.path === location.pathname);
-    if (currentItem) return currentItem.label;
-
-    // Check dropdown items
-    for (const item of navigationItems) {
-      if (item.children) {
-        const childItem = item.children.find(child => child.path === location.pathname);
-        if (childItem) return childItem.label;
-      }
-    }
-
-    return title;
+    return currentItem ? currentItem.label : title;
   };
 
   const isActiveItem = (item: any) => {
-    if (item.path) return location.pathname === item.path;
-    if (item.children) {
-      return item.children.some((child: any) => location.pathname === child.path);
-    }
-    return false;
+    return item.path === location.pathname;
   };
-
-  const isActiveChild = (childPath: string) => {
-    return location.pathname === childPath;
-  };
-
-  // Auto-open dropdown if current page is a child of that dropdown
-  React.useEffect(() => {
-    navigationItems.forEach(item => {
-      if (item.children && item.children.some(child => child.path === location.pathname)) {
-        if (!openDropdowns.includes(item.id)) {
-          setOpenDropdowns(prev => [...prev, item.id]);
-        }
-      }
-    });
-  }, [location.pathname]);
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', display: 'flex' }}>
@@ -207,94 +152,41 @@ const AnganvaadiLayout: React.FC<AnganvaadiLayoutProps> = ({ children, title }) 
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = isActiveItem(item);
-            const isDropdownOpen = openDropdowns.includes(item.id);
 
             return (
-              <div key={item.id}>
-                {/* Main Navigation Item */}
-                <button
-                  onClick={() => {
-                    if (item.isDropdown) {
-                      toggleDropdown(item.id);
-                    } else if (item.path) {
-                      navigate(item.path);
-                    }
-                  }}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '1rem',
-                    padding: sidebarOpen ? '1rem 1.5rem' : '1rem',
-                    border: 'none',
-                    background: isActive ? 'var(--green-50)' : 'transparent',
-                    color: isActive ? 'var(--green-700)' : 'var(--gray-600)',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    fontWeight: isActive ? '600' : '500',
-                    borderLeft: isActive ? '3px solid var(--green-600)' : '3px solid transparent',
-                    justifyContent: sidebarOpen ? 'space-between' : 'center',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.backgroundColor = 'var(--gray-50)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <Icon size={22} />
-                    {sidebarOpen && <span>{item.label}</span>}
-                  </div>
-                  {sidebarOpen && item.isDropdown && (
-                    isDropdownOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />
-                  )}
-                </button>
-
-                {/* Dropdown Items */}
-                {item.isDropdown && isDropdownOpen && sidebarOpen && (
-                  <div style={{ backgroundColor: 'var(--gray-25)' }}>
-                    {item.children?.map((child) => (
-                      <button
-                        key={child.id}
-                        onClick={() => navigate(child.path)}
-                        style={{
-                          width: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '1rem',
-                          padding: '0.75rem 3rem',
-                          border: 'none',
-                          background: isActiveChild(child.path) ? 'var(--green-100)' : 'transparent',
-                          color: isActiveChild(child.path) ? 'var(--green-700)' : 'var(--gray-600)',
-                          cursor: 'pointer',
-                          fontSize: '0.875rem',
-                          fontWeight: isActiveChild(child.path) ? '600' : '500',
-                          transition: 'all 0.2s ease',
-                          textAlign: 'left'
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isActiveChild(child.path)) {
-                            e.currentTarget.style.backgroundColor = 'var(--gray-50)';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isActiveChild(child.path)) {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                          }
-                        }}
-                      >
-                        <span>{child.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <button
+                key={item.id}
+                onClick={() => navigate(item.path)}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  padding: sidebarOpen ? '1rem 1.5rem' : '1rem',
+                  border: 'none',
+                  background: isActive ? 'var(--green-50)' : 'transparent',
+                  color: isActive ? 'var(--green-700)' : 'var(--gray-600)',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: isActive ? '600' : '500',
+                  borderLeft: isActive ? '3px solid var(--green-600)' : '3px solid transparent',
+                  justifyContent: sidebarOpen ? 'flex-start' : 'center',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = 'var(--gray-50)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+              >
+                <Icon size={22} />
+                {sidebarOpen && <span>{item.label}</span>}
+              </button>
             );
           })}
         </nav>

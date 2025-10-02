@@ -11,6 +11,10 @@ import MaternityDashboard from './pages/MaternityDashboard';
 import PalliativeDashboard from './pages/PalliativeDashboard';
 import AshaWorkerDashboard from './pages/AshaWorkerDashboard';
 import AnganvaadiDashboard from './pages/anganvaadi/AnganvaadiDashboard';
+import AnganvaadiCommunityClasses from './pages/anganvaadi/CommunityClasses';
+import AnganvaadiLocalCamps from './pages/anganvaadi/LocalCamps';
+import AnganvaadiRation from './pages/anganvaadi/Ration';
+import AnganvaadiVaccinationSchedules from './pages/anganvaadi/VaccinationSchedules';
 import AshaCalendarManagement from './pages/asha/CalendarManagement';
 import VaccinationSchedules from './pages/asha/VaccinationSchedules';
 import AshaVisitRequests from './pages/asha/VisitRequests';
@@ -255,6 +259,38 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <AnganvaadiDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/anganvaadi/community-classes"
+        element={
+          <ProtectedRoute>
+            <AnganvaadiCommunityClasses />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/anganvaadi/local-camps"
+        element={
+          <ProtectedRoute>
+            <AnganvaadiLocalCamps />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/anganvaadi/ration"
+        element={
+          <ProtectedRoute>
+            <AnganvaadiRation />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/anganvaadi/vaccination-schedules"
+        element={
+          <ProtectedRoute>
+            <AnganvaadiVaccinationSchedules />
           </ProtectedRoute>
         }
       />

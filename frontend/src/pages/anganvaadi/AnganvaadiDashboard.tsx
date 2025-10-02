@@ -1,8 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import AnganvaadiLayout from './AnganvaadiLayout';
-import { Bell, Calendar, Users, FileText, Settings, Activity, TrendingUp, AlertCircle, BookOpen, MapPin, Package } from 'lucide-react';
+import { Users, Activity, AlertCircle, BookOpen, MapPin, Package, Syringe } from 'lucide-react';
 
 const AnganvaadiDashboard: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <AnganvaadiLayout title="Dashboard">
       <div>
@@ -119,7 +122,7 @@ const AnganvaadiDashboard: React.FC = () => {
               <div className="card" style={{ padding: '1.5rem', border: '2px solid var(--green-100)', backgroundColor: 'var(--green-25)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
                   <BookOpen style={{ width: '1.5rem', height: '1.5rem', color: 'var(--green-600)' }} />
-                  <h3 style={{ margin: '0', color: 'var(--green-800)', fontSize: '1.125rem', fontWeight: '600' }}>Schedule Classes</h3>
+                  <h3 style={{ margin: '0', color: 'var(--green-800)', fontSize: '1.125rem', fontWeight: '600' }}>Community Classes</h3>
                 </div>
                 <p style={{ margin: '0 0 1.25rem', color: 'var(--green-700)', fontSize: '0.875rem', lineHeight: '1.4' }}>
                   Organize community classes, educational sessions, and nutritional awareness programs.
@@ -130,8 +133,8 @@ const AnganvaadiDashboard: React.FC = () => {
                   border: 'none',
                   fontSize: '0.875rem',
                   fontWeight: '600'
-                }}>
-                  View Classes (8)
+                }} onClick={() => navigate('/anganvaadi/community-classes')}>
+                  View Classes
                 </button>
               </div>
 
@@ -149,8 +152,8 @@ const AnganvaadiDashboard: React.FC = () => {
                   border: 'none',
                   fontSize: '0.875rem',
                   fontWeight: '600'
-                }}>
-                  View Camps (3)
+                }} onClick={() => navigate('/anganvaadi/local-camps')}>
+                  View Camps
                 </button>
               </div>
 
@@ -168,18 +171,18 @@ const AnganvaadiDashboard: React.FC = () => {
                   border: 'none',
                   fontSize: '0.875rem',
                   fontWeight: '600'
-                }}>
-                  Manage Supplies
+                }} onClick={() => navigate('/anganvaadi/ration')}>
+                  View Ration
                 </button>
               </div>
 
               <div className="card" style={{ padding: '1.5rem', border: '2px solid var(--orange-100)', backgroundColor: 'var(--orange-25)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                  <Users style={{ width: '1.5rem', height: '1.5rem', color: 'var(--orange-600)' }} />
-                  <h3 style={{ margin: '0', color: 'var(--orange-800)', fontSize: '1.125rem', fontWeight: '600' }}>Child Enrollment</h3>
+                  <Syringe style={{ width: '1.5rem', height: '1.5rem', color: 'var(--orange-600)' }} />
+                  <h3 style={{ margin: '0', color: 'var(--orange-800)', fontSize: '1.125rem', fontWeight: '600' }}>Vaccination Schedules</h3>
                 </div>
                 <p style={{ margin: '0 0 1.25rem', color: 'var(--orange-700)', fontSize: '0.875rem', lineHeight: '1.4' }}>
-                  Register new children, update enrollment records, and track attendance.
+                  View immunization schedules, track vaccination records, and manage health programs.
                 </p>
                 <button className="btn" style={{
                   backgroundColor: 'var(--orange-600)',
@@ -187,8 +190,8 @@ const AnganvaadiDashboard: React.FC = () => {
                   border: 'none',
                   fontSize: '0.875rem',
                   fontWeight: '600'
-                }}>
-                  Manage Enrollment
+                }} onClick={() => navigate('/anganvaadi/vaccination-schedules')}>
+                  View Schedules
                 </button>
               </div>
             </div>
