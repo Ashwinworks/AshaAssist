@@ -140,6 +140,10 @@ export const adminAPI = {
     const response = await api.put(`/admin/users/${id}`, payload);
     return response.data;
   },
+  updateUserCredentials: async (id: string, payload: { email?: string; password?: string }) => {
+    const response = await api.put(`/admin/users/${id}/credentials`, payload);
+    return response.data;
+  },
   updateUserStatus: async (id: string, isActive: boolean) => {
     const response = await api.put(`/admin/users/${id}/status`, { isActive });
     return response.data as { message: string; isActive: boolean };

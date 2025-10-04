@@ -41,6 +41,9 @@ const AshaManagement: React.FC = () => {
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showCredentialsModal, setShowCredentialsModal] = useState(false);
+  const [credentials, setCredentials] = useState({ email: '', password: '', confirmPassword: '' });
+  const [credentialsSaving, setCredentialsSaving] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -181,6 +184,62 @@ const AshaManagement: React.FC = () => {
     );
   };
 
+  const handleCredentialsOpen = () => {
+    if (overview) {
+      setCredentials({
+        email: overview.worker.email,
+        password: '',
+        confirmPassword: ''
+      });
+      setShowCredentialsModal(true);
+    }
+  };
+
+  const handleCredentialsSave = async () => {
+    if (!overview) return;
+
+    // Validate passwords match if password is being changed
+    if (credentials.password && credentials.password !== credentials.confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    setCredentialsSaving(true);
+    try {
+      const updateData: any = {};
+      if (credentials.email !== overview.worker.email) {
+        updateData.email = credentials.email;
+      }
+      if (credentials.password) {
+        updateData.password = credentials.password;
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        toast.error('No changes to save');
+        return;
+      }
+
+      await adminAPI.updateUserCredentials(overview.worker.id, updateData);
+      
+      // Update local state
+      setOverview({
+        ...overview,
+        worker: {
+          ...overview.worker,
+          email: credentials.email
+        }
+      });
+
+      toast.success('Credentials updated successfully');
+      setShowCredentialsModal(false);
+      setCredentials({ email: '', password: '', confirmPassword: '' });
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to update credentials');
+    } finally {
+      setCredentialsSaving(false);
+    }
+  };
+
   return (
     <AdminLayout title="ASHA Worker Management">
       <div>
@@ -294,48 +353,196 @@ const AshaManagement: React.FC = () => {
 
                   {/* Actions */}
                   <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1rem', borderTop: '1px solid var(--gray-200)' }}>
-                    <button
-                      className="btn"
-                      style={{
-                        backgroundColor: overview.worker.isActive ? '#dc2626' : '#16a34a',
-                        color: 'white',
-                        border: 'none',
-                        fontSize: '0.875rem',
-                        padding: '0.5rem 1rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        cursor: 'pointer',
-                        fontWeight: '500'
-                      }}
-                      title="Activate/Deactivate ASHA worker"
-                    >
-                      {overview.worker.isActive ? <UserX size={14} /> : <UserCheck size={14} />}
-                      {overview.worker.isActive ? 'Deactivate Account' : 'Activate Account'}
-                    </button>
-                    <a
-                      className="btn"
-                      href={`tel:${overview.worker.phone}`}
-                      style={{
-                        backgroundColor: 'var(--purple-600)',
-                        color: 'white',
-                        border: 'none',
-                        fontSize: '0.875rem',
-                        padding: '0.5rem 1rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        textDecoration: 'none'
-                      }}
-                    >
-                      <Phone size={14} />
-                      Contact
-                    </a>
+                     <button
+                       className="btn"
+                       style={{
+                         backgroundColor: overview.worker.isActive ? '#dc2626' : '#16a34a',
+                         color: 'white',
+                         border: 'none',
+                         fontSize: '0.875rem',
+                         padding: '0.5rem 1rem',
+                         display: 'flex',
+                         alignItems: 'center',
+                         gap: '0.5rem',
+                         cursor: 'pointer',
+                         fontWeight: '500'
+                       }}
+                       title="Activate/Deactivate ASHA worker"
+                     >
+                       {overview.worker.isActive ? <UserX size={14} /> : <UserCheck size={14} />}
+                       {overview.worker.isActive ? 'Deactivate Account' : 'Activate Account'}
+                     </button>
+                     <button
+                       className="btn"
+                       onClick={handleCredentialsOpen}
+                       style={{
+                         backgroundColor: 'var(--blue-600)',
+                         color: 'white',
+                         border: 'none',
+                         fontSize: '0.875rem',
+                         padding: '0.5rem 1rem',
+                         display: 'flex',
+                         alignItems: 'center',
+                         gap: '0.5rem',
+                         cursor: 'pointer',
+                         fontWeight: '500'
+                       }}
+                       title="Edit login credentials (Admin only)"
+                     >
+                       <Edit3 size={14} />
+                       Edit Credentials
+                     </button>
+                     <a
+                       className="btn"
+                       href={`tel:${overview.worker.phone}`}
+                       style={{
+                         backgroundColor: 'var(--purple-600)',
+                         color: 'white',
+                         border: 'none',
+                         fontSize: '0.875rem',
+                         padding: '0.5rem 1rem',
+                         display: 'flex',
+                         alignItems: 'center',
+                         gap: '0.5rem',
+                         textDecoration: 'none'
+                       }}
+                     >
+                       <Phone size={14} />
+                       Contact
+                     </a>
                   </div>
                 </div>
               </div>
             </div>
           </>
+        )}
+
+        {/* Credentials Modal */}
+        {showCredentialsModal && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div className="card" style={{ width: '90%', maxWidth: '500px', background: 'white', padding: '1.5rem' }}>
+              <div className="card-header">
+                <h3 className="card-title">Edit ASHA Worker Credentials</h3>
+                <p style={{ color: 'var(--gray-600)', fontSize: '0.9rem', margin: '0.5rem 0 0 0' }}>
+                  Only administrators can modify login credentials
+                </p>
+              </div>
+              <div className="card-content" style={{ display: 'grid', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={credentials.email}
+                    onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid var(--gray-300)',
+                      borderRadius: '0.5rem',
+                      fontSize: '1rem'
+                    }}
+                    placeholder="asha.worker@example.com"
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    New Password (leave blank to keep current)
+                  </label>
+                  <input
+                    type="password"
+                    value={credentials.password}
+                    onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid var(--gray-300)',
+                      borderRadius: '0.5rem',
+                      fontSize: '1rem'
+                    }}
+                    placeholder="Enter new password"
+                  />
+                </div>
+
+                {credentials.password && (
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                      Confirm New Password
+                    </label>
+                    <input
+                      type="password"
+                      value={credentials.confirmPassword}
+                      onChange={(e) => setCredentials({ ...credentials, confirmPassword: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid var(--gray-300)',
+                        borderRadius: '0.5rem',
+                        fontSize: '1rem'
+                      }}
+                      placeholder="Confirm new password"
+                    />
+                  </div>
+                )}
+
+                <div style={{ 
+                  padding: '1rem', 
+                  backgroundColor: 'var(--yellow-50)', 
+                  border: '1px solid var(--yellow-200)', 
+                  borderRadius: '0.5rem',
+                  fontSize: '0.9rem',
+                  color: 'var(--yellow-800)'
+                }}>
+                  <strong>Security Notice:</strong> Changing credentials will require the ASHA worker to log in again with the new credentials.
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
+                <button
+                  className="btn"
+                  onClick={() => setShowCredentialsModal(false)}
+                  disabled={credentialsSaving}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: 'var(--gray-500)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.5rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn"
+                  onClick={handleCredentialsSave}
+                  disabled={credentialsSaving}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: 'var(--blue-600)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.5rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  {credentialsSaving ? 'Saving...' : 'Save Credentials'}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </AdminLayout>
