@@ -239,63 +239,6 @@ const SupplyRequests: React.FC = () => {
           <p style={{ color: 'var(--gray-600)', fontSize: '1.125rem' }}>
             Schedule delivery dates for approved medical supply requests.
           </p>
-          {/* Debug button - remove in production */}
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-            <button 
-              onClick={() => {
-                console.log('Current state:');
-                console.log('Pending requests:', requests);
-                console.log('Scheduled requests:', scheduledRequests);
-                fetchApprovedRequests();
-              }}
-              style={{ 
-                padding: '0.5rem 1rem',
-                backgroundColor: 'var(--blue-600)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                cursor: 'pointer'
-              }}
-            >
-              Debug: Refresh & Log Data
-            </button>
-            <button 
-              onClick={() => {
-                // Add a mock scheduled request for testing
-                const mockScheduledRequest: SupplyRequest = {
-                  _id: 'mock-scheduled-1',
-                  userId: 'mock-user-1',
-                  supplyName: 'Test Diapers',
-                  description: 'Mock scheduled request for testing',
-                  category: 'maternity',
-                  status: 'approved',
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString(),
-                  expectedDeliveryDate: '2025-01-15T00:00:00.000Z',
-                  deliveryLocation: 'home',
-                  user: {
-                    name: 'Test User',
-                    email: 'test@example.com',
-                    beneficiaryCategory: 'maternity',
-                    phone: '1234567890',
-                    address: 'Test Address'
-                  }
-                };
-                setScheduledRequests([mockScheduledRequest]);
-                console.log('Added mock scheduled request:', mockScheduledRequest);
-              }}
-              style={{ 
-                padding: '0.5rem 1rem',
-                backgroundColor: 'var(--green-600)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                cursor: 'pointer'
-              }}
-            >
-              Debug: Add Mock Scheduled Request
-            </button>
-          </div>
         </div>
 
         {/* Summary Stats */}

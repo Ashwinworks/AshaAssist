@@ -8,9 +8,13 @@ import {
   Star,
   CheckCircle,
   XCircle,
-  MessageSquare
+  MessageSquare,
+  Edit3,
+  Save,
+  X
 } from 'lucide-react';
 import { adminAPI } from '../../services/api';
+import toast from 'react-hot-toast';
 
 interface AshaOverview {
   worker: {
@@ -34,6 +38,9 @@ const AshaManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [overview, setOverview] = useState<AshaOverview | null>(null);
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,6 +62,124 @@ const AshaManagement: React.FC = () => {
   const getStatusIcon = (isActive: boolean) => (isActive ? <CheckCircle size={16} /> : <XCircle size={16} />);
 
   const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '—');
+
+  const handleEditStart = (field: string, currentValue: string) => {
+    setEditingField(field);
+    setEditValue(currentValue);
+  };
+
+  const handleEditCancel = () => {
+    setEditingField(null);
+    setEditValue('');
+  };
+
+  const handleEditSave = async () => {
+    if (!overview || !editingField) return;
+
+    setSaving(true);
+    try {
+      const updateData: any = {};
+      updateData[editingField] = editValue;
+
+      await adminAPI.updateUser(overview.worker.id, updateData);
+      
+      // Update local state
+      setOverview({
+        ...overview,
+        worker: {
+          ...overview.worker,
+          [editingField]: editValue
+        }
+      });
+
+      toast.success(`${editingField === 'name' ? 'Name' : 'Phone number'} updated successfully`);
+      setEditingField(null);
+      setEditValue('');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to update ASHA worker');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const renderEditableField = (field: string, label: string, value: string, isEditable: boolean = true) => {
+    if (editingField === field) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <input
+            type={field === 'phone' ? 'tel' : 'text'}
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            style={{
+              padding: '0.25rem 0.5rem',
+              border: '1px solid var(--gray-300)',
+              borderRadius: '0.25rem',
+              fontSize: '0.9rem',
+              minWidth: '150px'
+            }}
+            autoFocus
+          />
+          <button
+            onClick={handleEditSave}
+            disabled={saving}
+            style={{
+              padding: '0.25rem',
+              backgroundColor: 'var(--green-600)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.25rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center'
+            }}
+            title="Save"
+          >
+            <Save size={14} />
+          </button>
+          <button
+            onClick={handleEditCancel}
+            disabled={saving}
+            style={{
+              padding: '0.25rem',
+              backgroundColor: 'var(--gray-500)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.25rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center'
+            }}
+            title="Cancel"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <span>{value}</span>
+        {isEditable && (
+          <button
+            onClick={() => handleEditStart(field, value)}
+            style={{
+              padding: '0.25rem',
+              backgroundColor: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              color: 'var(--gray-500)'
+            }}
+            title={`Edit ${label.toLowerCase()}`}
+          >
+            <Edit3 size={12} />
+          </button>
+        )}
+      </div>
+    );
+  };
 
   return (
     <AdminLayout title="ASHA Worker Management">
@@ -139,9 +264,9 @@ const AshaManagement: React.FC = () => {
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
                         <UserCheck size={20} color="var(--green-600)" />
-                        <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: 'var(--gray-900)' }}>
-                          {overview.worker.name}
-                        </h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          {renderEditableField('name', 'Name', overview.worker.name)}
+                        </div>
                         <span style={{
                           fontSize: '0.75rem',
                           fontWeight: 600,
@@ -159,7 +284,7 @@ const AshaManagement: React.FC = () => {
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--gray-700)' }}>
                         <div><strong>Email:</strong> {overview.worker.email}</div>
-                        <div><strong>Phone:</strong> {overview.worker.phone}</div>
+                        <div><strong>Phone:</strong> {renderEditableField('phone', 'Phone', overview.worker.phone)}</div>
                         <div><strong>Ward:</strong> {overview.worker.ward}</div>
                         <div><strong>Joined:</strong> {fmt(overview.worker.createdAt)}</div>
                         <div><strong>Last Login:</strong> {fmt(overview.worker.lastLogin)}</div>

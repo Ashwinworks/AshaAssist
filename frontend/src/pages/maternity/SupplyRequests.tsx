@@ -23,6 +23,7 @@ interface SupplyRequest {
   expectedDeliveryDate?: string;
   scheduledAt?: string;
   scheduledBy?: string;
+  deliveryLocation?: 'home' | 'ward';
 }
 
 const SupplyRequests: React.FC = () => {
@@ -282,9 +283,14 @@ const SupplyRequests: React.FC = () => {
                             Requested on: {new Date(existingRequest.createdAt).toLocaleDateString()}
                           </p>
                           {existingRequest.status === 'approved' && existingRequest.expectedDeliveryDate && (
-                            <p style={{ margin: '0.5rem 0', fontSize: '0.875rem', color: 'var(--green-600)', fontWeight: 'bold' }}>
-                              Expected Delivery: {new Date(existingRequest.expectedDeliveryDate).toLocaleDateString()}
-                            </p>
+                            <div style={{ margin: '0.5rem 0' }}>
+                              <p style={{ fontSize: '0.875rem', color: 'var(--green-600)', fontWeight: 'bold', margin: '0.25rem 0' }}>
+                                Expected Delivery: {new Date(existingRequest.expectedDeliveryDate).toLocaleDateString()}
+                              </p>
+                              <p style={{ fontSize: '0.875rem', color: 'var(--blue-600)', margin: '0.25rem 0' }}>
+                                Delivery Method: {existingRequest.deliveryLocation === 'home' ? 'Home Delivery' : existingRequest.deliveryLocation === 'ward' ? 'Anganvaadi Ward Collection' : 'To be determined'}
+                              </p>
+                            </div>
                           )}
                           {existingRequest.status === 'rejected' && existingRequest.reviewNotes && (
                             <p style={{ margin: '0.5rem 0', fontSize: '0.875rem', color: 'var(--red-600)' }}>
@@ -411,6 +417,11 @@ const SupplyRequests: React.FC = () => {
               {selectedRequest.status === 'approved' && selectedRequest.expectedDeliveryDate && (
                 <div>
                   <strong>Expected Delivery Date:</strong> {new Date(selectedRequest.expectedDeliveryDate).toLocaleDateString()}
+                </div>
+              )}
+              {selectedRequest.status === 'approved' && selectedRequest.deliveryLocation && (
+                <div>
+                  <strong>Delivery Method:</strong> {selectedRequest.deliveryLocation === 'home' ? 'Home Delivery' : selectedRequest.deliveryLocation === 'ward' ? 'Anganvaadi Ward Collection' : selectedRequest.deliveryLocation}
                 </div>
               )}
               {selectedRequest.scheduledAt && selectedRequest.scheduledBy && (

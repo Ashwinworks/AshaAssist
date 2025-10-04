@@ -222,6 +222,7 @@ def get_user_supply_requests():
             req['updatedAt'] = req['updatedAt'].isoformat() if req.get('updatedAt') and hasattr(req['updatedAt'], 'isoformat') else None
             req['expectedDeliveryDate'] = req['expectedDeliveryDate'].isoformat() if req.get('expectedDeliveryDate') and hasattr(req['expectedDeliveryDate'], 'isoformat') else None
             req['scheduledAt'] = req['scheduledAt'].isoformat() if req.get('scheduledAt') and hasattr(req['scheduledAt'], 'isoformat') else None
+            req['deliveryLocation'] = req.get('deliveryLocation')
             if req.get('scheduledBy'):
                 req['scheduledBy'] = str(req['scheduledBy'])
 
@@ -289,6 +290,67 @@ def get_approved_supply_requests():
 
     except Exception as e:
         print(f"Error getting approved supply requests: {e}")
+        traceback.print_exc()
+        return jsonify({'error': 'Internal server error'}), 500
+
+@supply_bp.route('/supply-requests/scheduled', methods=['GET'])
+@require_auth
+def get_scheduled_supply_requests():
+    """Get scheduled supply requests history for ASHA workers"""
+    try:
+        db = request.db
+
+        # Get scheduled requests (approved with expectedDeliveryDate set)
+        requests = list(db['supply_requests'].find({
+            'status': 'approved',
+            'expectedDeliveryDate': {'$exists': True, '$ne': None}
+        }).sort('expectedDeliveryDate', 1))  # Sort by delivery date ascending
+
+        # Convert ObjectId to string and format dates, add user details
+        for req in requests:
+            req['_id'] = str(req['_id'])
+            req['userId'] = str(req['userId'])
+            req['createdAt'] = req['createdAt'].isoformat() if req.get('createdAt') and hasattr(req['createdAt'], 'isoformat') else None
+            req['updatedAt'] = req['updatedAt'].isoformat() if req.get('updatedAt') and hasattr(req['updatedAt'], 'isoformat') else None
+            req['reviewedBy'] = str(req['reviewedBy']) if req.get('reviewedBy') else None
+            req['expectedDeliveryDate'] = req['expectedDeliveryDate'].isoformat() if req.get('expectedDeliveryDate') and hasattr(req['expectedDeliveryDate'], 'isoformat') else None
+            req['scheduledAt'] = req['scheduledAt'].isoformat() if req.get('scheduledAt') and hasattr(req['scheduledAt'], 'isoformat') else None
+            if req.get('scheduledBy'):
+                req['scheduledBy'] = str(req['scheduledBy'])
+
+            # Get user details
+            try:
+                user = db['users'].find_one({'_id': ObjectId(req['userId'])})
+                if user:
+                    req['user'] = {
+                        'name': user.get('name', 'Unknown User'),
+                        'email': user.get('email', 'unknown@example.com'),
+                        'beneficiaryCategory': user.get('beneficiaryCategory', 'unknown'),
+                        'phone': user.get('phone', ''),
+                        'address': user.get('address', '')
+                    }
+                else:
+                    req['user'] = {
+                        'name': 'Unknown User',
+                        'email': 'unknown@example.com',
+                        'beneficiaryCategory': 'unknown',
+                        'phone': '',
+                        'address': ''
+                    }
+            except Exception as user_error:
+                print(f"Error fetching user details for userId {req['userId']}: {user_error}")
+                req['user'] = {
+                    'name': 'Unknown User',
+                    'email': 'unknown@example.com',
+                    'beneficiaryCategory': 'unknown',
+                    'phone': '',
+                    'address': ''
+                }
+
+        return jsonify({'requests': requests}), 200
+
+    except Exception as e:
+        print(f"Error getting scheduled supply requests: {e}")
         traceback.print_exc()
         return jsonify({'error': 'Internal server error'}), 500
 
