@@ -31,6 +31,7 @@ def get_collections(db):
         'supply_requests': db.supply_requests,
         'community_classes': db.community_classes,
         'local_camps': db.local_camps,
+        'weekly_rations': db.weekly_rations,
     }
 
 def ensure_indexes(collections):
@@ -90,6 +91,11 @@ def ensure_indexes(collections):
         collections['local_camps'].create_index([('createdBy', 1), ('date', -1)])
         collections['local_camps'].create_index([('status', 1), ('date', -1)])
 
-        print("Indexes ensured: users(email unique, phone partial unique), asha_feedback(userId+createdAt), calendar_events(start,end,createdBy), health_blogs(createdBy+createdAt, category+status, status+createdAt), vaccination_schedules(date,createdBy+date), vaccination_bookings(scheduleId,userId+createdAt), palliative_records(userId+date, testType), visit_requests(userId+createdAt, status+createdAt, requestType+status), supply_requests(userId+createdAt, status+createdAt, category+status), community_classes(date,createdBy+date,status+date), local_camps(date,createdBy+date,status+date)")
+        # Weekly rations: by userId, weekStartDate, status
+        collections['weekly_rations'].create_index([('userId', 1), ('weekStartDate', -1)])
+        collections['weekly_rations'].create_index([('weekStartDate', 1), ('status', 1)])
+        collections['weekly_rations'].create_index([('status', 1), ('weekStartDate', -1)])
+
+        print("Indexes ensured: users(email unique, phone partial unique), asha_feedback(userId+createdAt), calendar_events(start,end,createdBy), health_blogs(createdBy+createdAt, category+status, status+createdAt), vaccination_schedules(date,createdBy+date), vaccination_bookings(scheduleId,userId+createdAt), palliative_records(userId+date, testType), visit_requests(userId+createdAt, status+createdAt, requestType+status), supply_requests(userId+createdAt, status+createdAt, category+status), community_classes(date,createdBy+date,status+date), local_camps(date,createdBy+date,status+date), weekly_rations(userId+weekStartDate, weekStartDate+status, status+weekStartDate)")
     except Exception as e:
         print(f'Warning: could not ensure indexes: {e}')

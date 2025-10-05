@@ -1,64 +1,45 @@
 import React, { useEffect, useState } from 'react';
 import AnganvaadiLayout from './AnganvaadiLayout';
-import { Package, Calendar, Users, CheckCircle, AlertCircle, Truck } from 'lucide-react';
+import { Package, Calendar, Users, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import { weeklyRationAPI } from '../../services/api';
 
 const Ration: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [supplyRequests, setSupplyRequests] = useState<any[]>([]);
+  const [rations, setRations] = useState<any[]>([]);
+  const [weekStartDate, setWeekStartDate] = useState('');
 
   const fetchRationDistribution = async () => {
     try {
       setLoading(true);
       setError('');
-      // Mock data for weekly ration distribution - maternal users collecting rations
-      const mockRationData = [
-        {
-          id: 1,
-          userName: 'Priya Sharma',
-          rationType: 'Weekly Maternal Ration',
-          scheduledDate: new Date().toISOString().split('T')[0], // Today
-          collectionDate: null,
-          status: 'scheduled',
-          items: ['Rice 2kg', 'Wheat 1kg', 'Lentils 500g', 'Oil 500ml', 'Sugar 500g'],
-          phone: '+91-9876543210'
-        },
-        {
-          id: 2,
-          userName: 'Meera Patel',
-          rationType: 'Weekly Maternal Ration',
-          scheduledDate: new Date().toISOString().split('T')[0], // Today
-          collectionDate: new Date().toISOString(),
-          status: 'collected',
-          items: ['Rice 2kg', 'Wheat 1kg', 'Lentils 500g', 'Oil 500ml', 'Sugar 500g'],
-          phone: '+91-9876543211'
-        },
-        {
-          id: 3,
-          userName: 'Sunita Verma',
-          rationType: 'Weekly Maternal Ration',
-          scheduledDate: new Date(Date.now() + 86400000).toISOString().split('T')[0], // Tomorrow
-          collectionDate: null,
-          status: 'scheduled',
-          items: ['Rice 2kg', 'Wheat 1kg', 'Lentils 500g', 'Oil 500ml', 'Sugar 500g'],
-          phone: '+91-9876543212'
-        },
-        {
-          id: 4,
-          userName: 'Anjali Gupta',
-          rationType: 'Weekly Maternal Ration',
-          scheduledDate: new Date().toISOString().split('T')[0], // Today
-          collectionDate: new Date().toISOString(),
-          status: 'collected',
-          items: ['Rice 2kg', 'Wheat 1kg', 'Lentils 500g', 'Oil 500ml', 'Sugar 500g'],
-          phone: '+91-9876543213'
-        }
-      ];
-      setSupplyRequests(mockRationData);
+      const data = await weeklyRationAPI.getWeeklyRations();
+      setRations(data.rations || []);
+      setWeekStartDate(data.weekStartDate || '');
     } catch (e: any) {
-      setError('Failed to load ration distribution data');
+      setError(e?.response?.data?.error || 'Failed to load ration distribution data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMarkCollected = async (userId: string) => {
+    try {
+      await weeklyRationAPI.markCollected(userId);
+      // Refresh the list
+      fetchRationDistribution();
+    } catch (e: any) {
+      alert(e?.response?.data?.error || 'Failed to mark ration as collected');
+    }
+  };
+
+  const handleMarkPending = async (userId: string) => {
+    try {
+      await weeklyRationAPI.markPending(userId);
+      // Refresh the list
+      fetchRationDistribution();
+    } catch (e: any) {
+      alert(e?.response?.data?.error || 'Failed to mark ration as pending');
     }
   };
 
@@ -68,7 +49,7 @@ const Ration: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'scheduled': return 'var(--blue-500)';
+      case 'pending': return 'var(--yellow-500)';
       case 'collected': return 'var(--green-500)';
       default: return 'var(--gray-400)';
     }
@@ -76,7 +57,7 @@ const Ration: React.FC = () => {
 
   const getStatusBgColor = (status: string) => {
     switch (status) {
-      case 'scheduled': return 'var(--blue-50)';
+      case 'pending': return 'var(--yellow-50)';
       case 'collected': return 'var(--green-50)';
       default: return 'var(--gray-25)';
     }
@@ -84,11 +65,14 @@ const Ration: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'scheduled': return <Calendar size={16} />;
+      case 'pending': return <AlertCircle size={16} />;
       case 'collected': return <CheckCircle size={16} />;
       default: return <AlertCircle size={16} />;
     }
   };
+
+  const pendingRations = rations.filter(r => r.status === 'pending');
+  const collectedRations = rations.filter(r => r.status === 'collected');
 
   return (
     <AnganvaadiLayout title="Ration Distribution">
@@ -99,7 +83,7 @@ const Ration: React.FC = () => {
               Ration Distribution
             </h1>
             <p style={{ color: 'var(--gray-600)' }}>
-              Manage weekly ration supplies for maternal users
+              Manage weekly ration supplies for maternal users for the week of {new Date(weekStartDate).toLocaleDateString()}
             </p>
           </div>
         </div>
@@ -122,8 +106,197 @@ const Ration: React.FC = () => {
             <div style={{ fontSize: '1.125rem', color: 'var(--gray-600)' }}>Loading ration distribution data...</div>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
-            {supplyRequests.length === 0 ? (
+          <>
+            {/* Summary Stats */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+              <div className="card" style={{ padding: '1.5rem', textAlign: 'center', borderLeft: '4px solid var(--yellow-500)' }}>
+                <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--yellow-600)', marginBottom: '0.5rem' }}>
+                  {pendingRations.length}
+                </div>
+                <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Pending Collection</div>
+              </div>
+              <div className="card" style={{ padding: '1.5rem', textAlign: 'center', borderLeft: '4px solid var(--green-500)' }}>
+                <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--green-600)', marginBottom: '0.5rem' }}>
+                  {collectedRations.length}
+                </div>
+                <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Collected</div>
+              </div>
+              <div className="card" style={{ padding: '1.5rem', textAlign: 'center', borderLeft: '4px solid var(--blue-500)' }}>
+                <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--blue-600)', marginBottom: '0.5rem' }}>
+                  {rations.length}
+                </div>
+                <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Total Users</div>
+              </div>
+            </div>
+
+            {/* Pending Rations Section */}
+            {pendingRations.length > 0 && (
+              <>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'var(--yellow-700)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <AlertCircle size={20} />
+                  Pending Collection ({pendingRations.length})
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+                  {pendingRations.map((ration: any) => (
+                    <div key={ration.id} style={{
+                      backgroundColor: 'white',
+                      borderRadius: '0.75rem',
+                      padding: '1.5rem',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                      border: '2px solid var(--yellow-200)',
+                      transition: 'all 0.2s ease'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                        <div style={{ flex: 1 }}>
+                          <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'var(--gray-900)', marginBottom: '0.5rem' }}>
+                            {ration.userName}
+                          </h3>
+                          <div style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '9999px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            backgroundColor: getStatusBgColor(ration.status),
+                            color: getStatusColor(ration.status)
+                          }}>
+                            {getStatusIcon(ration.status)}
+                            {ration.status?.toUpperCase()}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--gray-600)', marginBottom: '0.75rem' }}>
+                          <Users size={16} />
+                          <span style={{ fontSize: '0.875rem' }}>{ration.userPhone || 'No phone'}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--gray-600)' }}>
+                          <Calendar size={16} />
+                          <span style={{ fontSize: '0.875rem' }}>
+                            Week: {new Date(ration.weekStartDate).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{ marginTop: '1rem' }}>
+                        <button 
+                          onClick={() => handleMarkCollected(ration.userId)}
+                          style={{
+                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem',
+                            border: 'none',
+                            backgroundColor: 'var(--green-600)',
+                            color: 'white',
+                            borderRadius: '0.375rem',
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <CheckCircle size={16} />
+                          Mark Collected
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Collected Rations Section */}
+            {collectedRations.length > 0 && (
+              <>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'var(--green-700)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <CheckCircle size={20} />
+                  Collected ({collectedRations.length})
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
+                  {collectedRations.map((ration: any) => (
+                    <div key={ration.id} style={{
+                      backgroundColor: 'white',
+                      borderRadius: '0.75rem',
+                      padding: '1.5rem',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                      border: '1px solid var(--green-200)',
+                      transition: 'all 0.2s ease',
+                      opacity: 0.9
+                    }}>
+                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                        <div style={{ flex: 1 }}>
+                          <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'var(--gray-700)', marginBottom: '0.5rem' }}>
+                            {ration.userName}
+                          </h3>
+                          <div style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '9999px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            backgroundColor: getStatusBgColor(ration.status),
+                            color: getStatusColor(ration.status)
+                          }}>
+                            {getStatusIcon(ration.status)}
+                            {ration.status?.toUpperCase()}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--gray-600)', marginBottom: '0.75rem' }}>
+                          <Users size={16} />
+                          <span style={{ fontSize: '0.875rem' }}>{ration.userPhone || 'No phone'}</span>
+                        </div>
+                        {ration.collectionDate && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--gray-600)' }}>
+                            <Calendar size={16} />
+                            <span style={{ fontSize: '0.875rem' }}>
+                              Collected: {new Date(ration.collectionDate).toLocaleDateString()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ marginTop: '1rem' }}>
+                        <button 
+                          onClick={() => handleMarkPending(ration.userId)}
+                          style={{
+                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem',
+                            padding: '0.75rem',
+                            border: '1px solid var(--yellow-300)',
+                            backgroundColor: 'var(--yellow-50)',
+                            color: 'var(--yellow-700)',
+                            borderRadius: '0.375rem',
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <XCircle size={16} />
+                          Mark Pending
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {rations.length === 0 && (
               <div style={{
                 gridColumn: '1 / -1',
                 textAlign: 'center',
@@ -134,111 +307,14 @@ const Ration: React.FC = () => {
               }}>
                 <Package size={48} style={{ color: 'var(--gray-400)', marginBottom: '1rem' }} />
                 <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'var(--gray-900)', marginBottom: '0.5rem' }}>
-                  No Ration Requests
+                  No Maternity Users
                 </h3>
                 <p style={{ color: 'var(--gray-600)' }}>
-                  Ration distribution requests will appear here once they are submitted.
+                  No maternity users are currently registered for weekly ration distribution.
                 </p>
               </div>
-            ) : (
-              supplyRequests.map((request) => (
-                <div key={request.id} style={{
-                  backgroundColor: 'white',
-                  borderRadius: '0.75rem',
-                  padding: '1.5rem',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                  border: '1px solid var(--gray-200)',
-                  transition: 'all 0.2s ease'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: 'var(--gray-900)', marginBottom: '0.5rem' }}>
-                        {request.rationType}
-                      </h3>
-                      <div style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        padding: '0.25rem 0.75rem',
-                        borderRadius: '9999px',
-                        fontSize: '0.75rem',
-                        fontWeight: '600',
-                        backgroundColor: getStatusBgColor(request.status),
-                        color: getStatusColor(request.status)
-                      }}>
-                        {getStatusIcon(request.status)}
-                        {request.status?.toUpperCase()}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--gray-600)', marginBottom: '0.75rem' }}>
-                      <Users size={16} />
-                      <span style={{ fontSize: '0.875rem' }}>{request.userName}</span>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--gray-600)', marginBottom: request.collectionDate ? '0.75rem' : '0' }}>
-                      <Calendar size={16} />
-                      <span style={{ fontSize: '0.875rem' }}>
-                        Scheduled: {new Date(request.scheduledDate).toLocaleDateString()}
-                      </span>
-                    </div>
-
-                    {request.collectionDate && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--gray-600)' }}>
-                        <CheckCircle size={16} />
-                        <span style={{ fontSize: '0.875rem' }}>
-                          Collected: {new Date(request.collectionDate).toLocaleDateString()}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: 'var(--gray-50)', borderRadius: '0.375rem' }}>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--gray-700)', margin: '0 0 0.5rem', fontWeight: '600' }}>
-                      Ration Items:
-                    </p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      {request.items.map((item: string, index: number) => (
-                        <span key={index} style={{
-                          fontSize: '0.75rem',
-                          color: 'var(--gray-600)',
-                          backgroundColor: 'white',
-                          padding: '0.25rem 0.5rem',
-                          borderRadius: '0.25rem',
-                          border: '1px solid var(--gray-200)'
-                        }}>
-                          {item}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
-                    <button style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.5rem',
-                      padding: '0.5rem',
-                      border: '1px solid var(--gray-300)',
-                      backgroundColor: 'white',
-                      color: 'var(--gray-700)',
-                      borderRadius: '0.375rem',
-                      fontSize: '0.875rem',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}>
-                      <CheckCircle size={16} />
-                      View Details
-                    </button>
-                  </div>
-                </div>
-              ))
             )}
-          </div>
+          </>
         )}
       </div>
     </AnganvaadiLayout>

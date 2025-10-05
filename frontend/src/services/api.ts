@@ -514,3 +514,34 @@ export const supplyAPI = {
     return response.data as { message: string };
   }
 };
+
+// Weekly Ration API (Anganvaadi & Maternity)
+export const weeklyRationAPI = {
+  // Get all weekly rations for a specific week (Anganvaadi view)
+  getWeeklyRations: async (weekStartDate?: string) => {
+    const params = weekStartDate ? { weekStartDate } : undefined;
+    const response = await api.get('/weekly-rations', { params });
+    return response.data as { rations: any[]; weekStartDate: string };
+  },
+  // Get current user's ration status (Maternity user view)
+  getMyRationStatus: async (weekStartDate?: string) => {
+    const params = weekStartDate ? { weekStartDate } : undefined;
+    const response = await api.get('/weekly-rations/my-status', { params });
+    return response.data as { ration: any };
+  },
+  // Mark ration as collected
+  markCollected: async (userId?: string, weekStartDate?: string) => {
+    const payload: any = {};
+    if (userId) payload.userId = userId;
+    if (weekStartDate) payload.weekStartDate = weekStartDate;
+    const response = await api.put('/weekly-rations/mark-collected', payload);
+    return response.data as { message: string };
+  },
+  // Mark ration as pending (undo collection) - Anganvaadi only
+  markPending: async (userId: string, weekStartDate?: string) => {
+    const payload: any = { userId };
+    if (weekStartDate) payload.weekStartDate = weekStartDate;
+    const response = await api.put('/weekly-rations/mark-pending', payload);
+    return response.data as { message: string };
+  }
+};

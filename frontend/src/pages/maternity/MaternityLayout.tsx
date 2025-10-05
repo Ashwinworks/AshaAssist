@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Heart, LogOut, User, Settings, Calendar, Baby, Stethoscope, Phone,
   Home, FileText, BookOpen, Package, UserCheck, Syringe, CreditCard, MessageSquare,
-  Menu, X, Bot
+  Menu, X, Bot, ShoppingBag
 } from 'lucide-react';
 
 // Navigation items for maternity users
@@ -14,6 +14,7 @@ const navigationItems = [
   { id: 'blogs', label: 'Health Blogs', icon: BookOpen, path: '/maternity/blogs' },
   { id: 'calendar', label: 'Integrated Calendar', icon: Calendar, path: '/maternity/calendar' },
   { id: 'supplies', label: 'Request Supplies', icon: Package, path: '/maternity/supplies' },
+  { id: 'ration', label: 'Weekly Ration', icon: ShoppingBag, path: '/maternity/ration' },
   { id: 'visits', label: 'Antenatal Visits', icon: UserCheck, path: '/maternity/visits' },
   { id: 'visit-requests', label: 'Visit Requests', icon: UserCheck, path: '/maternity/visit-requests' },
   { id: 'vaccinations', label: 'Vaccination Booking', icon: Syringe, path: '/maternity/vaccinations' },

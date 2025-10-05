@@ -45,6 +45,7 @@ import VaccinationBooking from './pages/maternity/VaccinationBooking';
 import MCPCard from './pages/maternity/MCPCard';
 import MaternityFeedback from './pages/maternity/Feedback';
 import AntenatalVisits from './pages/maternity/AntenatalVisits';
+import WeeklyRation from './pages/maternity/WeeklyRation';
 
 // Import palliative pages
 import PalliativeProfileSetup from './pages/palliative/ProfileSetup';
@@ -428,6 +429,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <MaternitySupplyRequests />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/maternity/ration"
+        element={
+          <ProtectedRoute>
+            <WeeklyRation />
           </ProtectedRoute>
         }
       />
