@@ -545,3 +545,39 @@ export const weeklyRationAPI = {
     return response.data as { message: string };
   }
 };
+
+// Locations API
+export const locationsAPI = {
+  // Get all active locations
+  getLocations: async (ward?: string) => {
+    const params = ward ? { ward } : undefined;
+    const response = await api.get('/locations', { params });
+    return response.data as { locations: any[] };
+  },
+  // Create location (admin only)
+  createLocation: async (payload: {
+    name: string;
+    type: string;
+    ward: string;
+    address?: string;
+  }) => {
+    const response = await api.post('/locations', payload);
+    return response.data as { id: string; message: string };
+  },
+  // Update location (admin only)
+  updateLocation: async (id: string, payload: Partial<{
+    name: string;
+    type: string;
+    ward: string;
+    address: string;
+    active: boolean;
+  }>) => {
+    const response = await api.put(`/locations/${id}`, payload);
+    return response.data as { message: string };
+  },
+  // Delete location (admin only)
+  deleteLocation: async (id: string) => {
+    const response = await api.delete(`/locations/${id}`);
+    return response.data as { message: string };
+  }
+};

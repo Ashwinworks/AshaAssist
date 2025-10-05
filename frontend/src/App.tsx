@@ -38,6 +38,11 @@ import SupplyRequestsManagement from './pages/admin/SupplyRequestsManagement';
 
 import CategorySelection from './components/CategorySelection';
 
+// Import public pages
+import AboutUs from './pages/AboutUs';
+import Contact from './pages/Contact';
+import Services from './pages/Services';
+
 // Import maternity pages
 import MaternityProfileSetup from './pages/maternity/ProfileSetup';
 import MaternitySupplyRequests from './pages/maternity/SupplyRequests';
@@ -218,6 +223,30 @@ const AppRoutes: React.FC = () => {
         element={
           <PublicRoute>
             <ResetPasswordPage />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/about"
+        element={
+          <PublicRoute>
+            <AboutUs />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/contact"
+        element={
+          <PublicRoute>
+            <Contact />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/services"
+        element={
+          <PublicRoute>
+            <Services />
           </PublicRoute>
         }
       />

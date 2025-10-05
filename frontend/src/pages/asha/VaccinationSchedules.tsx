@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import AshaLayout from './AshaLayout';
 import { Plus, Calendar, Syringe, MapPin, Clock, Users, Eye, Edit, CheckCircle, XCircle } from 'lucide-react';
-import { vaccinationAPI } from '../../services/api';
+import { vaccinationAPI, locationsAPI } from '../../services/api';
 
 interface ScheduleForm {
   title: string;
@@ -18,6 +18,8 @@ const VaccinationSchedules: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+  const [locations, setLocations] = useState<any[]>([]);
+  const [locationsLoading, setLocationsLoading] = useState(false);
 
   // View / Edit state
   const [selectedSchedule, setSelectedSchedule] = useState<any | null>(null);
@@ -59,8 +61,27 @@ const VaccinationSchedules: React.FC = () => {
     }
   };
 
+  const fetchLocations = async () => {
+    try {
+      setLocationsLoading(true);
+      const res = await locationsAPI.getLocations();
+      
+      if (res.locations && Array.isArray(res.locations)) {
+        setLocations(res.locations);
+      } else {
+        setLocations([]);
+      }
+    } catch (e: any) {
+      console.error('Failed to load locations:', e?.response?.data?.error || e.message);
+      setLocations([]);
+    } finally {
+      setLocationsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchSchedules();
+    fetchLocations();
   }, []);
 
   // Fetch booking counts for all schedules
@@ -344,15 +365,29 @@ const VaccinationSchedules: React.FC = () => {
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--gray-700)' }}>
                     Location <span style={{ color: 'var(--red-500)' }}>*</span>
+                    {!locationsLoading && locations.length > 0 && (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--gray-500)', marginLeft: '0.5rem' }}>
+                        ({locations.length} available)
+                      </span>
+                    )}
                   </label>
-                  <input 
-                    type="text" 
-                    placeholder="Venue address..."
+                  <select
                     value={form.location}
                     onChange={(e) => setForm({...form, location: e.target.value})}
                     required
-                    style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
-                  />
+                    disabled={locationsLoading}
+                    style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem', backgroundColor: 'white' }}
+                  >
+                    <option value="">{locationsLoading ? 'Loading locations...' : 'Select a location...'}</option>
+                    {locations.length === 0 && !locationsLoading && (
+                      <option value="" disabled>No locations available</option>
+                    )}
+                    {locations.map((loc: any) => (
+                      <option key={loc._id} value={loc.name}>
+                        {loc.name} {loc.ward ? `(${loc.ward})` : ''}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -712,7 +747,22 @@ const VaccinationSchedules: React.FC = () => {
                   </div>
                   <div>
                     <label style={{ display: 'block', marginBottom: '0.5rem' }}>Location</label>
-                    <input type="text" value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }} />
+                    <select
+                      value={editForm.location}
+                      onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                      disabled={locationsLoading}
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem', backgroundColor: 'white' }}
+                    >
+                      <option value="">{locationsLoading ? 'Loading locations...' : 'Select a location...'}</option>
+                      {locations.length === 0 && !locationsLoading && (
+                        <option value="" disabled>No locations available</option>
+                      )}
+                      {locations.map((loc: any) => (
+                        <option key={loc._id} value={loc.name}>
+                          {loc.name} {loc.ward ? `(${loc.ward})` : ''}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem' }}>Vaccines (comma-separated)</label>
