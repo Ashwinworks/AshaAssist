@@ -11,7 +11,8 @@ import {
   X,
   Heart,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  MapPin
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -69,6 +70,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
       icon: MessageSquare,
       label: 'Feedbacks',
       color: 'var(--yellow-600)'
+    },
+    {
+      path: '/admin/visit-monitoring',
+      icon: MapPin,
+      label: 'Visit Monitoring',
+      color: 'var(--green-600)'
     },
   ];
 

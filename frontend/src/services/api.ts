@@ -581,3 +581,54 @@ export const locationsAPI = {
     return response.data as { message: string };
   }
 };
+
+// Home Visits API
+export const homeVisitsAPI = {
+  // Get users for home visits (ASHA worker)
+  getUsersForVisits: async () => {
+    const response = await api.get('/home-visits/users');
+    return response.data as { users: any[] };
+  },
+  // Record a home visit with geotagged photo
+  recordVisit: async (formData: FormData) => {
+    const response = await api.post('/home-visits', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data as { message: string; visitId: string };
+  },
+  // Get my visits (ASHA worker)
+  getMyVisits: async (params?: { userId?: string; dateFrom?: string; dateTo?: string }) => {
+    const response = await api.get('/home-visits/my-visits', { params });
+    return response.data as { visits: any[] };
+  },
+  // Get all visits (Admin)
+  getAllVisits: async (params?: {
+    ashaWorkerId?: string;
+    userCategory?: string;
+    verified?: boolean;
+    dateFrom?: string;
+    dateTo?: string;
+  }) => {
+    const response = await api.get('/home-visits/all', { params });
+    return response.data as { visits: any[] };
+  },
+  // Verify a visit (Admin)
+  verifyVisit: async (visitId: string, verified: boolean, adminNotes?: string) => {
+    const response = await api.put(`/home-visits/${visitId}/verify`, {
+      verified,
+      adminNotes
+    });
+    return response.data as { message: string };
+  },
+  // Get visit statistics (Admin)
+  getVisitStats: async () => {
+    const response = await api.get('/home-visits/stats');
+    return response.data as {
+      totalVisitsThisMonth: number;
+      verifiedVisits: number;
+      pendingVerification: number;
+      maternityVisits: number;
+      palliativeVisits: number;
+    };
+  }
+};

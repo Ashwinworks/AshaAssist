@@ -55,7 +55,6 @@ const VaccinationSchedules: React.FC = () => {
     const diffTime = scheduleDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays < 0) return 'COMPLETED';
     if (diffDays === 0) return 'TODAY';
     if (diffDays <= 7) return 'UPCOMING';
     return 'SCHEDULED';
@@ -63,15 +62,25 @@ const VaccinationSchedules: React.FC = () => {
 
   return (
     <AnganvaadiLayout title="Vaccination Schedules">
-      <div style={{ padding: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--gray-900)', marginBottom: '0.5rem' }}>
-              Vaccination Schedules
-            </h1>
-            <p style={{ color: 'var(--gray-600)' }}>
-              View upcoming vaccination camps and immunization programs
-            </p>
+      <div>
+        {/* Colorful Header Banner */}
+        <div style={{ 
+          background: 'var(--blue-50)',
+          padding: '2rem',
+          borderRadius: '0.75rem',
+          marginBottom: '2rem',
+          borderLeft: '4px solid var(--blue-500)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--blue-800)', marginBottom: '0.5rem' }}>
+                Vaccination Schedules
+              </h1>
+              <p style={{ fontSize: '1rem', color: 'var(--blue-600)' }}>
+                View vaccination schedules and immunization programs
+              </p>
+            </div>
+            <Syringe size={48} style={{ color: 'var(--blue-300)' }} />
           </div>
         </div>
 
@@ -119,6 +128,7 @@ const VaccinationSchedules: React.FC = () => {
                   padding: '1.5rem',
                   boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                   border: '1px solid var(--gray-200)',
+                  borderLeft: `4px solid ${getStatusColor(schedule.date)}`,
                   transition: 'all 0.2s ease'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
@@ -183,11 +193,12 @@ const VaccinationSchedules: React.FC = () => {
                       justifyContent: 'center',
                       gap: '0.5rem',
                       padding: '0.5rem',
-                      border: '1px solid var(--gray-300)',
-                      backgroundColor: 'white',
-                      color: 'var(--gray-700)',
+                      border: '1px solid var(--blue-300)',
+                      backgroundColor: 'var(--blue-50)',
+                      color: 'var(--blue-700)',
                       borderRadius: '0.375rem',
                       fontSize: '0.875rem',
+                      fontWeight: '500',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease'
                     }}>

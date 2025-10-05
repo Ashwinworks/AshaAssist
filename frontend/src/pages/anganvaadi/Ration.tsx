@@ -76,15 +76,25 @@ const Ration: React.FC = () => {
 
   return (
     <AnganvaadiLayout title="Ration Distribution">
-      <div style={{ padding: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--gray-900)', marginBottom: '0.5rem' }}>
-              Ration Distribution
-            </h1>
-            <p style={{ color: 'var(--gray-600)' }}>
-              Manage weekly ration supplies for maternal users for the week of {new Date(weekStartDate).toLocaleDateString()}
-            </p>
+      <div>
+        {/* Colorful Header Banner */}
+        <div style={{ 
+          background: 'var(--orange-50)',
+          padding: '2rem',
+          borderRadius: '0.75rem',
+          marginBottom: '2rem',
+          borderLeft: '4px solid var(--orange-500)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--orange-800)', marginBottom: '0.5rem' }}>
+                Ration Distribution
+              </h1>
+              <p style={{ fontSize: '1rem', color: 'var(--orange-600)' }}>
+                Manage weekly ration supplies for maternal users for the week of {new Date(weekStartDate).toLocaleDateString()}
+              </p>
+            </div>
+            <Package size={48} style={{ color: 'var(--orange-300)' }} />
           </div>
         </div>
 

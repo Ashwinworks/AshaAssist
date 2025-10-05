@@ -26,7 +26,9 @@ import AshaHealthBlogs from './pages/asha/HealthBlogs';
 import AshaCommunityClasses from './pages/asha/CommunityClasses';
 import AshaLocalCamps from './pages/asha/LocalCamps';
 import AshaSupplyDistribution from './pages/asha/SupplyDistribution';
+import AshaHomeVisits from './pages/asha/HomeVisits';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import VisitMonitoring from './pages/admin/VisitMonitoring';
 import AshaManagement from './pages/admin/AshaManagement';
 import UsersManagement from './pages/admin/UsersManagement';
 import HealthBlogsManagement from './pages/admin/content/HealthBlogsManagement';
@@ -420,6 +422,14 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/asha/home-visits"
+        element={
+          <ProtectedRoute>
+            <AshaHomeVisits />
+          </ProtectedRoute>
+        }
+      />
       {/* Maternity Routes */}
       <Route
         path="/maternity/profile"
@@ -647,6 +657,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <SupplyRequestsManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/visit-monitoring"
+        element={
+          <ProtectedRoute>
+            <VisitMonitoring />
           </ProtectedRoute>
         }
       />
