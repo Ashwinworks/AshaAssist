@@ -30,6 +30,7 @@ from routes.visit_requests import init_visit_request_routes
 from routes.supply import init_supply_routes
 from routes.community import init_community_routes
 from routes.weekly_ration import init_weekly_ration_routes
+from routes.locations import init_locations_routes
 
 # Import utilities
 from utils.helpers import JSONEncoder
@@ -69,6 +70,9 @@ def create_app(config_name='default'):
     # Seed sample supply requests
     seed_service.create_sample_supply_requests()
 
+    # Seed default locations
+    seed_service.create_default_locations()
+
     # Initialize routes
     init_auth_routes(app, collections)
     init_maternity_routes(app, collections)
@@ -83,6 +87,7 @@ def create_app(config_name='default'):
     init_palliative_routes(app, collections)
     init_community_routes(app, collections)
     init_weekly_ration_routes(app, collections)
+    init_locations_routes(app, collections)
     
     # Serve uploaded files
     @app.route('/uploads/<path:filename>')

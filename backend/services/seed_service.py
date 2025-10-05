@@ -180,3 +180,67 @@ class SeedService:
             print(f"✓ Seeded {len(sample_requests)} sample supply requests.")
         except Exception as e:
             print(f"Error seeding sample supply requests: {e}")
+
+    def create_default_locations(self):
+        """Create default locations for ward1"""
+        try:
+            # Only seed if collection is empty
+            existing_count = self.collections['locations'].count_documents({})
+            if existing_count > 0:
+                print("Locations already exist; skipping seeding.")
+                return
+
+            now = datetime.now(timezone.utc)
+
+            default_locations = [
+                {
+                    'name': 'Manarcad Health Center (HC)',
+                    'type': 'Health Center',
+                    'ward': 'Ward 1',
+                    'address': 'Manarcad, Ward 1',
+                    'active': True,
+                    'createdAt': now,
+                    'updatedAt': now
+                },
+                {
+                    'name': 'Pampady Health Center (HC)',
+                    'type': 'Health Center',
+                    'ward': 'Ward 1',
+                    'address': 'Pampady, Ward 1',
+                    'active': True,
+                    'createdAt': now,
+                    'updatedAt': now
+                },
+                {
+                    'name': 'Anganvaadi Ward 1',
+                    'type': 'Anganvaadi',
+                    'ward': 'Ward 1',
+                    'address': 'Anganvaadi Center, Ward 1',
+                    'active': True,
+                    'createdAt': now,
+                    'updatedAt': now
+                },
+                {
+                    'name': 'Community Hall Ward 1',
+                    'type': 'Community Hall',
+                    'ward': 'Ward 1',
+                    'address': 'Community Hall, Ward 1',
+                    'active': True,
+                    'createdAt': now,
+                    'updatedAt': now
+                },
+                {
+                    'name': 'Homeo Clinic Ward 1',
+                    'type': 'Clinic',
+                    'ward': 'Ward 1',
+                    'address': 'Homeo Clinic, Ward 1',
+                    'active': True,
+                    'createdAt': now,
+                    'updatedAt': now
+                }
+            ]
+
+            self.collections['locations'].insert_many(default_locations)
+            print(f"✓ Seeded {len(default_locations)} default locations for Ward 1.")
+        except Exception as e:
+            print(f"Error seeding default locations: {e}")
