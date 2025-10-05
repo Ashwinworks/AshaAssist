@@ -1,13 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import AshaLayout from './AshaLayout';
 import { Plus, GraduationCap, Calendar, MapPin, Clock, Users, Edit, Eye } from 'lucide-react';
-import { communityAPI } from '../../services/api';
+import { communityAPI, locationsAPI } from '../../services/api';
 
 const CommunityClasses: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [classes, setClasses] = useState<any[]>([]);
+  const [locations, setLocations] = useState<any[]>([]);
+  const [locationsLoading, setLocationsLoading] = useState(false);
 
   const [form, setForm] = useState({
     title: '',
@@ -42,8 +44,26 @@ const CommunityClasses: React.FC = () => {
     }
   };
 
+  const fetchLocations = async () => {
+    try {
+      setLocationsLoading(true);
+      const res = await locationsAPI.getLocations();
+      if (res.locations && Array.isArray(res.locations)) {
+        setLocations(res.locations);
+      } else {
+        setLocations([]);
+      }
+    } catch (e: any) {
+      console.error('Failed to load locations:', e?.response?.data?.error || e.message);
+      setLocations([]);
+    } finally {
+      setLocationsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchClasses();
+    fetchLocations();
   }, []);
 
   const getStatusColor = (status: string) => {
@@ -235,14 +255,28 @@ const CommunityClasses: React.FC = () => {
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--gray-700)' }}>
                     Location
+                    {!locationsLoading && locations.length > 0 && (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--gray-500)', marginLeft: '0.5rem' }}>
+                        ({locations.length} available)
+                      </span>
+                    )}
                   </label>
-                  <input 
-                    type="text" 
-                    placeholder="Venue address..."
+                  <select
                     value={form.location}
                     onChange={(e) => setForm({ ...form, location: e.target.value })}
-                    style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
-                  />
+                    disabled={locationsLoading}
+                    style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem', backgroundColor: 'white' }}
+                  >
+                    <option value="">{locationsLoading ? 'Loading locations...' : 'Select a location...'}</option>
+                    {locations.length === 0 && !locationsLoading && (
+                      <option value="" disabled>No locations available</option>
+                    )}
+                    {locations.map((loc: any) => (
+                      <option key={loc._id} value={loc.name}>
+                        {loc.name} {loc.ward ? `(${loc.ward})` : ''}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -647,7 +681,19 @@ const CommunityClasses: React.FC = () => {
                   <input value={editForm.category} onChange={e => setEditForm({ ...editForm, category: e.target.value })} placeholder="Category" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
                   <input type="date" min={new Date().toISOString().split('T')[0]} value={editForm.date} onChange={e => setEditForm({ ...editForm, date: e.target.value })} style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
                   <input value={editForm.time} onChange={e => setEditForm({ ...editForm, time: e.target.value })} placeholder="Time" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
-                  <input value={editForm.location} onChange={e => setEditForm({ ...editForm, location: e.target.value })} placeholder="Location" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                  <select
+                    value={editForm.location}
+                    onChange={e => setEditForm({ ...editForm, location: e.target.value })}
+                    disabled={locationsLoading}
+                    style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8, backgroundColor: 'white' }}
+                  >
+                    <option value="">{locationsLoading ? 'Loading...' : 'Select location...'}</option>
+                    {locations.map((loc: any) => (
+                      <option key={loc._id} value={loc.name}>
+                        {loc.name} {loc.ward ? `(${loc.ward})` : ''}
+                      </option>
+                    ))}
+                  </select>
                   <input value={editForm.instructor} onChange={e => setEditForm({ ...editForm, instructor: e.target.value })} placeholder="Instructor" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
                   <input type="number" value={editForm.maxParticipants} onChange={e => setEditForm({ ...editForm, maxParticipants: e.target.value })} placeholder="Max Participants" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
                   <input value={editForm.targetAudience} onChange={e => setEditForm({ ...editForm, targetAudience: e.target.value })} placeholder="Target Audience" style={{ padding: '0.6rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />

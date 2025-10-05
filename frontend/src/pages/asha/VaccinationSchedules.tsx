@@ -344,6 +344,7 @@ const VaccinationSchedules: React.FC = () => {
                     type="date" 
                     value={form.date}
                     onChange={(e) => setForm({...form, date: e.target.value})}
+                    min={new Date().toISOString().split('T')[0]}
                     required
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
                   />
@@ -739,7 +740,13 @@ const VaccinationSchedules: React.FC = () => {
                   </div>
                   <div>
                     <label style={{ display: 'block', marginBottom: '0.5rem' }}>Date</label>
-                    <input type="date" value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }} />
+                    <input 
+                      type="date" 
+                      value={editForm.date} 
+                      onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} 
+                      min={new Date().toISOString().split('T')[0]}
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }} 
+                    />
                   </div>
                   <div>
                     <label style={{ display: 'block', marginBottom: '0.5rem' }}>Time</label>

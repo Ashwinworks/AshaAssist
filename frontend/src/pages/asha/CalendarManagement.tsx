@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import AshaLayout from './AshaLayout';
-import { calendarAPI } from '../../services/api';
+import { calendarAPI, locationsAPI } from '../../services/api';
 import { Plus, Edit2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -20,6 +20,8 @@ const CalendarManagement: React.FC = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [locations, setLocations] = useState<any[]>([]);
+  const [locationsLoading, setLocationsLoading] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<CalendarEvent | null>(null);
@@ -46,7 +48,25 @@ const CalendarManagement: React.FC = () => {
     }
   };
 
+  const fetchLocations = async () => {
+    try {
+      setLocationsLoading(true);
+      const res = await locationsAPI.getLocations();
+      if (res.locations && Array.isArray(res.locations)) {
+        setLocations(res.locations);
+      } else {
+        setLocations([]);
+      }
+    } catch (e: any) {
+      console.error('Failed to load locations:', e?.response?.data?.error || e.message);
+      setLocations([]);
+    } finally {
+      setLocationsLoading(false);
+    }
+  };
+
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [monthKey]);
+  useEffect(() => { fetchLocations(); /* eslint-disable-next-line */ }, []);
 
   const openNew = () => {
     setEditing(null);
@@ -173,10 +193,25 @@ const CalendarManagement: React.FC = () => {
               </div>
               <div className="card-content" style={{ display: 'grid', gap: '0.75rem' }}>
                 <input value={title} onChange={(e)=>setTitle(e.target.value)} placeholder="Title" style={{ padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
-                <input value={place} onChange={(e)=>setPlace(e.target.value)} placeholder="Place" style={{ padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                <select
+                  value={place}
+                  onChange={(e)=>setPlace(e.target.value)}
+                  disabled={locationsLoading}
+                  style={{ padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8, backgroundColor: 'white' }}
+                >
+                  <option value="">{locationsLoading ? 'Loading locations...' : 'Select a location...'}</option>
+                  {locations.length === 0 && !locationsLoading && (
+                    <option value="" disabled>No locations available</option>
+                  )}
+                  {locations.map((loc: any) => (
+                    <option key={loc._id} value={loc.name}>
+                      {loc.name} {loc.ward ? `(${loc.ward})` : ''}
+                    </option>
+                  ))}
+                </select>
                 <textarea value={description} onChange={(e)=>setDescription(e.target.value)} placeholder="Description" rows={3} style={{ padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
                 <label style={{ fontSize: 12, color: 'var(--gray-600)' }}>Date</label>
-                <input type="date" value={date} onChange={(e)=>setDate(e.target.value)} style={{ padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
+                <input type="date" value={date} onChange={(e)=>setDate(e.target.value)} min={new Date().toISOString().split('T')[0]} style={{ padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8 }} />
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <input type="checkbox" checked={allDay} onChange={(e)=>setAllDay(e.target.checked)} /> All day event
                 </label>
