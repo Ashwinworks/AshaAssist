@@ -2,9 +2,12 @@
 AshaAssist Backend Application
 Main application entry point with modular structure
 """
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, request, jsonify
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import JWTManager, jwt_required
+from werkzeug.utils import secure_filename
+import os
+from datetime import datetime
 
 # Import configuration
 from config.settings import config
@@ -33,6 +36,7 @@ from routes.monthly_ration import init_monthly_ration_routes
 from routes.locations import init_locations_routes
 from routes.home_visits import init_home_visits_routes
 from routes.anganvaadi import init_anganvaadi_routes
+from routes.milestones import init_milestone_routes
 
 # Import utilities
 from utils.helpers import JSONEncoder
@@ -92,6 +96,45 @@ def create_app(config_name='default'):
     init_locations_routes(app, collections)
     init_home_visits_routes(app, collections)
     init_anganvaadi_routes(app, collections)
+    init_milestone_routes(app, collections)
+    
+    # File upload endpoint
+    @app.route('/api/upload', methods=['POST'])
+    @jwt_required()
+    def upload_file():
+        """Upload a file (photos, documents, etc.)"""
+        try:
+            if 'file' not in request.files:
+                return jsonify({'error': 'No file provided'}), 400
+            
+            file = request.files['file']
+            if file.filename == '':
+                return jsonify({'error': 'No file selected'}), 400
+            
+            # Check file size (5MB limit)
+            file.seek(0, os.SEEK_END)
+            file_size = file.tell()
+            file.seek(0)
+            
+            if file_size > 5 * 1024 * 1024:
+                return jsonify({'error': 'File size must be less than 5MB'}), 400
+            
+            # Secure the filename and add timestamp
+            filename = secure_filename(file.filename)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"{timestamp}_{filename}"
+            
+            # Save the file
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            
+            # Return the file URL
+            file_url = f"/uploads/{filename}"
+            return jsonify({'fileUrl': file_url}), 200
+            
+        except Exception as e:
+            print(f"Error uploading file: {str(e)}")
+            return jsonify({'error': f'Failed to upload file: {str(e)}'}), 500
     
     # Serve uploaded files
     @app.route('/uploads/<path:filename>')

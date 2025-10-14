@@ -658,3 +658,64 @@ export const homeVisitsAPI = {
     };
   }
 };
+
+// Milestones API
+export const milestonesAPI = {
+  // Get all milestones
+  getAllMilestones: async () => {
+    const response = await api.get('/milestones');
+    return response.data as { milestones: any[] };
+  },
+  // Get user's milestone progress
+  getMyProgress: async () => {
+    const response = await api.get('/milestones/my-progress');
+    return response.data as { milestones: any[]; childAgeMonths: number | null };
+  },
+  // Record a milestone achievement
+  recordMilestone: async (data: {
+    milestoneId: string;
+    achievedDate: string;
+    notes?: string;
+    photoUrl?: string;
+  }) => {
+    const response = await api.post('/milestones/record', data);
+    return response.data as { message: string; recordId: string };
+  },
+  // Update a milestone record
+  updateMilestoneRecord: async (recordId: string, data: {
+    achievedDate?: string;
+    notes?: string;
+    photoUrl?: string;
+  }) => {
+    const response = await api.put(`/milestones/record/${recordId}`, data);
+    return response.data as { message: string };
+  },
+  // Delete a milestone record
+  deleteMilestoneRecord: async (recordId: string) => {
+    const response = await api.delete(`/milestones/record/${recordId}`);
+    return response.data as { message: string };
+  },
+  // Upload milestone photo
+  uploadMilestonePhoto: async (formData: FormData) => {
+    const response = await api.post('/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data as { fileUrl: string };
+  },
+  // ASHA Worker endpoints
+  getMaternalUsersMilestones: async () => {
+    const response = await api.get('/milestones/asha/maternal-users');
+    return response.data as { users: any[] };
+  },
+  getUserMilestoneDetails: async (userId: string) => {
+    const response = await api.get(`/milestones/asha/user/${userId}`);
+    return response.data as { user: any; milestones: any[] };
+  },
+  verifyMilestone: async (recordId: string, verificationStatus: string, notes?: string) => {
+    const response = await api.put(`/milestones/asha/verify/${recordId}`, {
+      verificationStatus,
+      notes
+    });
+    return response.data as { message: string };
+  }
+};

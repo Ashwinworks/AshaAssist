@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Heart, LogOut, Calendar, Home, Package,
-  MessageSquare, Menu, X, ChevronDown, ChevronRight, Clipboard, MapPin
+  MessageSquare, Menu, X, ChevronDown, ChevronRight, Clipboard, MapPin, Baby
 } from 'lucide-react';
 
 // Navigation items for ASHA workers with dropdown support
@@ -34,6 +34,12 @@ const navigationItems = [
       { id: 'palliative-records', label: 'Palliative Records', path: '/asha/palliative-records' },
       { id: 'vaccination-records', label: 'Child Vaccination Records', path: '/asha/vaccination-records' }
     ]
+  },
+  { 
+    id: 'milestone-monitoring', 
+    label: 'Milestone Monitoring', 
+    icon: Baby, 
+    path: '/asha/milestone-monitoring' 
   },
   { 
     id: 'home-visits', 

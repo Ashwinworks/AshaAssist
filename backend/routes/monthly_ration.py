@@ -123,6 +123,23 @@ def init_monthly_ration_routes(app, collections):
         except Exception as e:
             return jsonify({'error': f'Failed to fetch ration history: {str(e)}'}), 500
 
+    @monthly_ration_bp.route('/api/monthly-rations/update-items', methods=['POST'])
+    @jwt_required()
+    def update_ration_items():
+        """Update all ration records with latest items (Admin/Anganvaadi only)"""
+        try:
+            current_user_id = get_jwt_identity()
+            current_user = collections['users'].find_one({'_id': ObjectId(current_user_id)})
+            
+            # Only anganvaadi workers or admins can update items
+            if not current_user or current_user.get('userType') not in ['anganvaadi', 'admin']:
+                return jsonify({'error': 'Access denied. Anganvaadi workers or admins only.'}), 403
+            
+            result, status_code = ration_service.update_all_ration_items()
+            return jsonify(result), status_code
+        except Exception as e:
+            return jsonify({'error': f'Failed to update ration items: {str(e)}'}), 500
+
     # Register blueprint with app
     app.register_blueprint(monthly_ration_bp)
     

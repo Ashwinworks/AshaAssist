@@ -10,7 +10,7 @@ import {
 // Navigation items for maternity users
 const navigationItems = [
   { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/maternity-dashboard' },
-
+  { id: 'milestones', label: 'Milestones', icon: Baby, path: '/maternity/milestones' },
   { id: 'blogs', label: 'Health Blogs', icon: BookOpen, path: '/maternity/blogs' },
   { id: 'calendar', label: 'Integrated Calendar', icon: Calendar, path: '/maternity/calendar' },
   { id: 'supplies', label: 'Request Supplies', icon: Package, path: '/maternity/supplies' },

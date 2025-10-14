@@ -28,6 +28,8 @@ import AshaCommunityClasses from './pages/asha/CommunityClasses';
 import AshaLocalCamps from './pages/asha/LocalCamps';
 import AshaSupplyDistribution from './pages/asha/SupplyDistribution';
 import AshaHomeVisits from './pages/asha/HomeVisits';
+import AshaMilestoneMonitoring from './pages/asha/MilestoneMonitoring';
+import AshaMilestoneUserDetail from './pages/asha/MilestoneUserDetail';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import VisitMonitoring from './pages/admin/VisitMonitoring';
 import AshaManagement from './pages/admin/AshaManagement';
@@ -54,6 +56,7 @@ import MCPCard from './pages/maternity/MCPCard';
 import MaternityFeedback from './pages/maternity/Feedback';
 import AntenatalVisits from './pages/maternity/AntenatalVisits';
 import MonthlyRation from './pages/maternity/MonthlyRation';
+import Milestones from './pages/maternity/Milestones';
 
 // Import palliative pages
 import PalliativeProfileSetup from './pages/palliative/ProfileSetup';
@@ -439,6 +442,22 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/asha/milestone-monitoring"
+        element={
+          <ProtectedRoute>
+            <AshaMilestoneMonitoring />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/asha/milestone-monitoring/:userId"
+        element={
+          <ProtectedRoute>
+            <AshaMilestoneUserDetail />
+          </ProtectedRoute>
+        }
+      />
       {/* Maternity Routes */}
       <Route
         path="/maternity/profile"
@@ -485,6 +504,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <MonthlyRation />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/maternity/milestones"
+        element={
+          <ProtectedRoute>
+            <Milestones />
           </ProtectedRoute>
         }
       />

@@ -34,6 +34,8 @@ def get_collections(db):
         'monthly_rations': db.monthly_rations,
         'locations': db.locations,
         'home_visits': db.home_visits,
+        'developmental_milestones': db.developmental_milestones,
+        'milestone_records': db.milestone_records,
     }
 
 def ensure_indexes(collections):
@@ -108,6 +110,15 @@ def ensure_indexes(collections):
         collections['home_visits'].create_index([('visitDate', -1)])
         collections['home_visits'].create_index([('verified', 1), ('visitDate', -1)])
 
-        print("Indexes ensured: users(email unique, phone partial unique), asha_feedback(userId+createdAt), calendar_events(start,end,createdBy), health_blogs(createdBy+createdAt, category+status, status+createdAt), vaccination_schedules(date,createdBy+date), vaccination_bookings(scheduleId,userId+createdAt), palliative_records(userId+date, testType), visit_requests(userId+createdAt, status+createdAt, requestType+status), supply_requests(userId+createdAt, status+createdAt, category+status), community_classes(date,createdBy+date,status+date), local_camps(date,createdBy+date,status+date), monthly_rations(userId+monthStartDate, monthStartDate+status, status+monthStartDate), locations(ward+type, name), home_visits(userId+visitDate, ashaWorkerId+visitDate, visitDate, verified+visitDate)")
+        # Milestone records: by userId, milestoneId, achievedDate
+        collections['milestone_records'].create_index([('userId', 1), ('achievedDate', -1)])
+        collections['milestone_records'].create_index([('userId', 1), ('milestoneId', 1)])
+        collections['milestone_records'].create_index([('status', 1)])
+
+        # Developmental milestones: by order for display
+        collections['developmental_milestones'].create_index([('order', 1)])
+        collections['developmental_milestones'].create_index([('isActive', 1)])
+
+        print("Indexes ensured: users(email unique, phone partial unique), asha_feedback(userId+createdAt), calendar_events(start,end,createdBy), health_blogs(createdBy+createdAt, category+status, status+createdAt), vaccination_schedules(date,createdBy+date), vaccination_bookings(scheduleId,userId+createdAt), palliative_records(userId+date, testType), visit_requests(userId+createdAt, status+createdAt, requestType+status), supply_requests(userId+createdAt, status+createdAt, category+status), community_classes(date,createdBy+date,status+date), local_camps(date,createdBy+date,status+date), monthly_rations(userId+monthStartDate, monthStartDate+status, status+monthStartDate), locations(ward+type, name), home_visits(userId+visitDate, ashaWorkerId+visitDate, visitDate, verified+visitDate), milestone_records(userId+achievedDate, userId+milestoneId, status), developmental_milestones(order, isActive)")
     except Exception as e:
         print(f'Warning: could not ensure indexes: {e}')

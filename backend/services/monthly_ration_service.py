@@ -31,7 +31,18 @@ class MonthlyRationService:
         }))
 
         # Monthly ration items (increased quantities for monthly distribution)
-        ration_items = ['Rice 8kg', 'Wheat 4kg', 'Lentils 2kg', 'Oil 2L', 'Sugar 2kg', 'Child Oil 400ml']
+        ration_items = [
+            'Rice 8kg', 
+            'Wheat 4kg', 
+            'Lentils 2kg', 
+            'Oil 2L', 
+            'Sugar 2kg', 
+            'Child Oil 400ml',
+            'Iron and Folic Acid (IFA) tablets',
+            'Calcium tablets',
+            'Vitamin A',
+            'Amrutham Nutrimix (Amrutham Podi)'
+        ]
 
         # For each maternity user, get or create their monthly ration record
         for user in maternity_users:
@@ -51,6 +62,18 @@ class MonthlyRationService:
                     'createdAt': datetime.now(timezone.utc),
                     'updatedAt': datetime.now(timezone.utc)
                 })
+            else:
+                # Update existing record with new items if different
+                if existing.get('items') != ration_items:
+                    self.monthly_rations.update_one(
+                        {'_id': existing['_id']},
+                        {
+                            '$set': {
+                                'items': ration_items,
+                                'updatedAt': datetime.now(timezone.utc)
+                            }
+                        }
+                    )
 
         return {'message': 'Monthly rations initialized'}, 200
 
@@ -225,3 +248,35 @@ class MonthlyRationService:
             })
 
         return {'rations': rations}, 200
+
+    def update_all_ration_items(self) -> Tuple[Dict[str, Any], int]:
+        """Update all existing ration records with the latest items list"""
+        # Latest ration items
+        ration_items = [
+            'Rice 8kg', 
+            'Wheat 4kg', 
+            'Lentils 2kg', 
+            'Oil 2L', 
+            'Sugar 2kg', 
+            'Child Oil 400ml',
+            'Iron and Folic Acid (IFA) tablets',
+            'Calcium tablets',
+            'Vitamin A',
+            'Amrutham Nutrimix (Amrutham Podi)'
+        ]
+        
+        # Update all records
+        result = self.monthly_rations.update_many(
+            {},  # Match all documents
+            {
+                '$set': {
+                    'items': ration_items,
+                    'updatedAt': datetime.now(timezone.utc)
+                }
+            }
+        )
+        
+        return {
+            'message': f'Updated {result.modified_count} ration records with new items',
+            'modifiedCount': result.modified_count
+        }, 200
