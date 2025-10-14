@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import AnganvaadiLayout from './AnganvaadiLayout';
 import { Package, Calendar, Users, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
-import { weeklyRationAPI } from '../../services/api';
+import { monthlyRationAPI } from '../../services/api';
 
 const Ration: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [rations, setRations] = useState<any[]>([]);
-  const [weekStartDate, setWeekStartDate] = useState('');
+  const [monthStartDate, setMonthStartDate] = useState('');
 
   const fetchRationDistribution = async () => {
     try {
       setLoading(true);
       setError('');
-      const data = await weeklyRationAPI.getWeeklyRations();
+      const data = await monthlyRationAPI.getMonthlyRations();
       setRations(data.rations || []);
-      setWeekStartDate(data.weekStartDate || '');
+      setMonthStartDate(data.monthStartDate || '');
     } catch (e: any) {
       setError(e?.response?.data?.error || 'Failed to load ration distribution data');
     } finally {
@@ -25,7 +25,7 @@ const Ration: React.FC = () => {
 
   const handleMarkCollected = async (userId: string) => {
     try {
-      await weeklyRationAPI.markCollected(userId);
+      await monthlyRationAPI.markCollected(userId);
       // Refresh the list
       fetchRationDistribution();
     } catch (e: any) {
@@ -35,7 +35,7 @@ const Ration: React.FC = () => {
 
   const handleMarkPending = async (userId: string) => {
     try {
-      await weeklyRationAPI.markPending(userId);
+      await monthlyRationAPI.markPending(userId);
       // Refresh the list
       fetchRationDistribution();
     } catch (e: any) {
@@ -91,7 +91,7 @@ const Ration: React.FC = () => {
                 Ration Distribution
               </h1>
               <p style={{ fontSize: '1rem', color: 'var(--orange-600)' }}>
-                Manage weekly ration supplies for maternal users for the week of {new Date(weekStartDate).toLocaleDateString()}
+                Manage monthly ration supplies for maternal users for {new Date(monthStartDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </p>
             </div>
             <Package size={48} style={{ color: 'var(--orange-300)' }} />
@@ -186,7 +186,7 @@ const Ration: React.FC = () => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--gray-600)' }}>
                           <Calendar size={16} />
                           <span style={{ fontSize: '0.875rem' }}>
-                            Week: {new Date(ration.weekStartDate).toLocaleDateString()}
+                            Month: {new Date(ration.monthStartDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                           </span>
                         </div>
                       </div>
@@ -320,7 +320,7 @@ const Ration: React.FC = () => {
                   No Maternity Users
                 </h3>
                 <p style={{ color: 'var(--gray-600)' }}>
-                  No maternity users are currently registered for weekly ration distribution.
+                  No maternity users are currently registered for monthly ration distribution.
                 </p>
               </div>
             )}

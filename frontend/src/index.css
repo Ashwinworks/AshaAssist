@@ -66,6 +66,7 @@ body {
   --blue-700: var(--primary-700);
 
   --green-600: var(--success-600);
+  --green-700: #15803d;
   --green-25: #f0fdf4;
 
   --red-600: var(--error-600);

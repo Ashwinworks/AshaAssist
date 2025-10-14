@@ -515,34 +515,39 @@ export const supplyAPI = {
   }
 };
 
-// Weekly Ration API (Anganvaadi & Maternity)
-export const weeklyRationAPI = {
-  // Get all weekly rations for a specific week (Anganvaadi view)
-  getWeeklyRations: async (weekStartDate?: string) => {
-    const params = weekStartDate ? { weekStartDate } : undefined;
-    const response = await api.get('/weekly-rations', { params });
-    return response.data as { rations: any[]; weekStartDate: string };
+// Monthly Ration API (Anganvaadi & Maternity)
+export const monthlyRationAPI = {
+  // Get all monthly rations for a specific month (Anganvaadi view)
+  getMonthlyRations: async (monthStartDate?: string) => {
+    const params = monthStartDate ? { monthStartDate } : undefined;
+    const response = await api.get('/monthly-rations', { params });
+    return response.data as { rations: any[]; monthStartDate: string };
   },
   // Get current user's ration status (Maternity user view)
-  getMyRationStatus: async (weekStartDate?: string) => {
-    const params = weekStartDate ? { weekStartDate } : undefined;
-    const response = await api.get('/weekly-rations/my-status', { params });
+  getMyRationStatus: async (monthStartDate?: string) => {
+    const params = monthStartDate ? { monthStartDate } : undefined;
+    const response = await api.get('/monthly-rations/my-status', { params });
     return response.data as { ration: any };
   },
   // Mark ration as collected
-  markCollected: async (userId?: string, weekStartDate?: string) => {
+  markCollected: async (userId?: string, monthStartDate?: string) => {
     const payload: any = {};
     if (userId) payload.userId = userId;
-    if (weekStartDate) payload.weekStartDate = weekStartDate;
-    const response = await api.put('/weekly-rations/mark-collected', payload);
+    if (monthStartDate) payload.monthStartDate = monthStartDate;
+    const response = await api.put('/monthly-rations/mark-collected', payload);
     return response.data as { message: string };
   },
   // Mark ration as pending (undo collection) - Anganvaadi only
-  markPending: async (userId: string, weekStartDate?: string) => {
+  markPending: async (userId: string, monthStartDate?: string) => {
     const payload: any = { userId };
-    if (weekStartDate) payload.weekStartDate = weekStartDate;
-    const response = await api.put('/weekly-rations/mark-pending', payload);
+    if (monthStartDate) payload.monthStartDate = monthStartDate;
+    const response = await api.put('/monthly-rations/mark-pending', payload);
     return response.data as { message: string };
+  },
+  // Get ration history for all months (Anganvaadi only)
+  getRationHistory: async () => {
+    const response = await api.get('/monthly-rations/history');
+    return response.data as { rations: any[] };
   }
 };
 
@@ -579,6 +584,27 @@ export const locationsAPI = {
   deleteLocation: async (id: string) => {
     const response = await api.delete(`/locations/${id}`);
     return response.data as { message: string };
+  }
+};
+
+// Anganvaadi Dashboard API
+export const anganvaadiAPI = {
+  getDashboardStats: async () => {
+    const response = await api.get('/anganvaadi/dashboard-stats');
+    return response.data as {
+      stats: {
+        vaccinationsScheduled: number;
+        classesToday: number;
+        rationDistributions: number;
+        campsThisWeek: number;
+      };
+      updates: Array<{
+        type: string;
+        title: string;
+        message: string;
+        color: string;
+      }>;
+    };
   }
 };
 

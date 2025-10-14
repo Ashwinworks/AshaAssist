@@ -29,9 +29,10 @@ from routes.general import init_general_routes
 from routes.visit_requests import init_visit_request_routes
 from routes.supply import init_supply_routes
 from routes.community import init_community_routes
-from routes.weekly_ration import init_weekly_ration_routes
+from routes.monthly_ration import init_monthly_ration_routes
 from routes.locations import init_locations_routes
 from routes.home_visits import init_home_visits_routes
+from routes.anganvaadi import init_anganvaadi_routes
 
 # Import utilities
 from utils.helpers import JSONEncoder
@@ -87,9 +88,10 @@ def create_app(config_name='default'):
     from routes.palliative import init_palliative_routes
     init_palliative_routes(app, collections)
     init_community_routes(app, collections)
-    init_weekly_ration_routes(app, collections)
+    init_monthly_ration_routes(app, collections)
     init_locations_routes(app, collections)
     init_home_visits_routes(app, collections)
+    init_anganvaadi_routes(app, collections)
     
     # Serve uploaded files
     @app.route('/uploads/<path:filename>')

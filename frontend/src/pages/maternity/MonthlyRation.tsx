@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import MaternityLayout from './MaternityLayout';
 import { Package, Calendar, CheckCircle, AlertCircle, ShoppingBag } from 'lucide-react';
-import { weeklyRationAPI } from '../../services/api';
+import { monthlyRationAPI } from '../../services/api';
 
-const WeeklyRation: React.FC = () => {
+const MonthlyRation: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [ration, setRation] = useState<any>(null);
@@ -13,7 +13,7 @@ const WeeklyRation: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      const data = await weeklyRationAPI.getMyRationStatus();
+      const data = await monthlyRationAPI.getMyRationStatus();
       setRation(data.ration);
     } catch (e: any) {
       setError(e?.response?.data?.error || 'Failed to load ration status');
@@ -26,7 +26,7 @@ const WeeklyRation: React.FC = () => {
     try {
       setError('');
       setSuccessMessage('');
-      await weeklyRationAPI.markCollected();
+      await monthlyRationAPI.markCollected();
       setSuccessMessage('Ration marked as collected successfully!');
       // Refresh the status
       fetchRationStatus();
@@ -39,19 +39,16 @@ const WeeklyRation: React.FC = () => {
     fetchRationStatus();
   }, []);
 
-  const getWeekEndDate = (weekStartDate: string) => {
-    const start = new Date(weekStartDate);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 6);
-    return end.toLocaleDateString();
+  const getMonthName = (monthStartDate: string) => {
+    return new Date(monthStartDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   };
 
   return (
-    <MaternityLayout title="Weekly Ration">
+    <MaternityLayout title="Monthly Ration">
       <div>
         <div style={{ marginBottom: '2rem' }}>
           <p style={{ color: 'var(--gray-600)', fontSize: '1.125rem' }}>
-            Track and collect your weekly ration supplies from the Anganwadi center.
+            Track and collect your monthly ration supplies from the Anganwadi center.
           </p>
         </div>
 
@@ -99,7 +96,7 @@ const WeeklyRation: React.FC = () => {
                   color: ration.status === 'collected' ? 'var(--green-800)' : 'var(--yellow-800)'
                 }}>
                   <ShoppingBag size={24} />
-                  Weekly Ration Status
+                  Monthly Ration Status
                 </h2>
                 <div style={{
                   display: 'inline-flex',
@@ -118,7 +115,7 @@ const WeeklyRation: React.FC = () => {
               </div>
             </div>
             <div className="card-content" style={{ padding: '2rem' }}>
-              {/* Week Information */}
+              {/* Month Information */}
               <div style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
@@ -132,10 +129,10 @@ const WeeklyRation: React.FC = () => {
                 <Calendar size={20} color="var(--blue-600)" />
                 <div>
                   <div style={{ fontSize: '0.875rem', color: 'var(--blue-600)', fontWeight: '500' }}>
-                    Current Week
+                    Current Month
                   </div>
                   <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--blue-800)' }}>
-                    {new Date(ration.weekStartDate).toLocaleDateString()} - {getWeekEndDate(ration.weekStartDate)}
+                    {getMonthName(ration.monthStartDate)}
                   </div>
                 </div>
               </div>
@@ -224,7 +221,7 @@ const WeeklyRation: React.FC = () => {
                       color: 'var(--yellow-700)',
                       margin: 0
                     }}>
-                      Visit your nearest Anganwadi center to collect this week's ration. Mark as collected once you've received your supplies.
+                      Visit your nearest Anganwadi center to collect this month's ration. Mark as collected once you've received your supplies.
                     </p>
                   </div>
                   <button
@@ -263,7 +260,7 @@ const WeeklyRation: React.FC = () => {
                   margin: 0,
                   lineHeight: '1.5'
                 }}>
-                  <strong>Note:</strong> Weekly rations are distributed every week from the Anganwadi center. 
+                  <strong>Note:</strong> Monthly rations are distributed every month from the Anganwadi center. 
                   Please collect your ration during the center's operating hours. For any queries, contact your local Anganwadi worker.
                 </p>
               </div>
@@ -281,7 +278,7 @@ const WeeklyRation: React.FC = () => {
                 No Ration Information
               </h3>
               <p>
-                No ration information available for this week. Please contact your Anganwadi worker.
+                No ration information available for this month. Please contact your Anganwadi worker.
               </p>
             </div>
           </div>
@@ -291,4 +288,4 @@ const WeeklyRation: React.FC = () => {
   );
 };
 
-export default WeeklyRation;
+export default MonthlyRation;

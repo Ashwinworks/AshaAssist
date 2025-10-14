@@ -1,10 +1,56 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AnganvaadiLayout from './AnganvaadiLayout';
 import { Users, Activity, AlertCircle, BookOpen, MapPin, Package, Syringe } from 'lucide-react';
+import { anganvaadiAPI } from '../../services/api';
 
 const AnganvaadiDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<{
+    vaccinationsScheduled: number;
+    classesToday: number;
+    rationDistributions: number;
+    campsThisWeek: number;
+  }>({
+    vaccinationsScheduled: 0,
+    classesToday: 0,
+    rationDistributions: 0,
+    campsThisWeek: 0
+  });
+  const [updates, setUpdates] = useState<Array<{
+    type: string;
+    title: string;
+    message: string;
+    color: string;
+  }>>([]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const data = await anganvaadiAPI.getDashboardStats();
+      setStats(data.stats);
+      setUpdates(data.updates);
+    } catch (error) {
+      console.error('Failed to fetch dashboard stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <AnganvaadiLayout title="Dashboard">
+        <div style={{ textAlign: 'center', padding: '3rem' }}>
+          <p>Loading dashboard data...</p>
+        </div>
+      </AnganvaadiLayout>
+    );
+  }
 
   return (
     <AnganvaadiLayout title="Dashboard">
@@ -22,14 +68,14 @@ const AnganvaadiDashboard: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
               <div>
                 <div style={{ fontSize: '2.5rem', fontWeight: '700', color: 'var(--green-600)', marginBottom: '0.25rem' }}>
-                  25
+                  {stats.vaccinationsScheduled}
                 </div>
-                <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem', fontWeight: '500' }}>Children Enrolled</div>
+                <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem', fontWeight: '500' }}>Vaccinations Scheduled</div>
               </div>
-              <Users style={{ width: '2.5rem', height: '2.5rem', color: 'var(--green-200)' }} />
+              <Syringe style={{ width: '2.5rem', height: '2.5rem', color: 'var(--green-200)' }} />
             </div>
             <div style={{ fontSize: '0.75rem', color: 'var(--green-600)', backgroundColor: 'var(--green-50)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', display: 'inline-block' }}>
-              Active Enrollment
+              This Month
             </div>
           </div>
 
@@ -37,7 +83,7 @@ const AnganvaadiDashboard: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
               <div>
                 <div style={{ fontSize: '2.5rem', fontWeight: '700', color: 'var(--blue-600)', marginBottom: '0.25rem' }}>
-                  8
+                  {stats.classesToday}
                 </div>
                 <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem', fontWeight: '500' }}>Classes Today</div>
               </div>
@@ -52,7 +98,7 @@ const AnganvaadiDashboard: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
               <div>
                 <div style={{ fontSize: '2.5rem', fontWeight: '700', color: 'var(--purple-600)', marginBottom: '0.25rem' }}>
-                  15
+                  {stats.rationDistributions}
                 </div>
                 <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem', fontWeight: '500' }}>Ration Distributions</div>
               </div>
@@ -67,7 +113,7 @@ const AnganvaadiDashboard: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
               <div>
                 <div style={{ fontSize: '2.5rem', fontWeight: '700', color: 'var(--orange-600)', marginBottom: '0.25rem' }}>
-                  3
+                  {stats.campsThisWeek}
                 </div>
                 <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem', fontWeight: '500' }}>Camps This Week</div>
               </div>
@@ -89,22 +135,24 @@ const AnganvaadiDashboard: React.FC = () => {
           </div>
           <div className="card-content">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ padding: '1rem', backgroundColor: 'var(--green-50)', borderRadius: '0.5rem', borderLeft: '3px solid var(--green-400)' }}>
-                <div style={{ fontWeight: '600', color: 'var(--green-800)', marginBottom: '0.25rem' }}>
-                  Nutrition Program Update
+              {updates.map((update, index) => (
+                <div 
+                  key={index}
+                  style={{ 
+                    padding: '1rem', 
+                    backgroundColor: `var(--${update.color}-50)`, 
+                    borderRadius: '0.5rem', 
+                    borderLeft: `3px solid var(--${update.color}-400)` 
+                  }}
+                >
+                  <div style={{ fontWeight: '600', color: `var(--${update.color}-800)`, marginBottom: '0.25rem' }}>
+                    {update.title}
+                  </div>
+                  <div style={{ fontSize: '0.875rem', color: `var(--${update.color}-700)` }}>
+                    {update.message}
+                  </div>
                 </div>
-                <div style={{ fontSize: '0.875rem', color: 'var(--green-700)' }}>
-                  New weekly ration supplies have been allocated for 25 children. Distribution scheduled for tomorrow.
-                </div>
-              </div>
-              <div style={{ padding: '1rem', backgroundColor: 'var(--blue-50)', borderRadius: '0.5rem', borderLeft: '3px solid var(--blue-400)' }}>
-                <div style={{ fontWeight: '600', color: 'var(--blue-800)', marginBottom: '0.25rem' }}>
-                  Community Health Camp
-                </div>
-                <div style={{ fontSize: '0.875rem', color: 'var(--blue-700)' }}>
-                  Vaccination and health checkup camp scheduled for Saturday at the center premises.
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>

@@ -14,6 +14,7 @@ import AnganvaadiDashboard from './pages/anganvaadi/AnganvaadiDashboard';
 import AnganvaadiCommunityClasses from './pages/anganvaadi/CommunityClasses';
 import AnganvaadiLocalCamps from './pages/anganvaadi/LocalCamps';
 import AnganvaadiRation from './pages/anganvaadi/Ration';
+import AnganvaadiRationHistory from './pages/anganvaadi/RationHistory';
 import AnganvaadiVaccinationSchedules from './pages/anganvaadi/VaccinationSchedules';
 import AshaCalendarManagement from './pages/asha/CalendarManagement';
 import VaccinationSchedules from './pages/asha/VaccinationSchedules';
@@ -52,7 +53,7 @@ import VaccinationBooking from './pages/maternity/VaccinationBooking';
 import MCPCard from './pages/maternity/MCPCard';
 import MaternityFeedback from './pages/maternity/Feedback';
 import AntenatalVisits from './pages/maternity/AntenatalVisits';
-import WeeklyRation from './pages/maternity/WeeklyRation';
+import MonthlyRation from './pages/maternity/MonthlyRation';
 
 // Import palliative pages
 import PalliativeProfileSetup from './pages/palliative/ProfileSetup';
@@ -319,6 +320,14 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
+        path="/anganvaadi/ration-history"
+        element={
+          <ProtectedRoute>
+            <AnganvaadiRationHistory />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/anganvaadi/vaccination-schedules"
         element={
           <ProtectedRoute>
@@ -475,7 +484,7 @@ const AppRoutes: React.FC = () => {
         path="/maternity/ration"
         element={
           <ProtectedRoute>
-            <WeeklyRation />
+            <MonthlyRation />
           </ProtectedRoute>
         }
       />
