@@ -126,9 +126,22 @@ const UsersManagement: React.FC = () => {
   return (
     <AdminLayout title="User Management">
       <div>
-        <div style={{ marginBottom: '1rem' }}>
-          <p style={{ color: 'var(--gray-600)', fontSize: '1.0rem', margin: 0 }}>
-            Manage registered users. Search, filter by category and status, and activate/deactivate accounts.
+        {/* Colorful Header Banner */}
+        <div style={{
+          background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
+          padding: '2rem',
+          borderRadius: '1rem',
+          marginBottom: '2rem',
+          border: '1px solid #c4b5fd'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+            <Users size={32} color="#7c3aed" />
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#5b21b6', margin: 0 }}>
+              User Management
+            </h2>
+          </div>
+          <p style={{ color: '#6d28d9', fontSize: '0.95rem', margin: 0 }}>
+            Manage registered users. Search, filter by category and status, and activate/deactivate accounts
           </p>
         </div>
 
@@ -377,7 +390,10 @@ const UsersManagement: React.FC = () => {
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr style={{ backgroundColor: 'var(--gray-50)', borderBottom: '1px solid var(--gray-200)' }}>
+                    <tr style={{
+                      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                      borderBottom: '2px solid #cbd5e1'
+                    }}>
                       <th style={th}>Name</th>
                       <th style={th}>Email</th>
                       <th style={th}>Phone</th>
@@ -397,7 +413,17 @@ const UsersManagement: React.FC = () => {
                       </tr>
                     )}
                     {users.map((u) => (
-                      <tr key={u.id} style={{ borderBottom: '1px solid var(--gray-100)' }}>
+                      <tr key={u.id} style={{
+                        borderBottom: '1px solid var(--gray-100)',
+                        transition: 'background-color 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f9fafb';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                      >
                         <td style={td}>
                           <div style={{ fontWeight: 600, color: 'var(--gray-900)' }}>{u.name}</div>
                           <div style={{ display: 'flex', gap: '0.5rem', color: 'var(--gray-600)', fontSize: '0.8125rem' }}>
@@ -451,16 +477,20 @@ const UsersManagement: React.FC = () => {
                               className="btn"
                               onClick={() => toggleStatus(u)}
                               style={{
-                                backgroundColor: u.isActive ? '#dc2626' : '#16a34a',
-                                color: 'white',
-                                border: 'none',
+                                background: u.isActive 
+                                  ? 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)'
+                                  : 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                                color: u.isActive ? '#991b1b' : '#166534',
+                                border: u.isActive ? '1px solid #fca5a5' : '1px solid #86efac',
                                 padding: '0.4rem 0.75rem',
                                 fontSize: '0.8125rem',
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '0.4rem',
                                 cursor: 'pointer',
-                                fontWeight: '500'
+                                fontWeight: '600',
+                                borderRadius: '0.375rem',
+                                transition: 'all 0.2s ease'
                               }}
                             >
                               {u.isActive ? <XCircle size={14} /> : <CheckCircle size={14} />}
@@ -470,16 +500,18 @@ const UsersManagement: React.FC = () => {
                               className="btn"
                               onClick={() => removeUser(u)}
                               style={{
-                                backgroundColor: '#dc2626',
-                                color: 'white',
-                                border: 'none',
+                                background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+                                color: '#991b1b',
+                                border: '1px solid #fca5a5',
                                 padding: '0.4rem 0.75rem',
                                 fontSize: '0.8125rem',
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '0.4rem',
                                 cursor: 'pointer',
-                                fontWeight: '500'
+                                fontWeight: '600',
+                                borderRadius: '0.375rem',
+                                transition: 'all 0.2s ease'
                               }}
                               title="Remove user permanently"
                             >

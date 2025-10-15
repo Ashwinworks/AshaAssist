@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import AdminLayout from './AdminLayout';
-import { Search, Star, User, TrendingUp, TrendingDown, X } from 'lucide-react';
+import { Search, Star, User, TrendingUp, TrendingDown, X, MessageSquare } from 'lucide-react';
 import { adminAPI } from '../../services/api';
 
 interface AdminFeedbackItem {
@@ -133,28 +133,41 @@ const Feedbacks: React.FC = () => {
   return (
     <AdminLayout title="Feedbacks & Ratings">
       <div>
-        <div style={{ marginBottom: '2rem' }}>
-          <p style={{ color: 'var(--gray-600)', fontSize: '1.125rem' }}>
-            Monitor user feedback and ratings to improve service quality.
+        {/* Colorful Header Banner */}
+        <div style={{
+          background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+          padding: '2rem',
+          borderRadius: '1rem',
+          marginBottom: '2rem',
+          border: '1px solid #fbbf24'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+            <MessageSquare size={32} color="#d97706" />
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#78350f', margin: 0 }}>
+              Feedbacks & Ratings
+            </h2>
+          </div>
+          <p style={{ color: '#92400e', fontSize: '0.95rem', margin: 0 }}>
+            Monitor user feedback and ratings to improve service quality
           </p>
         </div>
 
         {/* Search and Filters */}
         <div className="card" style={{ marginBottom: '2rem' }}>
           <div className="card-content" style={{ padding: '1.5rem' }}>
-            <div className="search-container" style={{ 
-              display: 'flex', 
-              gap: '1.5rem', 
-              alignItems: 'center', 
+            <div className="search-container" style={{
+              display: 'flex',
+              gap: '1.5rem',
+              alignItems: 'center',
               flexWrap: 'wrap',
               justifyContent: 'flex-start'
             }}>
               {/* Search Input Container */}
-              <div className="search-input-container" style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '0.75rem', 
-                flex: 2, 
+              <div className="search-input-container" style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                flex: 2,
                 minWidth: '400px',
                 position: 'relative'
               }}>
@@ -164,9 +177,9 @@ const Feedbacks: React.FC = () => {
                   display: 'flex',
                   alignItems: 'center'
                 }}>
-                  <Search 
-                    size={20} 
-                    color="var(--gray-400)" 
+                  <Search
+                    size={20}
+                    color="var(--gray-400)"
                     style={{
                       position: 'absolute',
                       left: '0.75rem',
@@ -282,7 +295,7 @@ const Feedbacks: React.FC = () => {
               }}>
                 <Search size={16} />
                 <span>
-                  Found {filteredFeedbacks.length} feedback{filteredFeedbacks.length !== 1 ? 's' : ''} 
+                  Found {filteredFeedbacks.length} feedback{filteredFeedbacks.length !== 1 ? 's' : ''}
                   {searchTerm && ` matching "${searchTerm}"`}
                   {filterRating !== 'all' && ` with ${filterRating} star${filterRating !== '1' ? 's' : ''}`}
                 </span>
@@ -300,29 +313,49 @@ const Feedbacks: React.FC = () => {
             marginBottom: '2rem',
           }}
         >
-          <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--blue-600)', marginBottom: '0.5rem' }}>
+          <div className="card" style={{
+            padding: '1.5rem',
+            textAlign: 'center',
+            background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+            border: '1px solid #93c5fd'
+          }}>
+            <div style={{ fontSize: '2rem', fontWeight: '700', color: '#1e40af', marginBottom: '0.5rem' }}>
               {feedbacks.length}
             </div>
-            <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Total Feedbacks</div>
+            <div style={{ color: '#1e3a8a', fontSize: '0.875rem', fontWeight: '600' }}>Total Feedbacks</div>
           </div>
-          <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--green-600)', marginBottom: '0.5rem' }}>
+          <div className="card" style={{
+            padding: '1.5rem',
+            textAlign: 'center',
+            background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+            border: '1px solid #86efac'
+          }}>
+            <div style={{ fontSize: '2rem', fontWeight: '700', color: '#166534', marginBottom: '0.5rem' }}>
               {feedbacks.length ? (feedbacks.reduce((sum, f) => sum + (f.rating || 0), 0) / feedbacks.length).toFixed(1) : '0.0'}
             </div>
-            <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Average Rating</div>
+            <div style={{ color: '#14532d', fontSize: '0.875rem', fontWeight: '600' }}>Average Rating</div>
           </div>
-          <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--yellow-600)', marginBottom: '0.5rem' }}>
+          <div className="card" style={{
+            padding: '1.5rem',
+            textAlign: 'center',
+            background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+            border: '1px solid #fde68a'
+          }}>
+            <div style={{ fontSize: '2rem', fontWeight: '700', color: '#b45309', marginBottom: '0.5rem' }}>
               {filteredFeedbacks.filter((f) => f.rating >= 3 && f.rating < 4).length}
             </div>
-            <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Neutral (3-star)</div>
+            <div style={{ color: '#78350f', fontSize: '0.875rem', fontWeight: '600' }}>Neutral (3-star)</div>
           </div>
-          <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--red-600)', marginBottom: '0.5rem' }}>
+          <div className="card" style={{
+            padding: '1.5rem',
+            textAlign: 'center',
+            background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+            border: '1px solid #fca5a5'
+          }}>
+            <div style={{ fontSize: '2rem', fontWeight: '700', color: '#991b1b', marginBottom: '0.5rem' }}>
               {filteredFeedbacks.filter((f) => f.rating <= 2).length}
             </div>
-            <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Negative</div>
+            <div style={{ color: '#7f1d1d', fontSize: '0.875rem', fontWeight: '600' }}>Negative</div>
           </div>
         </div>
 
@@ -333,7 +366,11 @@ const Feedbacks: React.FC = () => {
           </div>
           <div className="card-content">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
-              <div className="card" style={{ padding: '1.5rem', backgroundColor: 'var(--gray-25)', border: '1px solid var(--gray-200)' }}>
+              <div className="card" style={{
+                padding: '1.5rem',
+                background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                border: '1px solid #cbd5e1'
+              }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
                   <User size={18} color="var(--blue-600)" />
                   <h4 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600', color: 'var(--gray-900)' }}>{workerSummary.name}</h4>
@@ -372,7 +409,13 @@ const Feedbacks: React.FC = () => {
                   <div
                     key={feedback.id}
                     className="card"
-                    style={{ padding: '1.5rem', border: '1px solid var(--gray-200)', borderLeft: `4px solid ${getRatingColor(feedback.rating)}` }}
+                    style={{
+                      padding: '1.5rem',
+                      background: 'linear-gradient(135deg, #fefefe 0%, #f9fafb 100%)',
+                      border: '1px solid #e5e7eb',
+                      borderLeft: `4px solid ${getRatingColor(feedback.rating)}`,
+                      transition: 'all 0.2s ease'
+                    }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                       <div style={{ flex: 1 }}>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from './AdminLayout';
 import { adminAPI } from '../../services/api';
 import toast from 'react-hot-toast';
-import { Eye, Check, X, Download, Filter } from 'lucide-react';
+import { Eye, Check, X, Download, Filter, Package } from 'lucide-react';
 
 interface SupplyRequest {
   _id: string;
@@ -109,7 +109,27 @@ const SupplyRequestsManagement: React.FC = () => {
 
   return (
     <AdminLayout title="Supply Requests Management">
-      <div className="card">
+      <div>
+        {/* Colorful Header Banner */}
+        <div style={{
+          background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+          padding: '2rem',
+          borderRadius: '1rem',
+          marginBottom: '2rem',
+          border: '1px solid #93c5fd'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+            <Package size={32} color="#2563eb" />
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1e3a8a', margin: 0 }}>
+              Supply Requests Management
+            </h2>
+          </div>
+          <p style={{ color: '#1e40af', fontSize: '0.95rem', margin: 0 }}>
+            Review and manage supply requests from users across all categories
+          </p>
+        </div>
+
+        <div className="card">
         <div className="card-header">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 className="card-title">Supply Requests</h2>
@@ -144,7 +164,13 @@ const SupplyRequestsManagement: React.FC = () => {
           ) : (
             <div style={{ display: 'grid', gap: '1rem' }}>
               {requests.map((request) => (
-                <div key={request._id} className="card" style={{ margin: 0, padding: '1rem' }}>
+                <div key={request._id} className="card" style={{
+                  margin: 0,
+                  padding: '1.5rem',
+                  background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                  border: '1px solid #e2e8f0',
+                  transition: 'all 0.2s ease'
+                }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
@@ -200,7 +226,13 @@ const SupplyRequestsManagement: React.FC = () => {
                           setSelectedRequest(request);
                           setModalOpen(true);
                         }}
-                        style={{ padding: '0.5rem' }}
+                        style={{
+                          padding: '0.5rem',
+                          backgroundColor: '#dbeafe',
+                          color: '#1e40af',
+                          border: '1px solid #93c5fd',
+                          borderRadius: '0.375rem'
+                        }}
                       >
                         <Eye size={16} />
                       </button>
@@ -209,23 +241,41 @@ const SupplyRequestsManagement: React.FC = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="btn"
-                        style={{ padding: '0.5rem' }}
+                        style={{
+                          padding: '0.5rem',
+                          backgroundColor: '#f1f5f9',
+                          color: '#475569',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '0.375rem'
+                        }}
                       >
                         <Download size={16} />
                       </a>
                       {request.status === 'pending' && (
                         <>
                           <button
-                            className="btn btn-success"
+                            className="btn"
                             onClick={() => openActionModal(request, 'approve')}
-                            style={{ padding: '0.5rem' }}
+                            style={{
+                              padding: '0.5rem',
+                              background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
+                              color: '#166534',
+                              border: '1px solid #86efac',
+                              borderRadius: '0.375rem'
+                            }}
                           >
                             <Check size={16} />
                           </button>
                           <button
-                            className="btn btn-danger"
+                            className="btn"
                             onClick={() => openActionModal(request, 'reject')}
-                            style={{ padding: '0.5rem' }}
+                            style={{
+                              padding: '0.5rem',
+                              background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+                              color: '#991b1b',
+                              border: '1px solid #fca5a5',
+                              borderRadius: '0.375rem'
+                            }}
                           >
                             <X size={16} />
                           </button>
@@ -350,6 +400,7 @@ const SupplyRequestsManagement: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
     </AdminLayout>
   );
 };

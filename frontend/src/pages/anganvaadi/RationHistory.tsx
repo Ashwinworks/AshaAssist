@@ -106,24 +106,22 @@ const RationHistory: React.FC = () => {
     <AnganvaadiLayout title="Ration History">
       <div>
         {/* Header */}
-        <div style={{ 
-          background: 'var(--purple-50)',
+        <div style={{
+          background: 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)',
           padding: '2rem',
-          borderRadius: '0.75rem',
+          borderRadius: '1rem',
           marginBottom: '2rem',
-          borderLeft: '4px solid var(--purple-500)'
+          border: '1px solid #f472b6'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--purple-800)', marginBottom: '0.5rem' }}>
-                Ration Distribution History
-              </h1>
-              <p style={{ fontSize: '1rem', color: 'var(--purple-600)' }}>
-                View and track all monthly ration distributions
-              </p>
-            </div>
-            <History size={48} style={{ color: 'var(--purple-300)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+            <History size={32} color="#be185d" />
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#831843', margin: 0 }}>
+              Ration Distribution History
+            </h2>
           </div>
+          <p style={{ color: '#9f1239', fontSize: '0.95rem', margin: 0 }}>
+            View and track all monthly ration distributions and collection records
+          </p>
         </div>
 
         {error && (
@@ -300,7 +298,7 @@ const RationHistory: React.FC = () => {
                       justifyContent: 'center',
                       gap: '0.5rem',
                       padding: '0.625rem 1rem',
-                      backgroundColor: filteredRations.length === 0 ? 'var(--gray-400)' : 'var(--blue-600)',
+                      background: filteredRations.length === 0 ? '#9ca3af' : 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
                       color: 'white',
                       border: 'none',
                       borderRadius: '0.5rem',
@@ -308,18 +306,18 @@ const RationHistory: React.FC = () => {
                       fontWeight: '600',
                       cursor: filteredRations.length === 0 ? 'not-allowed' : 'pointer',
                       transition: 'all 0.2s ease',
-                      boxShadow: filteredRations.length === 0 ? 'none' : '0 1px 2px rgba(0, 0, 0, 0.05)'
+                      boxShadow: filteredRations.length === 0 ? 'none' : '0 2px 4px rgba(236, 72, 153, 0.2)'
                     }}
                     onMouseEnter={(e) => {
                       if (filteredRations.length > 0) {
-                        e.currentTarget.style.backgroundColor = 'var(--blue-700)';
-                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(236, 72, 153, 0.3)';
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (filteredRations.length > 0) {
-                        e.currentTarget.style.backgroundColor = 'var(--blue-600)';
-                        e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(236, 72, 153, 0.2)';
                       }
                     }}
                   >
@@ -332,11 +330,15 @@ const RationHistory: React.FC = () => {
 
             {/* History Table */}
             {filteredRations.length > 0 ? (
-              <div className="card" style={{ overflow: 'hidden' }}>
+              <div className="card" style={{ 
+                overflow: 'hidden',
+                background: 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
+                border: '1px solid #fbcfe8'
+              }}>
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
-                      <tr style={{ backgroundColor: 'var(--gray-50)', borderBottom: '2px solid var(--gray-200)' }}>
+                      <tr style={{ background: 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)', borderBottom: '2px solid #f9a8d4' }}>
                         <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: 'var(--gray-700)' }}>Month</th>
                         <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: 'var(--gray-700)' }}>User Name</th>
                         <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.875rem', fontWeight: '600', color: 'var(--gray-700)' }}>Phone</th>

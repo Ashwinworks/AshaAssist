@@ -48,6 +48,23 @@ const LocalCamps: React.FC = () => {
     <AnganvaadiLayout title="Local Camps">
       <div>
         {/* Colorful Header Banner */}
+        <div style={{
+          background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
+          padding: '2rem',
+          borderRadius: '1rem',
+          marginBottom: '2rem',
+          border: '1px solid #34d399'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+            <Target size={32} color="#059669" />
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#064e3b', margin: 0 }}>
+              Local Health Camps
+            </h2>
+          </div>
+          <p style={{ color: '#065f46', fontSize: '0.95rem', margin: 0 }}>
+            Organize and manage community health camps and medical check-ups
+          </p>
+        </div>
         <div style={{ 
           background: 'var(--pink-50)',
           padding: '2rem',
@@ -107,11 +124,11 @@ const LocalCamps: React.FC = () => {
             ) : (
               camps.map((camp) => (
                 <div key={camp._id} style={{
-                  backgroundColor: 'white',
+                  background: 'linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%)',
                   borderRadius: '0.75rem',
                   padding: '1.5rem',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                  border: '1px solid var(--gray-200)',
+                  boxShadow: '0 2px 4px rgba(20, 184, 166, 0.1)',
+                  border: '1px solid #99f6e4',
                   borderLeft: `4px solid ${getStatusColor(camp.status)}`,
                   transition: 'all 0.2s ease'
                 }}>

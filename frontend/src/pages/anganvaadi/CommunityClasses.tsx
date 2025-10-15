@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import AnganvaadiLayout from './AnganvaadiLayout';
-import { Plus, GraduationCap, Calendar, MapPin, Clock, Users, Edit, Eye } from 'lucide-react';
+import { Plus, GraduationCap, Calendar, MapPin, Clock, Users, Edit, Eye, BookOpen } from 'lucide-react';
 import { communityAPI } from '../../services/api';
 
 const CommunityClasses: React.FC = () => {
@@ -47,6 +47,24 @@ const CommunityClasses: React.FC = () => {
   return (
     <AnganvaadiLayout title="Community Classes">
       <div>
+        {/* Colorful Header Banner */}
+        <div style={{
+          background: 'linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 100%)',
+          padding: '2rem',
+          borderRadius: '1rem',
+          marginBottom: '2rem',
+          border: '1px solid #a78bfa'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+            <BookOpen size={32} color="#7c3aed" />
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#581c87', margin: 0 }}>
+              Community Classes
+            </h2>
+          </div>
+          <p style={{ color: '#6b21a8', fontSize: '0.95rem', margin: 0 }}>
+            Schedule and manage community health education classes
+          </p>
+        </div>
         {/* Colorful Header Banner */}
         <div style={{ 
           background: 'var(--indigo-50)',
@@ -107,11 +125,11 @@ const CommunityClasses: React.FC = () => {
             ) : (
               classes.map((classItem) => (
                 <div key={classItem._id} style={{
-                  backgroundColor: 'white',
+                  background: 'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)',
                   borderRadius: '0.75rem',
                   padding: '1.5rem',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                  border: '1px solid var(--gray-200)',
+                  boxShadow: '0 2px 4px rgba(124, 58, 237, 0.1)',
+                  border: '1px solid #e9d5ff',
                   borderLeft: `4px solid ${getStatusColor(classItem.status)}`,
                   transition: 'all 0.2s ease'
                 }}>

@@ -64,24 +64,22 @@ const VaccinationSchedules: React.FC = () => {
     <AnganvaadiLayout title="Vaccination Schedules">
       <div>
         {/* Colorful Header Banner */}
-        <div style={{ 
-          background: 'var(--blue-50)',
+        <div style={{
+          background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
           padding: '2rem',
-          borderRadius: '0.75rem',
+          borderRadius: '1rem',
           marginBottom: '2rem',
-          borderLeft: '4px solid var(--blue-500)'
+          border: '1px solid #60a5fa'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h1 style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--blue-800)', marginBottom: '0.5rem' }}>
-                Vaccination Schedules
-              </h1>
-              <p style={{ fontSize: '1rem', color: 'var(--blue-600)' }}>
-                View vaccination schedules and immunization programs
-              </p>
-            </div>
-            <Syringe size={48} style={{ color: 'var(--blue-300)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+            <Syringe size={32} color="#2563eb" />
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1e3a8a', margin: 0 }}>
+              Vaccination Schedules
+            </h2>
           </div>
+          <p style={{ color: '#1e40af', fontSize: '0.95rem', margin: 0 }}>
+            View and manage vaccination schedules and immunization programs
+          </p>
         </div>
 
         {error && (
@@ -123,11 +121,11 @@ const VaccinationSchedules: React.FC = () => {
             ) : (
               schedules.map((schedule) => (
                 <div key={schedule._id} style={{
-                  backgroundColor: 'white',
+                  background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
                   borderRadius: '0.75rem',
                   padding: '1.5rem',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                  border: '1px solid var(--gray-200)',
+                  boxShadow: '0 2px 4px rgba(59, 130, 246, 0.1)',
+                  border: '1px solid #bfdbfe',
                   borderLeft: `4px solid ${getStatusColor(schedule.date)}`,
                   transition: 'all 0.2s ease'
                 }}>

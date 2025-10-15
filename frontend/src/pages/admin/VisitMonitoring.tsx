@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import AdminLayout from './AdminLayout';
-import { Eye, CheckCircle, XCircle, MapPin, Calendar, User, FileText, Image as ImageIcon } from 'lucide-react';
+import { Eye, CheckCircle, XCircle, MapPin, Calendar, User, FileText, Image as ImageIcon, Navigation } from 'lucide-react';
 import { homeVisitsAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -67,44 +67,82 @@ const VisitMonitoring: React.FC = () => {
   return (
     <AdminLayout title="Visit Monitoring">
       <div>
-        <div style={{ marginBottom: '2rem' }}>
-          <p style={{ color: 'var(--gray-600)', fontSize: '1.125rem', margin: 0 }}>
-            Monitor and verify home visits recorded by ASHA workers.
+        {/* Colorful Header Banner */}
+        <div style={{
+          background: 'linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%)',
+          padding: '2rem',
+          borderRadius: '1rem',
+          marginBottom: '2rem',
+          border: '1px solid #5eead4'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+            <Navigation size={32} color="#0f766e" />
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#134e4a', margin: 0 }}>
+              Visit Monitoring
+            </h2>
+          </div>
+          <p style={{ color: '#115e59', fontSize: '0.95rem', margin: 0 }}>
+            Monitor and verify home visits recorded by ASHA workers
           </p>
         </div>
 
         {/* Stats */}
         {stats && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-            <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
-              <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--blue-600)', marginBottom: '0.5rem' }}>
+            <div className="card" style={{
+              padding: '1.5rem',
+              textAlign: 'center',
+              background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+              border: '1px solid #93c5fd'
+            }}>
+              <div style={{ fontSize: '2rem', fontWeight: '700', color: '#1e40af', marginBottom: '0.5rem' }}>
                 {stats.totalVisitsThisMonth}
               </div>
-              <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Total Visits This Month</div>
+              <div style={{ color: '#1e3a8a', fontSize: '0.875rem', fontWeight: '600' }}>Total Visits This Month</div>
             </div>
-            <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
-              <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--green-600)', marginBottom: '0.5rem' }}>
+            <div className="card" style={{
+              padding: '1.5rem',
+              textAlign: 'center',
+              background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+              border: '1px solid #86efac'
+            }}>
+              <div style={{ fontSize: '2rem', fontWeight: '700', color: '#166534', marginBottom: '0.5rem' }}>
                 {stats.verifiedVisits}
               </div>
-              <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Verified Visits</div>
+              <div style={{ color: '#14532d', fontSize: '0.875rem', fontWeight: '600' }}>Verified Visits</div>
             </div>
-            <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
-              <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--yellow-600)', marginBottom: '0.5rem' }}>
+            <div className="card" style={{
+              padding: '1.5rem',
+              textAlign: 'center',
+              background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+              border: '1px solid #fde68a'
+            }}>
+              <div style={{ fontSize: '2rem', fontWeight: '700', color: '#b45309', marginBottom: '0.5rem' }}>
                 {stats.pendingVerification}
               </div>
-              <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Pending Verification</div>
+              <div style={{ color: '#78350f', fontSize: '0.875rem', fontWeight: '600' }}>Pending Verification</div>
             </div>
-            <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
-              <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--pink-600)', marginBottom: '0.5rem' }}>
+            <div className="card" style={{
+              padding: '1.5rem',
+              textAlign: 'center',
+              background: 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)',
+              border: '1px solid #f9a8d4'
+            }}>
+              <div style={{ fontSize: '2rem', fontWeight: '700', color: '#be185d', marginBottom: '0.5rem' }}>
                 {stats.maternityVisits}
               </div>
-              <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Maternity Visits</div>
+              <div style={{ color: '#831843', fontSize: '0.875rem', fontWeight: '600' }}>Maternity Visits</div>
             </div>
-            <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
-              <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--blue-600)', marginBottom: '0.5rem' }}>
+            <div className="card" style={{
+              padding: '1.5rem',
+              textAlign: 'center',
+              background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
+              border: '1px solid #c4b5fd'
+            }}>
+              <div style={{ fontSize: '2rem', fontWeight: '700', color: '#6d28d9', marginBottom: '0.5rem' }}>
                 {stats.palliativeVisits}
               </div>
-              <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Palliative Visits</div>
+              <div style={{ color: '#5b21b6', fontSize: '0.875rem', fontWeight: '600' }}>Palliative Visits</div>
             </div>
           </div>
         )}
@@ -167,8 +205,10 @@ const VisitMonitoring: React.FC = () => {
                     className="card"
                     style={{
                       padding: '1.5rem',
-                      border: '1px solid var(--gray-200)',
-                      borderLeft: `4px solid ${visit.verified ? 'var(--green-600)' : 'var(--yellow-600)'}`
+                      background: 'linear-gradient(135deg, #fefefe 0%, #f9fafb 100%)',
+                      border: '1px solid #e5e7eb',
+                      borderLeft: `4px solid ${visit.verified ? '#16a34a' : '#eab308'}`,
+                      transition: 'all 0.2s ease'
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -257,7 +297,7 @@ const VisitMonitoring: React.FC = () => {
                       <button
                         onClick={() => openDetailModal(visit)}
                         style={{
-                          backgroundColor: 'var(--blue-600)',
+                          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                           color: 'white',
                           border: 'none',
                           fontSize: '0.875rem',
@@ -268,13 +308,16 @@ const VisitMonitoring: React.FC = () => {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '0.5rem',
-                          transition: 'all 0.2s'
+                          transition: 'all 0.2s',
+                          boxShadow: '0 2px 4px rgba(59, 130, 246, 0.2)'
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = 'var(--blue-700)';
+                          e.currentTarget.style.transform = 'translateY(-1px)';
+                          e.currentTarget.style.boxShadow = '0 4px 8px rgba(59, 130, 246, 0.3)';
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'var(--blue-600)';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 2px 4px rgba(59, 130, 246, 0.2)';
                         }}
                       >
                         <Eye size={16} />

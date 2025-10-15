@@ -78,6 +78,23 @@ const Ration: React.FC = () => {
     <AnganvaadiLayout title="Ration Distribution">
       <div>
         {/* Colorful Header Banner */}
+        <div style={{
+          background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+          padding: '2rem',
+          borderRadius: '1rem',
+          marginBottom: '2rem',
+          border: '1px solid #fbbf24'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+            <Package size={32} color="#d97706" />
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#92400e', margin: 0 }}>
+              Monthly Ration Distribution
+            </h2>
+          </div>
+          <p style={{ color: '#78350f', fontSize: '0.95rem', margin: 0 }}>
+            Manage and track monthly ration distribution for maternity beneficiaries
+          </p>
+        </div>
         <div style={{ 
           background: 'var(--orange-50)',
           padding: '2rem',
@@ -149,11 +166,11 @@ const Ration: React.FC = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
                   {pendingRations.map((ration: any) => (
                     <div key={ration.id} style={{
-                      backgroundColor: 'white',
+                      background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
                       borderRadius: '0.75rem',
                       padding: '1.5rem',
-                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                      border: '2px solid var(--yellow-200)',
+                      boxShadow: '0 2px 4px rgba(251, 191, 36, 0.15)',
+                      border: '2px solid #fde68a',
                       transition: 'all 0.2s ease'
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
@@ -202,13 +219,22 @@ const Ration: React.FC = () => {
                             gap: '0.5rem',
                             padding: '0.75rem',
                             border: 'none',
-                            backgroundColor: 'var(--green-600)',
+                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                             color: 'white',
-                            borderRadius: '0.375rem',
+                            borderRadius: '0.5rem',
                             fontSize: '0.875rem',
                             fontWeight: '600',
                             cursor: 'pointer',
-                            transition: 'all 0.2s ease'
+                            transition: 'all 0.2s ease',
+                            boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(16, 185, 129, 0.3)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(16, 185, 129, 0.2)';
                           }}
                         >
                           <CheckCircle size={16} />
@@ -231,13 +257,13 @@ const Ration: React.FC = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
                   {collectedRations.map((ration: any) => (
                     <div key={ration.id} style={{
-                      backgroundColor: 'white',
+                      background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
                       borderRadius: '0.75rem',
                       padding: '1.5rem',
-                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                      border: '1px solid var(--green-200)',
+                      boxShadow: '0 2px 4px rgba(16, 185, 129, 0.1)',
+                      border: '1px solid #bbf7d0',
                       transition: 'all 0.2s ease',
-                      opacity: 0.9
+                      opacity: 0.95
                     }}>
                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                         <div style={{ flex: 1 }}>
@@ -286,14 +312,23 @@ const Ration: React.FC = () => {
                             justifyContent: 'center',
                             gap: '0.5rem',
                             padding: '0.75rem',
-                            border: '1px solid var(--yellow-300)',
-                            backgroundColor: 'var(--yellow-50)',
-                            color: 'var(--yellow-700)',
-                            borderRadius: '0.375rem',
+                            border: '1px solid #fbbf24',
+                            background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                            color: '#92400e',
+                            borderRadius: '0.5rem',
                             fontSize: '0.875rem',
                             fontWeight: '600',
                             cursor: 'pointer',
-                            transition: 'all 0.2s ease'
+                            transition: 'all 0.2s ease',
+                            boxShadow: '0 2px 4px rgba(251, 191, 36, 0.15)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(251, 191, 36, 0.25)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(251, 191, 36, 0.15)';
                           }}
                         >
                           <XCircle size={16} />
