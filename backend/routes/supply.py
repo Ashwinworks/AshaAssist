@@ -225,6 +225,21 @@ def get_user_supply_requests():
             req['deliveryLocation'] = req.get('deliveryLocation')
             if req.get('scheduledBy'):
                 req['scheduledBy'] = str(req['scheduledBy'])
+            
+            # Get Anganwadi location details if ward delivery
+            if req.get('anganwadiLocationId'):
+                try:
+                    location = db['locations'].find_one({'_id': ObjectId(req['anganwadiLocationId'])})
+                    if location:
+                        req['anganwadiLocation'] = {
+                            'name': location.get('name'),
+                            'address': location.get('address'),
+                            'ward': location.get('ward')
+                        }
+                    req['anganwadiLocationId'] = str(req['anganwadiLocationId'])
+                except Exception as loc_error:
+                    print(f"Error fetching location details: {loc_error}")
+                    req['anganwadiLocationId'] = str(req['anganwadiLocationId']) if req.get('anganwadiLocationId') else None
 
         return jsonify({'requests': requests}), 200
 
@@ -354,6 +369,50 @@ def get_scheduled_supply_requests():
         traceback.print_exc()
         return jsonify({'error': 'Internal server error'}), 500
 
+@supply_bp.route('/supply-requests/<request_id>/status', methods=['PUT'])
+@require_auth
+def update_delivery_status(request_id):
+    """Update delivery status (mark as delivered or cancelled)"""
+    try:
+        db = request.db
+        asha_worker_id = request.user_id
+
+        # Get request data
+        data = request.get_json()
+        delivery_status = data.get('deliveryStatus')
+
+        if delivery_status not in ['delivered', 'cancelled']:
+            return jsonify({'error': 'Invalid delivery status'}), 400
+
+        # Validate that the request exists
+        request_doc = db['supply_requests'].find_one({'_id': ObjectId(request_id)})
+        if not request_doc:
+            return jsonify({'error': 'Supply request not found'}), 404
+
+        # Update the request with delivery status
+        update_data = {
+            'status': delivery_status,
+            'deliveryCompletedBy': asha_worker_id if delivery_status == 'delivered' else None,
+            'deliveryCompletedAt': datetime.now(timezone.utc) if delivery_status == 'delivered' else None,
+            'updatedAt': datetime.now(timezone.utc)
+        }
+
+        result = db['supply_requests'].update_one(
+            {'_id': ObjectId(request_id)},
+            {'$set': update_data}
+        )
+
+        if result.matched_count == 0:
+            return jsonify({'error': 'Supply request not found'}), 404
+
+        message = 'Marked as delivered' if delivery_status == 'delivered' else 'Delivery cancelled'
+        return jsonify({'message': message}), 200
+
+    except Exception as e:
+        print(f"Error updating delivery status: {e}")
+        traceback.print_exc()
+        return jsonify({'error': 'Internal server error'}), 500
+
 @supply_bp.route('/supply-requests/<request_id>/schedule', methods=['PUT'])
 @require_auth
 def schedule_supply_delivery(request_id):
@@ -365,9 +424,28 @@ def schedule_supply_delivery(request_id):
         # Get request data
         data = request.get_json()
         expected_delivery_date = data.get('expectedDeliveryDate')
+        delivery_location = data.get('deliveryLocation', 'home')  # 'home' or 'ward'
+        anganwadi_location_id = data.get('anganwadiLocationId')  # ObjectId if ward delivery
 
         if not expected_delivery_date:
             return jsonify({'error': 'Expected delivery date is required'}), 400
+
+        # Validate delivery location
+        if delivery_location not in ['home', 'ward']:
+            return jsonify({'error': 'Invalid delivery location'}), 400
+
+        # If ward delivery, validate anganwadi location exists
+        if delivery_location == 'ward':
+            if not anganwadi_location_id:
+                return jsonify({'error': 'Anganwadi location is required for ward delivery'}), 400
+            
+            try:
+                location = db['locations'].find_one({'_id': ObjectId(anganwadi_location_id), 'active': True})
+                if not location:
+                    return jsonify({'error': 'Invalid or inactive Anganwadi location'}), 400
+            except Exception as loc_error:
+                print(f"Error validating location: {loc_error}")
+                return jsonify({'error': 'Invalid Anganwadi location ID'}), 400
 
         # Validate that the request exists and is approved
         request_doc = db['supply_requests'].find_one({'_id': ObjectId(request_id)})
@@ -380,10 +458,16 @@ def schedule_supply_delivery(request_id):
         # Update the request with delivery scheduling info
         update_data = {
             'expectedDeliveryDate': datetime.fromisoformat(expected_delivery_date.replace('Z', '+00:00')),
+            'deliveryLocation': delivery_location,
             'scheduledBy': asha_worker_id,
             'scheduledAt': datetime.now(timezone.utc),
-            'updatedAt': datetime.now(timezone.utc)
+            'updatedAt': datetime.now(timezone.utc),
+            'status': 'scheduled'  # Change status to scheduled
         }
+
+        # Add anganwadi location details if ward delivery
+        if delivery_location == 'ward' and anganwadi_location_id:
+            update_data['anganwadiLocationId'] = ObjectId(anganwadi_location_id)
 
         result = db['supply_requests'].update_one(
             {'_id': ObjectId(request_id)},

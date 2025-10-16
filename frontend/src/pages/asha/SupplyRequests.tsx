@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AshaLayout from './AshaLayout';
-import { supplyAPI } from '../../services/api';
+import { supplyAPI, locationsAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 import { Clock, CheckCircle, XCircle, User, MapPin, Phone, Calendar, Truck, Home, Building2, History, Package } from 'lucide-react';
 
@@ -37,11 +37,23 @@ const SupplyRequests: React.FC = () => {
   const [schedulingRequest, setSchedulingRequest] = useState<string | null>(null);
   const [deliveryDate, setDeliveryDate] = useState('');
   const [deliveryLocation, setDeliveryLocation] = useState<'home' | 'ward'>('home');
+  const [selectedAnganwadiId, setSelectedAnganwadiId] = useState<string>('');
+  const [locations, setLocations] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'pending' | 'scheduled'>('pending');
 
   useEffect(() => {
     fetchApprovedRequests();
+    fetchLocations();
   }, []);
+
+  const fetchLocations = async () => {
+    try {
+      const response = await locationsAPI.getLocations();
+      setLocations(response.locations || []);
+    } catch (error) {
+      console.error('Failed to fetch locations:', error);
+    }
+  };
 
   const fetchApprovedRequests = async () => {
     try {
@@ -159,17 +171,28 @@ const SupplyRequests: React.FC = () => {
       return;
     }
 
+    if (deliveryLocation === 'ward' && !selectedAnganwadiId) {
+      toast.error('Please select an Anganwadi location for ward collection');
+      return;
+    }
+
     try {
       console.log('Scheduling delivery with:', {
         requestId,
         deliveryDate,
-        deliveryLocation
+        deliveryLocation,
+        anganwadiLocationId: selectedAnganwadiId
       });
       
       let response;
       try {
         // Try the new API with location first
-        response = await supplyAPI.scheduleDeliveryWithLocation(requestId, deliveryDate, deliveryLocation);
+        response = await supplyAPI.scheduleDeliveryWithLocation(
+          requestId, 
+          deliveryDate, 
+          deliveryLocation,
+          deliveryLocation === 'ward' ? selectedAnganwadiId : undefined
+        );
         console.log('Schedule delivery with location response:', response);
       } catch (locationError: any) {
         console.log('Location-based scheduling failed, trying basic scheduling:', locationError);
@@ -178,10 +201,11 @@ const SupplyRequests: React.FC = () => {
         console.log('Basic schedule delivery response:', response);
       }
       
-      toast.success(`Delivery scheduled successfully for ${deliveryLocation === 'home' ? 'home delivery' : 'ward collection'}`);
+      toast.success(`Delivery scheduled successfully for ${deliveryLocation === 'home' ? 'home delivery' : 'Anganwadi ward collection'}`);
       setSchedulingRequest(null);
       setDeliveryDate('');
       setDeliveryLocation('home');
+      setSelectedAnganwadiId('');
       
       // Wait a moment for backend to update, then refresh
       setTimeout(() => {
@@ -191,7 +215,7 @@ const SupplyRequests: React.FC = () => {
     } catch (error: any) {
       console.error('Schedule delivery error:', error);
       console.error('Error response:', error.response?.data);
-      toast.error(`Failed to schedule delivery: ${error.response?.data?.message || error.message}`);
+      toast.error(`Failed to schedule delivery: ${error.response?.data?.error || error.message}`);
     }
   };
 
@@ -459,7 +483,10 @@ const SupplyRequests: React.FC = () => {
                                     name="deliveryLocation"
                                     value="home"
                                     checked={deliveryLocation === 'home'}
-                                    onChange={(e) => setDeliveryLocation(e.target.value as 'home' | 'ward')}
+                                    onChange={(e) => {
+                                      setDeliveryLocation(e.target.value as 'home' | 'ward');
+                                      setSelectedAnganwadiId('');
+                                    }}
                                     style={{ marginRight: '0.25rem' }}
                                   />
                                   <Home size={16} color="var(--blue-600)" />
@@ -478,11 +505,37 @@ const SupplyRequests: React.FC = () => {
                                   />
                                   <Building2 size={16} color="var(--purple-600)" />
                                   <span style={{ fontSize: '0.875rem', color: 'var(--gray-700)' }}>
-                                    Ward 1 Anganwadi Collection
+                                    Anganwadi Ward Collection
                                   </span>
                                 </label>
                               </div>
                             </div>
+
+                            {deliveryLocation === 'ward' && (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <label style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--gray-700)' }}>
+                                  Select Anganwadi Location:
+                                </label>
+                                <select
+                                  value={selectedAnganwadiId}
+                                  onChange={(e) => setSelectedAnganwadiId(e.target.value)}
+                                  style={{
+                                    padding: '0.5rem',
+                                    border: '1px solid var(--gray-300)',
+                                    borderRadius: '0.375rem',
+                                    fontSize: '0.875rem',
+                                    backgroundColor: 'white'
+                                  }}
+                                >
+                                  <option value="">-- Select Anganwadi --</option>
+                                  {locations.map((location) => (
+                                    <option key={location._id} value={location._id}>
+                                      {location.name} - {location.ward} {location.address && `(${location.address})`}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
 
                             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                               <button

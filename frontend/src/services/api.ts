@@ -495,11 +495,14 @@ export const supplyAPI = {
     });
     return response.data as { message: string };
   },
-  scheduleDeliveryWithLocation: async (requestId: string, expectedDeliveryDate: string, deliveryLocation: 'home' | 'ward') => {
-    const payload = {
+  scheduleDeliveryWithLocation: async (requestId: string, expectedDeliveryDate: string, deliveryLocation: 'home' | 'ward', anganwadiLocationId?: string) => {
+    const payload: any = {
       expectedDeliveryDate,
       deliveryLocation
     };
+    if (deliveryLocation === 'ward' && anganwadiLocationId) {
+      payload.anganwadiLocationId = anganwadiLocationId;
+    }
     console.log('API: Scheduling delivery with payload:', payload);
     console.log('API: Request URL:', `/supply-requests/${requestId}/schedule`);
     

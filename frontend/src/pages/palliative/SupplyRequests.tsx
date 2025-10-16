@@ -16,7 +16,7 @@ interface SupplyRequest {
   supplyName: string;
   description: string;
   category: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'scheduled' | 'delivered';
   createdAt: string;
   updatedAt: string;
   reviewNotes?: string;
@@ -24,6 +24,12 @@ interface SupplyRequest {
   scheduledAt?: string;
   scheduledBy?: string;
   deliveryLocation?: 'home' | 'ward';
+  anganwadiLocation?: {
+    name: string;
+    address?: string;
+    ward: string;
+  };
+  anganwadiLocationId?: string;
 }
 
 const SupplyRequests: React.FC = () => {
@@ -42,6 +48,17 @@ const SupplyRequests: React.FC = () => {
     setRequestsLoading(true);
     try {
       const response = await supplyAPI.getUserRequests();
+      console.log('Palliative - Fetched supply requests:', response.requests);
+      response.requests?.forEach((req: any) => {
+        console.log('Request:', {
+          id: req._id,
+          supply: req.supplyName,
+          status: req.status,
+          expectedDeliveryDate: req.expectedDeliveryDate,
+          deliveryLocation: req.deliveryLocation,
+          anganwadiLocation: req.anganwadiLocation
+        });
+      });
       setRequests(response.requests || []);
     } catch (error: any) {
       toast.error('Failed to fetch requests');
@@ -282,14 +299,38 @@ const SupplyRequests: React.FC = () => {
                           <p style={{ margin: '0.5rem 0', fontSize: '0.875rem', color: 'var(--gray-500)' }}>
                             Requested on: {new Date(existingRequest.createdAt).toLocaleDateString()}
                           </p>
-                          {existingRequest.status === 'approved' && existingRequest.expectedDeliveryDate && (
-                            <div style={{ margin: '0.5rem 0' }}>
-                              <p style={{ fontSize: '0.875rem', color: 'var(--green-600)', fontWeight: 'bold', margin: '0.25rem 0' }}>
-                                Expected Delivery: {new Date(existingRequest.expectedDeliveryDate).toLocaleDateString()}
+                          {(existingRequest.status === 'approved' || existingRequest.status === 'scheduled') && existingRequest.expectedDeliveryDate && (
+                            <div style={{ margin: '0.5rem 0', padding: '0.75rem', backgroundColor: 'var(--green-50)', borderRadius: '0.5rem', border: '1px solid var(--green-200)' }}>
+                              <p style={{ fontSize: '0.875rem', color: 'var(--green-700)', fontWeight: 'bold', margin: '0.25rem 0' }}>
+                                📅 Expected Delivery: {new Date(existingRequest.expectedDeliveryDate).toLocaleDateString()}
                               </p>
-                              <p style={{ fontSize: '0.875rem', color: 'var(--blue-600)', margin: '0.25rem 0' }}>
-                                Delivery Method: {existingRequest.deliveryLocation === 'home' ? 'Home Delivery' : existingRequest.deliveryLocation === 'ward' ? 'Anganvaadi Ward Collection' : 'To be determined'}
+                              <p style={{ fontSize: '0.875rem', color: 'var(--blue-700)', fontWeight: '600', margin: '0.25rem 0' }}>
+                                {existingRequest.deliveryLocation === 'home' ? (
+                                  <>🏠 Home Delivery</>
+                                ) : existingRequest.deliveryLocation === 'ward' ? (
+                                  <>🏢 Anganwadi Ward Collection</>
+                                ) : (
+                                  <>📍 To be determined</>
+                                )}
                               </p>
+                              {existingRequest.deliveryLocation === 'ward' && (existingRequest as any).anganwadiLocation && (
+                                <div style={{ marginTop: '0.5rem', padding: '0.5rem', backgroundColor: 'white', borderRadius: '0.375rem' }}>
+                                  <p style={{ fontSize: '0.875rem', color: 'var(--gray-700)', fontWeight: '600', margin: '0.25rem 0' }}>
+                                    📍 Collection Point:
+                                  </p>
+                                  <p style={{ fontSize: '0.875rem', color: 'var(--gray-600)', margin: '0.25rem 0' }}>
+                                    {(existingRequest as any).anganwadiLocation.name}
+                                  </p>
+                                  {(existingRequest as any).anganwadiLocation.address && (
+                                    <p style={{ fontSize: '0.875rem', color: 'var(--gray-600)', margin: '0.25rem 0' }}>
+                                      {(existingRequest as any).anganwadiLocation.address}
+                                    </p>
+                                  )}
+                                  <p style={{ fontSize: '0.875rem', color: 'var(--gray-600)', margin: '0.25rem 0' }}>
+                                    Ward: {(existingRequest as any).anganwadiLocation.ward}
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           )}
                           {existingRequest.status === 'rejected' && existingRequest.reviewNotes && (

@@ -117,11 +117,52 @@ const MaternityVisitRequests: React.FC = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const markAsVisited = async (requestId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/visit-requests/${requestId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: 'Completed' })
+      });
+
+      if (response.ok) {
+        // Refresh the requests list
+        fetchUserRequests();
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to mark as visited');
+      }
+    } catch (error) {
+      console.error('Failed to mark as visited:', error);
+      alert('Failed to mark as visited');
+    }
+  };
+
+  const isDatePast = (dateStr: string): boolean => {
+    if (!dateStr) return false;
+    const scheduledDate = new Date(dateStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return scheduledDate < today;
+  };
+
+  const getStatusIcon = (status: string, scheduledDate?: string) => {
+    // Check if scheduled date is past
+    if (status === 'Scheduled' && scheduledDate && isDatePast(scheduledDate)) {
+      return <AlertCircle size={16} color="var(--orange-600)" />;
+    }
+    
     switch (status) {
       case 'Approved': return <Check size={16} color="var(--green-600)" />;
       case 'Rejected': return <X size={16} color="var(--red-600)" />;
       case 'Scheduled': return <Calendar size={16} color="var(--blue-600)" />;
+      case 'Completed': return <CheckCircle size={16} color="var(--green-600)" />;
       default: return <Clock size={16} color="var(--gray-600)" />;
     }
   };
@@ -440,16 +481,18 @@ const MaternityVisitRequests: React.FC = () => {
                           {request.requestType} Care Visit
                         </h4>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          {getStatusIcon(request.status)}
+                          {getStatusIcon(request.status, request.scheduledDate)}
                           <span style={{
                             fontSize: '0.875rem',
                             fontWeight: '500',
                             color: request.status === 'Approved' ? 'var(--green-700)' :
                                    request.status === 'Rejected' ? 'var(--red-700)' :
+                                   request.status === 'Scheduled' && request.scheduledDate && isDatePast(request.scheduledDate) ? 'var(--orange-700)' :
                                    request.status === 'Scheduled' ? 'var(--blue-700)' :
+                                   request.status === 'Completed' ? 'var(--green-700)' :
                                    'var(--gray-700)'
                           }}>
-                            {request.status}
+                            {request.status === 'Scheduled' && request.scheduledDate && isDatePast(request.scheduledDate) ? 'Expired' : request.status}
                           </span>
                         </div>
                       </div>
@@ -497,6 +540,36 @@ const MaternityVisitRequests: React.FC = () => {
                         </span>
                       </div>
                     </div>
+
+                    {/* Mark as Visited button for scheduled visits */}
+                    {request.status === 'Scheduled' && (
+                      <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--gray-200)' }}>
+                        <button
+                          className="btn"
+                          onClick={() => {
+                            if (window.confirm('Mark this visit as completed?')) {
+                              markAsVisited(request.id);
+                            }
+                          }}
+                          style={{
+                            backgroundColor: 'var(--green-600)',
+                            color: 'white',
+                            padding: '0.5rem 1rem',
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            border: 'none',
+                            borderRadius: '0.375rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                          }}
+                        >
+                          <CheckCircle size={16} />
+                          Mark as Visited
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

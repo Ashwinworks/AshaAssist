@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import MaternityLayout from './MaternityLayout';
-import { maternityAPI } from '../../services/api';
+import { maternityAPI, locationsAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 
 interface VisitItem {
@@ -15,6 +15,7 @@ const AntenatalVisits: React.FC = () => {
   const [visits, setVisits] = useState<VisitItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [healthCenters, setHealthCenters] = useState<any[]>([]);
 
   // Form state
   const [visitDate, setVisitDate] = useState('');
@@ -38,6 +39,30 @@ const AntenatalVisits: React.FC = () => {
       toast.error(err?.response?.data?.error || 'Failed to load visits');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadHealthCenters = async () => {
+    try {
+      const response = await locationsAPI.getLocations();
+      console.log('All locations from API:', response.locations);
+      
+      // Filter for health centers and clinics
+      const filtered = (response.locations || []).filter((loc: any) => {
+        console.log('Location:', loc.name, 'Type:', loc.type);
+        return loc.type === 'health_center' || loc.type === 'clinic' || loc.type === 'Health Center' || loc.type === 'Clinic';
+      });
+      
+      console.log('Filtered health centers:', filtered);
+      setHealthCenters(filtered);
+      
+      if (filtered.length === 0) {
+        const types = (response.locations || []).map((l: any) => l.type);
+        const uniqueTypes = Array.from(new Set(types));
+        console.warn('No health centers or clinics found. Available types:', uniqueTypes);
+      }
+    } catch (err: any) {
+      console.error('Failed to load health centers:', err);
     }
   };
 
@@ -67,6 +92,7 @@ const AntenatalVisits: React.FC = () => {
   useEffect(() => {
     setMounted(true); // trigger entrance animation
     loadVisits();
+    loadHealthCenters();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -128,13 +154,19 @@ const AntenatalVisits: React.FC = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Health Center (optional)</label>
-                  <input
-                    type="text"
+                  <select
                     className="input"
-                    placeholder="e.g., PHC, CHC, Pvt Clinic"
                     value={center}
                     onChange={(e) => setCenter(e.target.value)}
-                  />
+                  >
+                    <option value="">-- Select Health Center --</option>
+                    {healthCenters.map((location) => (
+                      <option key={location._id} value={location.name}>
+                        {location.name} {location.ward && `- ${location.ward}`} {location.address && `(${location.address})`}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="form-help">Select the health center where you had your checkup.</div>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Notes (optional)</label>
