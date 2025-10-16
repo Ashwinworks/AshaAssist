@@ -38,6 +38,8 @@ const SupplyRequests: React.FC = () => {
   const [selectedSupply, setSelectedSupply] = useState<Supply | null>(null);
   const [description, setDescription] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [address, setAddress] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [requests, setRequests] = useState<SupplyRequest[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(true);
@@ -199,6 +201,22 @@ const SupplyRequests: React.FC = () => {
       return;
     }
 
+    if (!address.trim()) {
+      toast.error('Please provide your delivery address');
+      return;
+    }
+
+    if (!phone.trim()) {
+      toast.error('Please provide your contact number');
+      return;
+    }
+
+    const phoneRegex = /^[6-9]\d{9}$/;
+    if (!phoneRegex.test(phone.replace(/\s+/g, ''))) {
+      toast.error('Please enter a valid 10-digit Indian phone number');
+      return;
+    }
+
     setLoading(true);
     try {
       const formData = new FormData();
@@ -206,12 +224,16 @@ const SupplyRequests: React.FC = () => {
       formData.append('description', description);
       formData.append('proof', file);
       formData.append('category', user?.beneficiaryCategory || '');
+      formData.append('address', address);
+      formData.append('phone', phone);
 
       await supplyAPI.submitRequest(formData);
       toast.success('Supply request submitted successfully!');
       setModalOpen(false);
       setDescription('');
       setFile(null);
+      setAddress('');
+      setPhone('');
       setSelectedSupply(null);
       fetchRequests();
     } catch (error: any) {
@@ -387,7 +409,35 @@ const SupplyRequests: React.FC = () => {
             <div className="card-content" style={{ display: 'grid', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  Upload Proof (Medical Certificate/Prescription)
+                  Delivery Address *
+                </label>
+                <textarea
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="House No., Street, Ward, City, PIN Code"
+                  rows={3}
+                  required
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8 }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  Contact Phone Number *
+                </label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="9876543210"
+                  required
+                  style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8 }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                  Upload Proof (Medical Certificate/Prescription) *
                 </label>
                 <input
                   type="file"
@@ -399,7 +449,7 @@ const SupplyRequests: React.FC = () => {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                  Description of Medical Need
+                  Description of Medical Need *
                 </label>
                 <textarea
                   value={description}
@@ -417,7 +467,7 @@ const SupplyRequests: React.FC = () => {
               <button
                 className="btn btn-primary"
                 onClick={handleSubmit}
-                disabled={loading || !description.trim() || !file}
+                disabled={loading || !description.trim() || !file || !address.trim() || !phone.trim()}
               >
                 {loading ? 'Submitting...' : 'Submit Request'}
               </button>
