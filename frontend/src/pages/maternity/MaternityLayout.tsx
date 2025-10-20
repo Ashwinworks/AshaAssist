@@ -1,11 +1,23 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Heart, LogOut, User, Settings, Calendar, Baby, Stethoscope, Phone,
-  Home, FileText, BookOpen, Package, UserCheck, Syringe, CreditCard, MessageSquare,
-  Menu, X, Bot, ShoppingBag
+import {
+  Heart,
+  LogOut,
+  Calendar,
+  Baby,
+  Home,
+  BookOpen,
+  Package,
+  UserCheck,
+  Syringe,
+  CreditCard,
+  MessageSquare,
+  ShoppingBag,
+  Menu,
+  X,
 } from 'lucide-react';
+import ChatBot from '../../components/ChatBot';
 
 // Navigation items for maternity users
 const navigationItems = [
@@ -32,7 +44,6 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [assistantOpen, setAssistantOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -271,58 +282,8 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
           {children}
         </main>
 
-        {/* Floating Assistant Button */}
-        <button
-          onClick={() => setAssistantOpen(prev => !prev)}
-          aria-label="AshaAssist Copilot"
-          style={{
-            position: 'fixed',
-            right: '24px',
-            bottom: '24px',
-            width: '56px',
-            height: '56px',
-            borderRadius: '28px',
-            border: '1px solid var(--gray-200)',
-            backgroundColor: 'white',
-            boxShadow: '0 8px 24px rgba(2, 8, 23, 0.12)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            zIndex: 1100
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 12px 28px rgba(2, 8, 23, 0.18)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 8px 24px rgba(2, 8, 23, 0.12)'; }}
-        >
-          <Bot size={24} color={'var(--blue-700)'} />
-        </button>
-
-        {assistantOpen && (
-          <div style={{
-            position: 'fixed',
-            right: '24px',
-            bottom: '92px',
-            width: '320px',
-            backgroundColor: 'white',
-            border: '1px solid var(--gray-200)',
-            borderRadius: '0.75rem',
-            boxShadow: '0 12px 28px rgba(2, 8, 23, 0.18)',
-            overflow: 'hidden',
-            zIndex: 1100
-          }}>
-            <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--gray-200)', backgroundColor: 'var(--blue-50)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--blue-700)', fontWeight: 700 }}>
-                <Bot size={18} />
-                AshaAssist Copilot
-              </div>
-            </div>
-            <div style={{ padding: '1.25rem' }}>
-              <p style={{ color: 'var(--gray-700)', margin: 0 }}>
-                Under construction, to be deployed soon
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Chat Bot */}
+        <ChatBot />
       </div>
     </div>
   );

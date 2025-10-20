@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AshaLayout from './asha/AshaLayout';
 import { Bell, Calendar, Users, FileText, Activity, TrendingUp, AlertCircle, Package, Syringe, Home } from 'lucide-react';
+import { homeVisitsAPI } from '../services/api';
 
 interface DashboardStats {
   pendingVisitRequests: number;
@@ -54,17 +55,13 @@ const AshaWorkerDashboard: React.FC = () => {
       const supplyData = await supplyResponse.json();
       const supplies = supplyData.requests || [];
 
-      // Fetch maternal records
-      const maternalResponse = await fetch('/api/maternal-records', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const maternalData = await maternalResponse.json();
-
-      // Fetch palliative records
-      const palliativeResponse = await fetch('/api/palliative-records', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const palliativeData = await palliativeResponse.json();
+      // Fetch users for visits (this will give us maternal and palliative user counts)
+      const usersData = await homeVisitsAPI.getUsersForVisits();
+      const users = usersData.users || [];
+      
+      // Calculate maternal and palliative user counts
+      const maternalUsers = users.filter((user: any) => user.category === 'maternity').length;
+      const palliativeUsers = users.filter((user: any) => user.category === 'palliative').length;
 
       // Calculate stats
       const today = new Date();
@@ -95,8 +92,8 @@ const AshaWorkerDashboard: React.FC = () => {
         totalVisitsThisMonth: visitsThisMonth.length,
         pendingSupplyRequests: pendingSupplies.length,
         approvedSupplyRequests: scheduledSupplies.length,
-        maternalUsers: maternalData.records?.length || 0,
-        palliativeUsers: palliativeData.records?.length || 0,
+        maternalUsers: maternalUsers,
+        palliativeUsers: palliativeUsers,
         upcomingVaccinations: 0 // Can be fetched from vaccination schedules if needed
       });
 
@@ -202,12 +199,12 @@ const AshaWorkerDashboard: React.FC = () => {
                 <div style={{ fontSize: '2.5rem', fontWeight: '700', color: 'var(--green-600)', marginBottom: '0.25rem' }}>
                   {stats.maternalUsers + stats.palliativeUsers}
                 </div>
-                <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem', fontWeight: '500' }}>Total Families</div>
+                <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem', fontWeight: '500' }}>Users</div>
               </div>
               <Users style={{ width: '2.5rem', height: '2.5rem', color: 'var(--green-200)' }} />
             </div>
             <div style={{ fontSize: '0.75rem', color: 'var(--green-600)', backgroundColor: 'var(--green-50)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', display: 'inline-block' }}>
-              {stats.maternalUsers} Maternity, {stats.palliativeUsers} Palliative
+              {stats.maternalUsers} Maternal, {stats.palliativeUsers} Palliative
             </div>
           </div>
 

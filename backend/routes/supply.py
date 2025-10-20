@@ -4,6 +4,7 @@ Supply requests routes
 from flask import Blueprint, request, jsonify
 from datetime import datetime, timezone
 from bson import ObjectId
+from bson.errors import InvalidId
 from middleware.auth import require_auth, require_admin
 from config.database import get_collections
 from services.file_service import FileService
@@ -107,35 +108,72 @@ def get_supply_requests():
                        .limit(limit))
 
         # Convert ObjectId to string and format dates
+        def format_datetime(value):
+            """Convert datetime or string to ISO format string."""
+            if not value:
+                return None
+            if hasattr(value, 'isoformat'):
+                return value.isoformat()
+            # Fallback for stored string values
+            return str(value)
+
+        def to_object_id(value):
+            """Safely convert a value to ObjectId, returning None if invalid."""
+            if not value:
+                return None
+            if isinstance(value, ObjectId):
+                return value
+            try:
+                return ObjectId(value)
+            except (InvalidId, TypeError):
+                return None
+
+        def serialize_object_id(value):
+            """Return string representation for ObjectId values."""
+            if not value:
+                return None
+            if isinstance(value, ObjectId):
+                return str(value)
+            return value
+
         for req in requests:
-            req['_id'] = str(req['_id'])
-            req['userId'] = str(req['userId'])
-            req['reviewedBy'] = str(req['reviewedBy']) if req.get('reviewedBy') else None
-            req['createdAt'] = req['createdAt'].isoformat() if req.get('createdAt') and hasattr(req['createdAt'], 'isoformat') else None
-            req['updatedAt'] = req['updatedAt'].isoformat() if req.get('updatedAt') and hasattr(req['updatedAt'], 'isoformat') else None
+            # Convert all ObjectId fields to strings
+            req['_id'] = serialize_object_id(req.get('_id'))
+            req['userId'] = serialize_object_id(req.get('userId'))
+            req['reviewedBy'] = serialize_object_id(req.get('reviewedBy'))
+            req['scheduledBy'] = serialize_object_id(req.get('scheduledBy'))
+            req['deliveryCompletedBy'] = serialize_object_id(req.get('deliveryCompletedBy'))
+            req['anganwadiLocationId'] = serialize_object_id(req.get('anganwadiLocationId'))
+
+            # Format datetime fields
+            req['createdAt'] = format_datetime(req.get('createdAt'))
+            req['updatedAt'] = format_datetime(req.get('updatedAt'))
+            req['expectedDeliveryDate'] = format_datetime(req.get('expectedDeliveryDate'))
+            req['scheduledAt'] = format_datetime(req.get('scheduledAt'))
+            req['deliveryCompletedAt'] = format_datetime(req.get('deliveryCompletedAt'))
 
             # Get user details
-            try:
-                user = db['users'].find_one({'_id': ObjectId(req['userId'])})
-                if user:
-                    req['user'] = {
-                        'name': user.get('name', 'Unknown User'),
-                        'email': user.get('email', 'unknown@example.com'),
-                        'beneficiaryCategory': user.get('beneficiaryCategory', 'unknown')
-                    }
-                else:
-                    req['user'] = {
-                        'name': 'Unknown User',
-                        'email': user.get('email', 'unknown@example.com'),
-                        'beneficiaryCategory': 'unknown'
-                    }
-            except Exception as user_error:
-                print(f"Error fetching user details for userId {req['userId']}: {user_error}")
-                req['user'] = {
-                    'name': 'Unknown User',
-                    'email': 'unknown@example.com',
-                    'beneficiaryCategory': 'unknown'
-                }
+            user_id = req.get('userId')
+            user_object_id = to_object_id(user_id)
+            user_details = {
+                'name': 'Unknown User',
+                'email': 'unknown@example.com',
+                'beneficiaryCategory': 'unknown'
+            }
+
+            if user_object_id:
+                try:
+                    user = db['users'].find_one({'_id': user_object_id})
+                    if user:
+                        user_details = {
+                            'name': user.get('name', 'Unknown User'),
+                            'email': user.get('email', 'unknown@example.com'),
+                            'beneficiaryCategory': user.get('beneficiaryCategory', 'unknown')
+                        }
+                except Exception as user_error:
+                    print(f"Error fetching user details for userId {req['userId']}: {user_error}")
+
+            req['user'] = user_details
 
         return jsonify({
             'requests': requests,
