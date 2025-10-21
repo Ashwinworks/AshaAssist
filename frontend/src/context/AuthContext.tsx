@@ -11,6 +11,7 @@ interface User {
   beneficiaryCategory?: 'maternity' | 'palliative';
   isFirstLogin: boolean;
   profileCompleted: boolean;
+  profilePicture?: string;
 }
 
 interface AuthContextType {

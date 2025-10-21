@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AshaLayout from './asha/AshaLayout';
-import { Bell, Calendar, Users, FileText, Activity, TrendingUp, AlertCircle, Package, Syringe, Home } from 'lucide-react';
+import { Bell, Calendar, Users, FileText, Activity, TrendingUp, AlertCircle, Package, Syringe, Home, UserCheck, CheckCircle, Clock, ShoppingCart } from 'lucide-react';
 import { homeVisitsAPI } from '../services/api';
 
 interface DashboardStats {
@@ -135,47 +135,80 @@ const AshaWorkerDashboard: React.FC = () => {
   return (
     <AshaLayout title="Dashboard">
       <div>
-        {/* Overview Stats */}
-        <div style={{ marginBottom: '2rem' }}>
-          <p style={{ color: 'var(--gray-600)', fontSize: '1.125rem', marginBottom: '1.5rem' }}>
-            Overview of your community healthcare activities and pending tasks.
-          </p>
+        {/* Welcome Header */}
+        <div className="card" style={{ 
+          marginBottom: '2rem', 
+          background: 'linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%)', 
+          border: '1px solid #bae6fd' 
+        }}>
+          <div className="card-header">
+            <h2 className="card-title" style={{ color: '#0369a1' }}>Good day, ASHA Worker!</h2>
+          </div>
+          <div className="card-content">
+            <p style={{ marginBottom: '1rem', color: '#4b5563' }}>
+              Overview of your community healthcare activities and pending tasks.
+            </p>
+          </div>
         </div>
 
         {loading && (
-          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--gray-600)' }}>
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
             Loading dashboard data...
           </div>
         )}
 
         {!loading && (
         <>
-        {/* Stats Cards */}
+        {/* Stats Cards with Mild Colors */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
           <div 
             className="card" 
-            style={{ padding: '1.5rem', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
-            onClick={() => navigate('/asha/visit-requests')}
+            style={{ 
+              borderLeft: '4px solid #0ea5e9', 
+              backgroundColor: '#f0f9ff',
+              cursor: 'pointer', 
+              transition: 'all 0.2s ease' 
+            }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(14, 165, 233, 0.15)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = '';
             }}
+            onClick={() => navigate('/asha/visit-requests')}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <div>
-                <div style={{ fontSize: '2.5rem', fontWeight: '700', color: 'var(--red-600)', marginBottom: '0.25rem' }}>
-                  {stats.pendingVisitRequests}
-                </div>
-                <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem', fontWeight: '500' }}>Pending Visit Requests</div>
+            <div className="card-content" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ 
+                backgroundColor: '#e0f2fe', 
+                borderRadius: '50%', 
+                width: '50px', 
+                height: '50px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center' 
+              }}>
+                <Home size={24} color="#0ea5e9" />
               </div>
-              <Home style={{ width: '2.5rem', height: '2.5rem', color: 'var(--red-200)' }} />
+              <div>
+                <h3 style={{ color: '#0369a1', fontSize: '2rem', margin: '0 0 0.25rem', fontWeight: 700 }}>
+                  {stats.pendingVisitRequests}
+                </h3>
+                <p style={{ color: '#0369a1', margin: 0, fontSize: '0.875rem', fontWeight: 500 }}>Pending Visit Requests</p>
+              </div>
             </div>
             {stats.urgentVisitRequests > 0 && (
-              <div style={{ fontSize: '0.75rem', color: 'var(--red-600)', backgroundColor: 'var(--red-50)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', display: 'inline-block' }}>
+              <div style={{ 
+                marginTop: '0.75rem',
+                fontSize: '0.75rem', 
+                color: '#ea580c', 
+                backgroundColor: '#ffedd5', 
+                padding: '0.25rem 0.75rem', 
+                borderRadius: '9999px', 
+                display: 'inline-block',
+                fontWeight: 600
+              }}>
                 {stats.urgentVisitRequests} Urgent
               </div>
             )}
@@ -183,81 +216,153 @@ const AshaWorkerDashboard: React.FC = () => {
 
           <div 
             className="card" 
-            style={{ padding: '1.5rem', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
-            onClick={() => navigate('/asha/maternal-records')}
+            style={{ 
+              borderLeft: '4px solid #10b981', 
+              backgroundColor: '#f0fdf4',
+              cursor: 'pointer', 
+              transition: 'all 0.2s ease' 
+            }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.15)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = '';
             }}
+            onClick={() => navigate('/asha/maternal-records')}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <div>
-                <div style={{ fontSize: '2.5rem', fontWeight: '700', color: 'var(--green-600)', marginBottom: '0.25rem' }}>
-                  {stats.maternalUsers + stats.palliativeUsers}
-                </div>
-                <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem', fontWeight: '500' }}>Users</div>
+            <div className="card-content" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ 
+                backgroundColor: '#dcfce7', 
+                borderRadius: '50%', 
+                width: '50px', 
+                height: '50px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center' 
+              }}>
+                <Users size={24} color="#10b981" />
               </div>
-              <Users style={{ width: '2.5rem', height: '2.5rem', color: 'var(--green-200)' }} />
+              <div>
+                <h3 style={{ color: '#047857', fontSize: '2rem', margin: '0 0 0.25rem', fontWeight: 700 }}>
+                  {stats.maternalUsers + stats.palliativeUsers}
+                </h3>
+                <p style={{ color: '#047857', margin: 0, fontSize: '0.875rem', fontWeight: 500 }}>Users</p>
+              </div>
             </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--green-600)', backgroundColor: 'var(--green-50)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', display: 'inline-block' }}>
+            <div style={{ 
+              marginTop: '0.75rem',
+              fontSize: '0.75rem', 
+              color: '#047857', 
+              backgroundColor: '#dcfce7', 
+              padding: '0.25rem 0.75rem', 
+              borderRadius: '9999px', 
+              display: 'inline-block',
+              fontWeight: 600
+            }}>
               {stats.maternalUsers} Maternal, {stats.palliativeUsers} Palliative
             </div>
           </div>
 
           <div 
             className="card" 
-            style={{ padding: '1.5rem', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
-            onClick={() => navigate('/asha/visit-requests')}
+            style={{ 
+              borderLeft: '4px solid #8b5cf6', 
+              backgroundColor: '#f5f3ff',
+              cursor: 'pointer', 
+              transition: 'all 0.2s ease' 
+            }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.15)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = '';
             }}
+            onClick={() => navigate('/asha/visit-requests')}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <div>
-                <div style={{ fontSize: '2.5rem', fontWeight: '700', color: 'var(--blue-600)', marginBottom: '0.25rem' }}>
-                  {stats.scheduledVisitsToday}
-                </div>
-                <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem', fontWeight: '500' }}>Visits Today</div>
+            <div className="card-content" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ 
+                backgroundColor: '#ede9fe', 
+                borderRadius: '50%', 
+                width: '50px', 
+                height: '50px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center' 
+              }}>
+                <Calendar size={24} color="#8b5cf6" />
               </div>
-              <Calendar style={{ width: '2.5rem', height: '2.5rem', color: 'var(--blue-200)' }} />
+              <div>
+                <h3 style={{ color: '#6d28d9', fontSize: '2rem', margin: '0 0 0.25rem', fontWeight: 700 }}>
+                  {stats.scheduledVisitsToday}
+                </h3>
+                <p style={{ color: '#6d28d9', margin: 0, fontSize: '0.875rem', fontWeight: 500 }}>Visits Today</p>
+              </div>
             </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--blue-600)', backgroundColor: 'var(--blue-50)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', display: 'inline-block' }}>
+            <div style={{ 
+              marginTop: '0.75rem',
+              fontSize: '0.75rem', 
+              color: '#6d28d9', 
+              backgroundColor: '#ede9fe', 
+              padding: '0.25rem 0.75rem', 
+              borderRadius: '9999px', 
+              display: 'inline-block',
+              fontWeight: 600
+            }}>
               Scheduled
             </div>
           </div>
 
           <div 
             className="card" 
-            style={{ padding: '1.5rem', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
-            onClick={() => navigate('/asha/supply-requests')}
+            style={{ 
+              borderLeft: '4px solid #f59e0b', 
+              backgroundColor: '#fffbeb',
+              cursor: 'pointer', 
+              transition: 'all 0.2s ease' 
+            }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.15)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = '';
             }}
+            onClick={() => navigate('/asha/supply-requests')}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <div>
-                <div style={{ fontSize: '2.5rem', fontWeight: '700', color: 'var(--purple-600)', marginBottom: '0.25rem' }}>
-                  {stats.pendingSupplyRequests + stats.approvedSupplyRequests}
-                </div>
-                <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem', fontWeight: '500' }}>Supply Requests</div>
+            <div className="card-content" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ 
+                backgroundColor: '#fef3c7', 
+                borderRadius: '50%', 
+                width: '50px', 
+                height: '50px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center' 
+              }}>
+                <Package size={24} color="#f59e0b" />
               </div>
-              <Package style={{ width: '2.5rem', height: '2.5rem', color: 'var(--purple-200)' }} />
+              <div>
+                <h3 style={{ color: '#d97706', fontSize: '2rem', margin: '0 0 0.25rem', fontWeight: 700 }}>
+                  {stats.pendingSupplyRequests + stats.approvedSupplyRequests}
+                </h3>
+                <p style={{ color: '#d97706', margin: 0, fontSize: '0.875rem', fontWeight: 500 }}>Supply Requests</p>
+              </div>
             </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--purple-600)', backgroundColor: 'var(--purple-50)', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', display: 'inline-block' }}>
+            <div style={{ 
+              marginTop: '0.75rem',
+              fontSize: '0.75rem', 
+              color: '#d97706', 
+              backgroundColor: '#fef3c7', 
+              padding: '0.25rem 0.75rem', 
+              borderRadius: '9999px', 
+              display: 'inline-block',
+              fontWeight: 600
+            }}>
               {stats.pendingSupplyRequests} To Schedule
             </div>
           </div>
@@ -265,10 +370,10 @@ const AshaWorkerDashboard: React.FC = () => {
 
         {/* Important Alerts */}
         {recentAlerts.length > 0 && (
-          <div className="card" style={{ marginBottom: '2rem', borderLeft: '4px solid var(--red-500)' }}>
+          <div className="card" style={{ marginBottom: '2rem' }}>
             <div className="card-header">
-              <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--red-700)' }}>
-                <AlertCircle size={24} />
+              <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#dc2626' }}>
+                <AlertCircle size={20} />
                 Important Alerts
               </h2>
             </div>
@@ -279,16 +384,22 @@ const AshaWorkerDashboard: React.FC = () => {
                     key={index}
                     style={{ 
                       padding: '1rem', 
-                      backgroundColor: `var(--${alert.color}-50)`, 
+                      backgroundColor: alert.color === 'red' ? '#fef2f2' : alert.color === 'blue' ? '#eff6ff' : '#fffbeb', 
                       borderRadius: '0.5rem', 
-                      borderLeft: `3px solid var(--${alert.color}-400)` 
+                      borderLeft: `3px solid ${alert.color === 'red' ? '#dc2626' : alert.color === 'blue' ? '#2563eb' : '#d97706'}`,
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '0.75rem'
                     }}
                   >
-                    <div style={{ fontWeight: '600', color: `var(--${alert.color}-800)`, marginBottom: '0.25rem' }}>
-                      {alert.title}
-                    </div>
-                    <div style={{ fontSize: '0.875rem', color: `var(--${alert.color}-700)` }}>
-                      {alert.message}
+                    <AlertCircle size={20} color={alert.color === 'red' ? '#dc2626' : alert.color === 'blue' ? '#2563eb' : '#d97706'} />
+                    <div>
+                      <div style={{ fontWeight: '600', color: alert.color === 'red' ? '#991b1b' : alert.color === 'blue' ? '#1d4ed8' : '#92400e', marginBottom: '0.25rem' }}>
+                        {alert.title}
+                      </div>
+                      <div style={{ fontSize: '0.875rem', color: alert.color === 'red' ? '#b91c1c' : alert.color === 'blue' ? '#2563eb' : '#b45309' }}>
+                        {alert.message}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -298,105 +409,193 @@ const AshaWorkerDashboard: React.FC = () => {
         )}
 
         {/* Quick Actions */}
-        <div className="card">
+        <div className="card" style={{ marginBottom: '2rem' }}>
           <div className="card-header">
             <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Activity size={24} />
+              <Activity size={20} color="#0369a1" />
               Quick Actions
             </h2>
           </div>
           <div className="card-content">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
-              <div className="card" style={{ padding: '1.5rem', border: '2px solid var(--red-100)', backgroundColor: 'var(--red-25)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                  <Bell style={{ width: '1.5rem', height: '1.5rem', color: 'var(--red-600)' }} />
-                  <h3 style={{ margin: '0', color: 'var(--red-800)', fontSize: '1.125rem', fontWeight: '600' }}>Pending Requests</h3>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+              gap: '1.5rem' 
+            }}>
+              <button 
+                className="btn"
+                style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  padding: '1.5rem 1rem',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '0.5rem',
+                  backgroundColor: 'white',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                onClick={() => navigate('/asha/visit-requests')}
+              >
+                <UserCheck size={32} color="#6366f1" style={{ marginBottom: '0.5rem' }} />
+                <span style={{ fontWeight: 500, color: '#374151' }}>Visit Requests</span>
+              </button>
+              
+              <button 
+                className="btn"
+                style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  padding: '1.5rem 1rem',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '0.5rem',
+                  backgroundColor: 'white',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                onClick={() => navigate('/asha/home-visits')}
+              >
+                <Home size={32} color="#10b981" style={{ marginBottom: '0.5rem' }} />
+                <span style={{ fontWeight: 500, color: '#374151' }}>Home Visits</span>
+              </button>
+              
+              <button 
+                className="btn"
+                style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  padding: '1.5rem 1rem',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '0.5rem',
+                  backgroundColor: 'white',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                onClick={() => navigate('/asha/supply-requests')}
+              >
+                <ShoppingCart size={32} color="#f59e0b" style={{ marginBottom: '0.5rem' }} />
+                <span style={{ fontWeight: 500, color: '#374151' }}>Supply Requests</span>
+              </button>
+              
+              <button 
+                className="btn"
+                style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  padding: '1.5rem 1rem',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '0.5rem',
+                  backgroundColor: 'white',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                onClick={() => navigate('/asha/maternal-records')}
+              >
+                <FileText size={32} color="#8b5cf6" style={{ marginBottom: '0.5rem' }} />
+                <span style={{ fontWeight: 500, color: '#374151' }}>Health Records</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Monthly Overview */}
+        <div className="card">
+          <div className="card-header">
+            <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <TrendingUp size={20} color="#0369a1" />
+              Monthly Overview
+            </h2>
+          </div>
+          <div className="card-content">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+              <div style={{ 
+                padding: '1.5rem', 
+                borderRadius: '0.5rem', 
+                backgroundColor: '#f0f9ff',
+                border: '1px solid #bae6fd',
+                textAlign: 'center'
+              }}>
+                <div style={{ 
+                  width: '50px', 
+                  height: '50px', 
+                  borderRadius: '50%', 
+                  backgroundColor: '#e0f2fe',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1rem'
+                }}>
+                  <CheckCircle size={24} color="#0ea5e9" />
                 </div>
-                <p style={{ margin: '0 0 1.25rem', color: 'var(--red-700)', fontSize: '0.875rem', lineHeight: '1.4' }}>
-                  Review and approve home visit and supply requests from families in your ward.
-                </p>
-                <button 
-                  className="btn" 
-                  onClick={() => navigate('/asha/visit-requests')}
-                  style={{ 
-                    backgroundColor: 'var(--red-600)', 
-                    color: 'white', 
-                    border: 'none',
-                    fontSize: '0.875rem',
-                    fontWeight: '600'
-                  }}
-                >
-                  View Requests ({stats.pendingVisitRequests})
-                </button>
+                <h3 style={{ color: '#0369a1', fontSize: '2rem', margin: '0 0 0.5rem', fontWeight: 700 }}>
+                  {stats.totalVisitsThisMonth}
+                </h3>
+                <p style={{ color: '#0369a1', margin: 0, fontSize: '0.875rem', fontWeight: 500 }}>Total Visits This Month</p>
               </div>
               
-              <div className="card" style={{ padding: '1.5rem', border: '2px solid var(--blue-100)', backgroundColor: 'var(--blue-25)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                  <Calendar style={{ width: '1.5rem', height: '1.5rem', color: 'var(--blue-600)' }} />
-                  <h3 style={{ margin: '0', color: 'var(--blue-800)', fontSize: '1.125rem', fontWeight: '600' }}>Today's Schedule</h3>
+              <div style={{ 
+                padding: '1.5rem', 
+                borderRadius: '0.5rem', 
+                backgroundColor: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                textAlign: 'center'
+              }}>
+                <div style={{ 
+                  width: '50px', 
+                  height: '50px', 
+                  borderRadius: '50%', 
+                  backgroundColor: '#dcfce7',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1rem'
+                }}>
+                  <Users size={24} color="#10b981" />
                 </div>
-                <p style={{ margin: '0 0 1.25rem', color: 'var(--blue-700)', fontSize: '0.875rem', lineHeight: '1.4' }}>
-                  Manage your visit schedule, vaccination drives, and community events.
-                </p>
-                <button 
-                  className="btn" 
-                  onClick={() => navigate('/asha/home-visits')}
-                  style={{ 
-                    backgroundColor: 'var(--blue-600)', 
-                    color: 'white', 
-                    border: 'none',
-                    fontSize: '0.875rem',
-                    fontWeight: '600'
-                  }}
-                >
-                  View Schedule
-                </button>
+                <h3 style={{ color: '#047857', fontSize: '2rem', margin: '0 0 0.5rem', fontWeight: 700 }}>
+                  {stats.maternalUsers}
+                </h3>
+                <p style={{ color: '#047857', margin: 0, fontSize: '0.875rem', fontWeight: 500 }}>Maternal Users</p>
               </div>
-
-              <div className="card" style={{ padding: '1.5rem', border: '2px solid var(--green-100)', backgroundColor: 'var(--green-25)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                  <FileText style={{ width: '1.5rem', height: '1.5rem', color: 'var(--green-600)' }} />
-                  <h3 style={{ margin: '0', color: 'var(--green-800)', fontSize: '1.125rem', fontWeight: '600' }}>Update Records</h3>
+              
+              <div style={{ 
+                padding: '1.5rem', 
+                borderRadius: '0.5rem', 
+                backgroundColor: '#f5f3ff',
+                border: '1px solid #ddd6fe',
+                textAlign: 'center'
+              }}>
+                <div style={{ 
+                  width: '50px', 
+                  height: '50px', 
+                  borderRadius: '50%', 
+                  backgroundColor: '#ede9fe',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1rem'
+                }}>
+                  <Users size={24} color="#8b5cf6" />
                 </div>
-                <p style={{ margin: '0 0 1.25rem', color: 'var(--green-700)', fontSize: '0.875rem', lineHeight: '1.4' }}>
-                  Update maternal, palliative, and vaccination records for your families.
-                </p>
-                <button 
-                  className="btn" 
-                  onClick={() => navigate('/asha/maternal-records')}
-                  style={{ 
-                    backgroundColor: 'var(--green-600)', 
-                    color: 'white', 
-                    border: 'none',
-                    fontSize: '0.875rem',
-                    fontWeight: '600'
-                  }}
-                >
-                  Manage Records
-                </button>
-              </div>
-
-              <div className="card" style={{ padding: '1.5rem', border: '2px solid var(--purple-100)', backgroundColor: 'var(--purple-25)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                  <Users style={{ width: '1.5rem', height: '1.5rem', color: 'var(--purple-600)' }} />
-                  <h3 style={{ margin: '0', color: 'var(--purple-800)', fontSize: '1.125rem', fontWeight: '600' }}>Community Updates</h3>
-                </div>
-                <p style={{ margin: '0 0 1.25rem', color: 'var(--purple-700)', fontSize: '0.875rem', lineHeight: '1.4' }}>
-                  Post health blogs, announce vaccination schedules, and community events.
-                </p>
-                <button 
-                  className="btn" 
-                  onClick={() => navigate('/asha/health-blogs')}
-                  style={{ 
-                    backgroundColor: 'var(--purple-600)', 
-                    color: 'white', 
-                    border: 'none',
-                    fontSize: '0.875rem',
-                    fontWeight: '600'
-                  }}
-                >
-                  Create Update
-                </button>
+                <h3 style={{ color: '#6d28d9', fontSize: '2rem', margin: '0 0 0.5rem', fontWeight: 700 }}>
+                  {stats.palliativeUsers}
+                </h3>
+                <p style={{ color: '#6d28d9', margin: 0, fontSize: '0.875rem', fontWeight: 500 }}>Palliative Users</p>
               </div>
             </div>
           </div>

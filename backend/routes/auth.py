@@ -344,7 +344,22 @@ def init_auth_routes(app, collections):
         """Update user profile"""
         try:
             user_id = get_jwt_identity()
-            data = request.get_json()
+            
+            # Handle both JSON and form data (for file uploads)
+            if request.is_json:
+                data = request.get_json()
+            else:
+                # Handle form data (including file uploads)
+                data = request.form.to_dict()
+                
+                # Handle profile picture upload
+                if 'profilePicture' in request.files:
+                    file = request.files['profilePicture']
+                    if file and file.filename:
+                        # In a real implementation, you would save the file to storage
+                        # For now, we'll just store a placeholder URL
+                        # In production, you might use cloud storage like Firebase Storage or AWS S3
+                        data['profilePicture'] = f"/uploads/profile-pictures/{user_id}.jpg"
             
             # Remove fields that shouldn't be updated via this endpoint
             protected_fields = ['_id', 'email', 'password', 'userType', 'createdAt']
@@ -352,7 +367,7 @@ def init_auth_routes(app, collections):
                 data.pop(field, None)
             
             # Add updated timestamp
-            data['updatedAt'] = datetime.now(timezone.utc)
+            data['updatedAt'] = datetime.now(timezone.utc).isoformat()
             
             # Update user
             result = collections['users'].update_one(
@@ -363,7 +378,20 @@ def init_auth_routes(app, collections):
             if result.matched_count == 0:
                 return jsonify({'error': 'User not found'}), 404
             
-            return jsonify({'message': 'Profile updated successfully'}), 200
+            # Return updated user data
+            updated_user = collections['users'].find_one({'_id': ObjectId(user_id)})
+            if updated_user:
+                # Remove sensitive information
+                updated_user.pop('password', None)
+                updated_user['id'] = str(updated_user['_id'])
+                updated_user.pop('_id', None)
+                
+                return jsonify({
+                    'message': 'Profile updated successfully',
+                    'user': updated_user
+                }), 200
+            else:
+                return jsonify({'message': 'Profile updated successfully'}), 200
             
         except Exception as e:
             return jsonify({'error': f'Failed to update profile: {str(e)}'}), 500

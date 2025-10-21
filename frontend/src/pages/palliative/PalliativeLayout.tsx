@@ -94,20 +94,33 @@ const PalliativeLayout: React.FC<PalliativeLayoutProps> = ({ children, title }) 
             backgroundColor: 'var(--blue-50)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{
-                width: '50px',
-                height: '50px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--blue-200)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--blue-700)',
-                fontWeight: '600',
-                fontSize: '1.25rem'
-              }}>
-                {user?.name?.charAt(0).toUpperCase()}
-              </div>
+              {user?.profilePicture ? (
+                <img 
+                  src={user.profilePicture} 
+                  alt="Profile" 
+                  style={{
+                    width: '50px',
+                    height: '50px',
+                    borderRadius: '50%',
+                    objectFit: 'cover'
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--blue-200)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--blue-700)',
+                  fontWeight: '600',
+                  fontSize: '1.25rem'
+                }}>
+                  {user?.name?.charAt(0).toUpperCase()}
+                </div>
+              )}
               <div>
                 <div style={{ fontWeight: '600', color: 'var(--gray-900)', fontSize: '1rem' }}>
                   {user?.name}

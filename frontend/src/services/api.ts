@@ -3,7 +3,7 @@ import axios from 'axios';
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 // Create axios instance
-const api = axios.create({
+export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
@@ -78,8 +78,16 @@ export const authAPI = {
   },
 
   updateProfile: async (profileData: any) => {
-    const response = await api.put('/profile', profileData);
-    return response.data;
+    // Check if we're sending form data (for file uploads)
+    if (profileData instanceof FormData) {
+      const response = await api.put('/profile', profileData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return response.data;
+    } else {
+      const response = await api.put('/profile', profileData);
+      return response.data;
+    }
   },
 };
 
@@ -720,5 +728,271 @@ export const milestonesAPI = {
       notes
     });
     return response.data as { message: string };
+  }
+};
+
+// Maternity Dashboard API
+export const maternityDashboardAPI = {
+  getStats: async () => {
+    try {
+      console.log('Fetching maternity dashboard stats...');
+      
+      // Fetch visits data
+      let visits: any[] = [];
+      try {
+        const visitsResponse = await maternityAPI.getVisits();
+        visits = visitsResponse.visits || [];
+        console.log('Visits data:', visits);
+      } catch (visitsError) {
+        console.log('Failed to fetch visits:', visitsError);
+        visits = [];
+      }
+      
+      // Fetch supply requests
+      let supplyRequests: any[] = [];
+      try {
+        const supplyResponse = await supplyAPI.getUserRequests();
+        supplyRequests = supplyResponse.requests || [];
+        console.log('Supply requests data:', supplyRequests);
+      } catch (supplyError) {
+        console.log('Failed to fetch supply requests:', supplyError);
+        supplyRequests = [];
+      }
+      
+      // Fetch monthly ration status
+      let rationStatus: any = null;
+      try {
+        const rationResponse = await monthlyRationAPI.getMyRationStatus();
+        rationStatus = rationResponse.ration || null;
+        console.log('Ration status:', rationStatus);
+      } catch (rationError) {
+        console.log('Failed to fetch ration status:', rationError);
+        rationStatus = null;
+      }
+      
+      // Fetch vaccination records
+      let vaccinationRecords: any[] = [];
+      try {
+        const vaccinationResponse = await vaccinationAPI.listMyRecords();
+        vaccinationRecords = vaccinationResponse.records || [];
+        console.log('Vaccination records:', vaccinationRecords);
+      } catch (vaccinationError) {
+        console.log('Failed to fetch vaccination records:', vaccinationError);
+        vaccinationRecords = [];
+      }
+      
+      // Fetch calendar events
+      let calendarEvents: any[] = [];
+      try {
+        const calendarResponse = await calendarAPI.list();
+        calendarEvents = calendarResponse.events || calendarResponse || [];
+        console.log('Calendar events:', calendarEvents);
+      } catch (calendarError) {
+        console.log('Failed to fetch calendar events:', calendarError);
+        calendarEvents = [];
+      }
+      
+      // Calculate statistics
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const upcomingAppointments = visits.filter((visit: any) => {
+        if (!visit.visitDate) return false;
+        try {
+          const visitDate = new Date(visit.visitDate);
+          visitDate.setHours(0, 0, 0, 0);
+          return visitDate >= today;
+        } catch (e) {
+          return false;
+        }
+      }).length;
+      
+      const pendingRequests = supplyRequests.filter((req: any) => 
+        req.status === 'pending'
+      ).length;
+      
+      const completedVisits = visits.filter((visit: any) => {
+        if (!visit.visitDate) return false;
+        try {
+          const visitDate = new Date(visit.visitDate);
+          visitDate.setHours(0, 0, 0, 0);
+          return visitDate < today;
+        } catch (e) {
+          return false;
+        }
+      }).length;
+      
+      // Get next vaccination date
+      let nextVaccination: any = null;
+      if (vaccinationRecords.length > 0) {
+        // Filter for scheduled vaccinations
+        const scheduledVaccinations = vaccinationRecords.filter((record: any) => 
+          record.status === 'Scheduled' && record.date
+        );
+        
+        if (scheduledVaccinations.length > 0) {
+          // Sort by date and get the earliest
+          scheduledVaccinations.sort((a: any, b: any) => 
+            new Date(a.date).getTime() - new Date(b.date).getTime()
+          );
+          nextVaccination = scheduledVaccinations[0];
+        }
+      }
+      
+      // Get upcoming calendar events (next 7 days)
+      const nextWeek = new Date();
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      
+      const upcomingEvents = calendarEvents.filter((event: any) => {
+        if (!event.date) return false;
+        try {
+          const eventDate = new Date(event.date);
+          return eventDate >= today && eventDate <= nextWeek;
+        } catch (e) {
+          return false;
+        }
+      }).slice(0, 3); // Limit to 3 events
+      
+      console.log('Calculated stats:', { 
+        upcomingAppointments, 
+        pendingRequests, 
+        completedVisits,
+        rationStatus,
+        nextVaccination,
+        upcomingEvents
+      });
+      
+      return {
+        upcomingAppointments,
+        pendingRequests,
+        completedVisits,
+        rationStatus,
+        nextVaccination,
+        upcomingEvents
+      };
+    } catch (error) {
+      console.error('Error fetching maternity dashboard stats:', error);
+      return {
+        upcomingAppointments: 0,
+        pendingRequests: 0,
+        completedVisits: 0,
+        rationStatus: null,
+        nextVaccination: null,
+        upcomingEvents: []
+      };
+    }
+  }
+};
+
+// Palliative Dashboard API
+export const palliativeDashboardAPI = {
+  getStats: async () => {
+    try {
+      console.log('Fetching palliative dashboard stats...');
+      
+      // Fetch health records
+      let records: any[] = [];
+      try {
+        const recordsResponse = await palliativeAPI.listRecords();
+        records = recordsResponse.records || [];
+        console.log('Health records data:', records);
+      } catch (recordsError) {
+        console.log('Failed to fetch health records:', recordsError);
+        records = [];
+      }
+      
+      // Fetch visit requests
+      let visitRequests: any[] = [];
+      try {
+        const visitResponse = await api.get('/visit-requests');
+        visitRequests = visitResponse.data.requests || [];
+        console.log('Visit requests data:', visitRequests);
+      } catch (visitError) {
+        console.log('Failed to fetch visit requests:', visitError);
+        visitRequests = [];
+      }
+      
+      // Fetch supply requests
+      let supplyRequests: any[] = [];
+      try {
+        const supplyResponse = await supplyAPI.getUserRequests();
+        supplyRequests = supplyResponse.requests || [];
+        console.log('Supply requests data:', supplyRequests);
+      } catch (supplyError) {
+        console.log('Failed to fetch supply requests:', supplyError);
+        supplyRequests = [];
+      }
+      
+      // Fetch calendar events
+      let calendarEvents: any[] = [];
+      try {
+        const calendarResponse = await calendarAPI.list();
+        calendarEvents = calendarResponse.events || calendarResponse || [];
+        console.log('Calendar events:', calendarEvents);
+      } catch (calendarError) {
+        console.log('Failed to fetch calendar events:', calendarError);
+        calendarEvents = [];
+      }
+      
+      const upcomingAppointments = visitRequests.filter((req: any) => 
+        req.status === 'scheduled' || req.status === 'approved'
+      ).length;
+      
+      const pendingRequests = supplyRequests.filter((req: any) => 
+        req.status === 'pending'
+      ).length;
+      
+      const careVisits = records.length;
+      
+      // Get upcoming calendar events (next 7 days)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const nextWeek = new Date();
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      
+      const upcomingEvents = calendarEvents.filter((event: any) => {
+        if (!event.date) return false;
+        try {
+          const eventDate = new Date(event.date);
+          return eventDate >= today && eventDate <= nextWeek;
+        } catch (e) {
+          return false;
+        }
+      }).slice(0, 3); // Limit to 3 events
+      
+      // Get recent health records (last 3)
+      const recentRecords = [...records]
+        .sort((a: any, b: any) => {
+          const dateA = new Date(a.date || a.createdAt);
+          const dateB = new Date(b.date || b.createdAt);
+          return dateB.getTime() - dateA.getTime();
+        })
+        .slice(0, 3);
+      
+      console.log('Calculated stats:', { 
+        upcomingAppointments, 
+        pendingRequests, 
+        careVisits,
+        upcomingEvents,
+        recentRecords
+      });
+      
+      return {
+        upcomingAppointments,
+        pendingRequests,
+        careVisits,
+        upcomingEvents,
+        recentRecords
+      };
+    } catch (error) {
+      console.error('Error fetching palliative dashboard stats:', error);
+      return {
+        upcomingAppointments: 0,
+        pendingRequests: 0,
+        careVisits: 0,
+        upcomingEvents: [],
+        recentRecords: []
+      };
+    }
   }
 };
