@@ -11,7 +11,7 @@ interface SupplyRequest {
   description: string;
   category: string;
   proofFile?: string;
-  status: 'pending' | 'approved' | 'rejected' | 'scheduled' | 'delivered';
+  status: 'pending' | 'approved' | 'rejected' | 'scheduled' | 'delivered' | 'cancelled';
   createdAt: string;
   updatedAt: string;
   reviewedBy?: string;
@@ -20,13 +20,20 @@ interface SupplyRequest {
   scheduledAt?: string;
   scheduledBy?: string;
   deliveryLocation?: 'home' | 'ward';
-  deliveryStatus?: 'pending' | 'scheduled' | 'delivered';
+  deliveryStatus?: 'pending' | 'delivered' | 'cancelled';
+  deliveryCompletedAt?: string;
+  deliveryCompletedBy?: string;
   user: {
     name: string;
     email: string;
     beneficiaryCategory: string;
     phone: string;
     address: string;
+  };
+  anganwadiLocation?: {
+    name: string;
+    address?: string;
+    ward: string;
   };
 }
 
@@ -222,8 +229,11 @@ const SupplyRequests: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'var(--yellow-600)';
-      case 'approved': return 'var(--green-600)';
+      case 'approved': return 'var(--blue-600)';
+      case 'scheduled': return 'var(--purple-600)';
+      case 'delivered': return 'var(--green-600)';
       case 'rejected': return 'var(--red-600)';
+      case 'cancelled': return 'var(--gray-600)';
       default: return 'var(--gray-600)';
     }
   };
@@ -231,17 +241,35 @@ const SupplyRequests: React.FC = () => {
   const getStatusBg = (status: string) => {
     switch (status) {
       case 'pending': return 'var(--yellow-50)';
-      case 'approved': return 'var(--green-50)';
+      case 'approved': return 'var(--blue-50)';
+      case 'scheduled': return 'var(--purple-50)';
+      case 'delivered': return 'var(--green-50)';
       case 'rejected': return 'var(--red-50)';
+      case 'cancelled': return 'var(--gray-50)';
       default: return 'var(--gray-50)';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Pending Approval';
+      case 'approved': return 'Approved';
+      case 'scheduled': return 'Scheduled for Delivery';
+      case 'delivered': return 'Delivered';
+      case 'rejected': return 'Rejected';
+      case 'cancelled': return 'Cancelled';
+      default: return status;
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending': return <Clock size={16} color="var(--yellow-600)" />;
-      case 'approved': return <CheckCircle size={16} color="var(--green-600)" />;
+      case 'approved': return <CheckCircle size={16} color="var(--blue-600)" />;
+      case 'scheduled': return <Calendar size={16} color="var(--purple-600)" />;
+      case 'delivered': return <CheckCircle size={16} color="var(--green-600)" />;
       case 'rejected': return <XCircle size={16} color="var(--red-600)" />;
+      case 'cancelled': return <XCircle size={16} color="var(--gray-600)" />;
       default: return <Clock size={16} color="var(--gray-600)" />;
     }
   };
@@ -370,208 +398,220 @@ const SupplyRequests: React.FC = () => {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {requests.map((request) => (
-                  <div
-                    key={request._id}
-                    className="card"
-                    style={{
-                      padding: '1.5rem',
-                      border: '1px solid var(--gray-200)',
-                      borderLeft: `4px solid var(--green-600)`
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                          <User size={18} color="var(--gray-600)" />
-                          <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600', color: 'var(--gray-900)' }}>
-                            {request.user.name}
-                          </h3>
-                          <span style={{
-                            fontSize: '0.75rem',
-                            fontWeight: '600',
-                            color: 'var(--blue-600)',
-                            backgroundColor: 'var(--blue-50)',
-                            padding: '0.25rem 0.5rem',
-                            borderRadius: '0.25rem'
-                          }}>
-                            {request.category}
+                    <div
+                      key={request._id}
+                      className="card"
+                      style={{
+                        padding: '1.5rem',
+                        border: '1px solid var(--gray-200)',
+                        borderLeft: `4px solid var(--green-600)`
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            <User size={18} color="var(--gray-600)" />
+                            <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600', color: 'var(--gray-900)' }}>
+                              {request.user.name}
+                            </h3>
+                            <span style={{
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                              color: 'var(--blue-600)',
+                              backgroundColor: 'var(--blue-50)',
+                              padding: '0.25rem 0.5rem',
+                              borderRadius: '0.25rem'
+                            }}>
+                              {request.category}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: '0.75rem',
+                                fontWeight: '600',
+                                color: getStatusColor(request.status),
+                                backgroundColor: getStatusBg(request.status),
+                                padding: '0.25rem 0.5rem',
+                                borderRadius: '0.25rem'
+                              }}
+                            >
+                              {getStatusText(request.status)}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '0.875rem', color: 'var(--gray-600)', marginBottom: '0.5rem' }}>
+                            <strong>Supply:</strong> {request.supplyName}
+                          </div>
+                          <div style={{ fontSize: '0.875rem', color: 'var(--gray-600)', marginBottom: '0.5rem' }}>
+                            <strong>Description:</strong> {request.description}
+                          </div>
+                          <div style={{ fontSize: '0.875rem', color: 'var(--gray-600)' }}>
+                            <strong>Approved:</strong> {new Date(request.updatedAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          {request.expectedDeliveryDate ? (
+                            <div style={{ textAlign: 'center' }}>
+                              <Truck size={16} color="var(--green-600)" />
+                              <div style={{ fontSize: '0.75rem', color: 'var(--green-600)', fontWeight: '600' }}>
+                                Scheduled
+                              </div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--gray-600)' }}>
+                                {new Date(request.expectedDeliveryDate).toLocaleDateString()}
+                              </div>
+                            </div>
+                          ) : (
+                            <div style={{ textAlign: 'center' }}>
+                              <Clock size={16} color="var(--yellow-600)" />
+                              <div style={{ fontSize: '0.75rem', color: 'var(--yellow-600)', fontWeight: '600' }}>
+                                Pending
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <MapPin size={16} color="var(--gray-500)" />
+                          <span style={{ fontSize: '0.875rem', color: 'var(--gray-600)' }}>
+                            {request.user.address || 'Address not provided'}
                           </span>
                         </div>
-                        <div style={{ fontSize: '0.875rem', color: 'var(--gray-600)', marginBottom: '0.5rem' }}>
-                          <strong>Supply:</strong> {request.supplyName}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Phone size={16} color="var(--gray-500)" />
+                          <span style={{ fontSize: '0.875rem', color: 'var(--gray-600)' }}>
+                            {request.user.phone || 'Phone not provided'}
+                          </span>
                         </div>
-                        <div style={{ fontSize: '0.875rem', color: 'var(--gray-600)', marginBottom: '0.5rem' }}>
-                          <strong>Description:</strong> {request.description}
-                        </div>
-                        <div style={{ fontSize: '0.875rem', color: 'var(--gray-600)' }}>
-                          <strong>Approved:</strong> {new Date(request.updatedAt).toLocaleDateString()}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <User size={16} color="var(--gray-500)" />
+                          <span style={{ fontSize: '0.875rem', color: 'var(--gray-600)' }}>
+                            {request.user.beneficiaryCategory}
+                          </span>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {request.expectedDeliveryDate ? (
-                          <div style={{ textAlign: 'center' }}>
-                            <Truck size={16} color="var(--green-600)" />
-                            <div style={{ fontSize: '0.75rem', color: 'var(--green-600)', fontWeight: '600' }}>
-                              Scheduled
-                            </div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--gray-600)' }}>
-                              {new Date(request.expectedDeliveryDate).toLocaleDateString()}
-                            </div>
-                          </div>
-                        ) : (
-                          <div style={{ textAlign: 'center' }}>
-                            <Clock size={16} color="var(--yellow-600)" />
-                            <div style={{ fontSize: '0.75rem', color: 'var(--yellow-600)', fontWeight: '600' }}>
-                              Pending
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <MapPin size={16} color="var(--gray-500)" />
-                        <span style={{ fontSize: '0.875rem', color: 'var(--gray-600)' }}>
-                          {request.user.address || 'Address not provided'}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Phone size={16} color="var(--gray-500)" />
-                        <span style={{ fontSize: '0.875rem', color: 'var(--gray-600)' }}>
-                          {request.user.phone || 'Phone not provided'}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <User size={16} color="var(--gray-500)" />
-                        <span style={{ fontSize: '0.875rem', color: 'var(--gray-600)' }}>
-                          {request.user.beneficiaryCategory}
-                        </span>
-                      </div>
-                    </div>
-
-                    {!request.expectedDeliveryDate && (
-                      <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--gray-200)' }}>
-                        {schedulingRequest === request._id ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <Calendar size={16} color="var(--gray-600)" />
-                                <input
-                                  type="date"
-                                  value={deliveryDate}
-                                  onChange={(e) => setDeliveryDate(e.target.value)}
-                                  min={new Date().toISOString().split('T')[0]}
-                                  style={{
-                                    padding: '0.5rem',
-                                    border: '1px solid var(--gray-300)',
-                                    borderRadius: '0.375rem',
-                                    fontSize: '0.875rem'
-                                  }}
-                                />
-                              </div>
-                            </div>
-                            
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                              <label style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--gray-700)' }}>
-                                Delivery Location:
-                              </label>
-                              <div style={{ display: 'flex', gap: '1rem' }}>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      {!request.expectedDeliveryDate && (
+                        <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--gray-200)' }}>
+                          {schedulingRequest === request._id ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  <Calendar size={16} color="var(--gray-600)" />
                                   <input
-                                    type="radio"
-                                    name="deliveryLocation"
-                                    value="home"
-                                    checked={deliveryLocation === 'home'}
-                                    onChange={(e) => {
-                                      setDeliveryLocation(e.target.value as 'home' | 'ward');
-                                      setSelectedAnganwadiId('');
+                                    type="date"
+                                    value={deliveryDate}
+                                    onChange={(e) => setDeliveryDate(e.target.value)}
+                                    min={new Date().toISOString().split('T')[0]}
+                                    style={{
+                                      padding: '0.5rem',
+                                      border: '1px solid var(--gray-300)',
+                                      borderRadius: '0.375rem',
+                                      fontSize: '0.875rem'
                                     }}
-                                    style={{ marginRight: '0.25rem' }}
                                   />
-                                  <Home size={16} color="var(--blue-600)" />
-                                  <span style={{ fontSize: '0.875rem', color: 'var(--gray-700)' }}>
-                                    Home Delivery
-                                  </span>
-                                </label>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                                  <input
-                                    type="radio"
-                                    name="deliveryLocation"
-                                    value="ward"
-                                    checked={deliveryLocation === 'ward'}
-                                    onChange={(e) => setDeliveryLocation(e.target.value as 'home' | 'ward')}
-                                    style={{ marginRight: '0.25rem' }}
-                                  />
-                                  <Building2 size={16} color="var(--purple-600)" />
-                                  <span style={{ fontSize: '0.875rem', color: 'var(--gray-700)' }}>
-                                    Anganwadi Ward Collection
-                                  </span>
-                                </label>
+                                </div>
                               </div>
-                            </div>
-
-                            {deliveryLocation === 'ward' && (
+                              
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                 <label style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--gray-700)' }}>
-                                  Select Anganwadi Location:
+                                  Delivery Location:
                                 </label>
-                                <select
-                                  value={selectedAnganwadiId}
-                                  onChange={(e) => setSelectedAnganwadiId(e.target.value)}
-                                  style={{
-                                    padding: '0.5rem',
-                                    border: '1px solid var(--gray-300)',
-                                    borderRadius: '0.375rem',
-                                    fontSize: '0.875rem',
-                                    backgroundColor: 'white'
-                                  }}
-                                >
-                                  <option value="">-- Select Anganwadi --</option>
-                                  {locations.map((location) => (
-                                    <option key={location._id} value={location._id}>
-                                      {location.name} - {location.ward} {location.address && `(${location.address})`}
-                                    </option>
-                                  ))}
-                                </select>
+                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                    <input
+                                      type="radio"
+                                      name="deliveryLocation"
+                                      value="home"
+                                      checked={deliveryLocation === 'home'}
+                                      onChange={(e) => {
+                                        setDeliveryLocation(e.target.value as 'home' | 'ward');
+                                        setSelectedAnganwadiId('');
+                                      }}
+                                      style={{ marginRight: '0.25rem' }}
+                                    />
+                                    <Home size={16} color="var(--blue-600)" />
+                                    <span style={{ fontSize: '0.875rem', color: 'var(--gray-700)' }}>
+                                      Home Delivery
+                                    </span>
+                                  </label>
+                                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                    <input
+                                      type="radio"
+                                      name="deliveryLocation"
+                                      value="ward"
+                                      checked={deliveryLocation === 'ward'}
+                                      onChange={(e) => setDeliveryLocation(e.target.value as 'home' | 'ward')}
+                                      style={{ marginRight: '0.25rem' }}
+                                    />
+                                    <Building2 size={16} color="var(--purple-600)" />
+                                    <span style={{ fontSize: '0.875rem', color: 'var(--gray-700)' }}>
+                                      Anganwadi Ward Collection
+                                    </span>
+                                  </label>
+                                </div>
                               </div>
-                            )}
 
-                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                              <button
-                                className="btn btn-primary"
-                                onClick={() => handleScheduleDelivery(request._id)}
-                                style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
-                              >
-                                Schedule Delivery
-                              </button>
-                              <button
-                                className="btn"
-                                onClick={() => {
-                                  setSchedulingRequest(null);
-                                  setDeliveryDate('');
-                                  setDeliveryLocation('home');
-                                }}
-                                style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
-                              >
-                                Cancel
-                              </button>
+                              {deliveryLocation === 'ward' && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                  <label style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--gray-700)' }}>
+                                    Select Anganwadi Location:
+                                  </label>
+                                  <select
+                                    value={selectedAnganwadiId}
+                                    onChange={(e) => setSelectedAnganwadiId(e.target.value)}
+                                    style={{
+                                      padding: '0.5rem',
+                                      border: '1px solid var(--gray-300)',
+                                      borderRadius: '0.375rem',
+                                      fontSize: '0.875rem',
+                                      backgroundColor: 'white'
+                                    }}
+                                  >
+                                    <option value="">-- Select Anganwadi --</option>
+                                    {locations.map((location) => (
+                                      <option key={location._id} value={location._id}>
+                                        {location.name} - {location.ward} {location.address && `(${location.address})`}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
+
+                              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                <button
+                                  className="btn btn-primary"
+                                  onClick={() => handleScheduleDelivery(request._id)}
+                                  style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+                                >
+                                  Schedule Delivery
+                                </button>
+                                <button
+                                  className="btn"
+                                  onClick={() => {
+                                    setSchedulingRequest(null);
+                                    setDeliveryDate('');
+                                    setDeliveryLocation('home');
+                                  }}
+                                  style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        ) : (
-                          <button
-                            className="btn btn-primary"
-                            onClick={() => setSchedulingRequest(request._id)}
-                            style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
-                          >
-                            <Calendar size={16} style={{ marginRight: '0.5rem' }} />
-                            Schedule Delivery
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                          ) : (
+                            <button
+                              className="btn btn-primary"
+                              onClick={() => setSchedulingRequest(request._id)}
+                              style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+                            >
+                              <Calendar size={16} style={{ marginRight: '0.5rem' }} />
+                              Schedule Delivery
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )
             ) : (
@@ -609,6 +649,18 @@ const SupplyRequests: React.FC = () => {
                               borderRadius: '0.25rem'
                             }}>
                               {request.category}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: '0.75rem',
+                                fontWeight: '600',
+                                color: getStatusColor(request.status),
+                                backgroundColor: getStatusBg(request.status),
+                                padding: '0.25rem 0.5rem',
+                                borderRadius: '0.25rem'
+                              }}
+                            >
+                              {getStatusText(request.status)}
                             </span>
                           </div>
                           <div style={{ fontSize: '0.875rem', color: 'var(--gray-600)', marginBottom: '0.5rem' }}>
@@ -648,6 +700,11 @@ const SupplyRequests: React.FC = () => {
                               </>
                             )}
                           </div>
+                          {request.deliveryCompletedAt && (
+                            <div style={{ fontSize: '0.75rem', color: 'var(--green-600)', marginTop: '0.5rem' }}>
+                              Delivered: {new Date(request.deliveryCompletedAt).toLocaleDateString()}
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -675,44 +732,58 @@ const SupplyRequests: React.FC = () => {
                       {/* Action buttons for scheduled requests */}
                       <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--gray-200)' }}>
                         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                          <button
-                            className="btn"
-                            onClick={() => supplyAPI.updateDeliveryStatus(request._id, 'delivered').then(() => {
-                              toast.success('Marked as delivered');
-                              fetchApprovedRequests(); // Refresh both lists
-                            })}
-                            style={{ 
+                          {request.status !== 'delivered' && request.status !== 'cancelled' && (
+                            <button
+                              className="btn"
+                              onClick={() => supplyAPI.updateDeliveryStatus(request._id, 'delivered').then(() => {
+                                toast.success('Marked as delivered');
+                                fetchApprovedRequests(); // Refresh both lists
+                              })}
+                              style={{ 
+                                fontSize: '0.875rem', 
+                                padding: '0.5rem 1rem',
+                                backgroundColor: 'var(--green-600)',
+                                color: 'white',
+                                border: 'none'
+                              }}
+                            >
+                              <CheckCircle size={16} style={{ marginRight: '0.5rem' }} />
+                              Mark as Delivered
+                            </button>
+                          )}
+                          {request.status !== 'delivered' && request.status !== 'cancelled' && (
+                            <button
+                              className="btn"
+                              onClick={() => {
+                                if (window.confirm('Are you sure you want to cancel this delivery?')) {
+                                  supplyAPI.updateDeliveryStatus(request._id, 'cancelled').then(() => {
+                                    toast.success('Delivery cancelled');
+                                    fetchApprovedRequests(); // Refresh both lists
+                                  });
+                                }
+                              }}
+                              style={{ 
+                                fontSize: '0.875rem', 
+                                padding: '0.5rem 1rem',
+                                backgroundColor: 'var(--red-600)',
+                                color: 'white',
+                                border: 'none'
+                              }}
+                            >
+                              <XCircle size={16} style={{ marginRight: '0.5rem' }} />
+                              Cancel Delivery
+                            </button>
+                          )}
+                          {(request.status === 'delivered' || request.status === 'cancelled') && (
+                            <div style={{ 
                               fontSize: '0.875rem', 
                               padding: '0.5rem 1rem',
-                              backgroundColor: 'var(--green-600)',
-                              color: 'white',
-                              border: 'none'
-                            }}
-                          >
-                            <CheckCircle size={16} style={{ marginRight: '0.5rem' }} />
-                            Mark as Delivered
-                          </button>
-                          <button
-                            className="btn"
-                            onClick={() => {
-                              if (window.confirm('Are you sure you want to cancel this delivery?')) {
-                                supplyAPI.updateDeliveryStatus(request._id, 'cancelled').then(() => {
-                                  toast.success('Delivery cancelled');
-                                  fetchApprovedRequests(); // Refresh both lists
-                                });
-                              }
-                            }}
-                            style={{ 
-                              fontSize: '0.875rem', 
-                              padding: '0.5rem 1rem',
-                              backgroundColor: 'var(--red-600)',
-                              color: 'white',
-                              border: 'none'
-                            }}
-                          >
-                            <XCircle size={16} style={{ marginRight: '0.5rem' }} />
-                            Cancel Delivery
-                          </button>
+                              color: request.status === 'delivered' ? 'var(--green-600)' : 'var(--red-600)',
+                              fontWeight: '600'
+                            }}>
+                              {request.status === 'delivered' ? '✅ Delivered' : '❌ Cancelled'}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -16,7 +16,7 @@ interface SupplyRequest {
   supplyName: string;
   description: string;
   category: string;
-  status: 'pending' | 'approved' | 'rejected' | 'scheduled' | 'delivered';
+  status: 'pending' | 'approved' | 'rejected' | 'scheduled' | 'delivered' | 'cancelled';
   createdAt: string;
   updatedAt: string;
   reviewNotes?: string;
@@ -24,6 +24,9 @@ interface SupplyRequest {
   scheduledAt?: string;
   scheduledBy?: string;
   deliveryLocation?: 'home' | 'ward';
+  deliveryStatus?: 'pending' | 'delivered' | 'cancelled';
+  deliveryCompletedAt?: string;
+  deliveryCompletedBy?: string;
   anganwadiLocation?: {
     name: string;
     address?: string;
@@ -159,8 +162,11 @@ const SupplyRequests: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'var(--yellow-600)';
-      case 'approved': return 'var(--green-600)';
+      case 'approved': return 'var(--blue-600)';
+      case 'scheduled': return 'var(--purple-600)';
+      case 'delivered': return 'var(--green-600)';
       case 'rejected': return 'var(--red-600)';
+      case 'cancelled': return 'var(--gray-600)';
       default: return 'var(--gray-600)';
     }
   };
@@ -168,9 +174,24 @@ const SupplyRequests: React.FC = () => {
   const getStatusBgColor = (status: string) => {
     switch (status) {
       case 'pending': return 'var(--yellow-50)';
-      case 'approved': return 'var(--green-50)';
+      case 'approved': return 'var(--blue-50)';
+      case 'scheduled': return 'var(--purple-50)';
+      case 'delivered': return 'var(--green-50)';
       case 'rejected': return 'var(--red-50)';
+      case 'cancelled': return 'var(--gray-50)';
       default: return 'var(--gray-50)';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Pending Approval';
+      case 'approved': return 'Approved';
+      case 'scheduled': return 'Scheduled for Delivery';
+      case 'delivered': return 'Delivered';
+      case 'rejected': return 'Rejected';
+      case 'cancelled': return 'Cancelled';
+      default: return status;
     }
   };
 
@@ -354,6 +375,16 @@ const SupplyRequests: React.FC = () => {
                               Approved - Delivery scheduling in progress
                             </p>
                           )}
+                          {existingRequest.status === 'delivered' && existingRequest.deliveryCompletedAt && (
+                            <p style={{ margin: '0.5rem 0', fontSize: '0.875rem', color: 'var(--green-600)' }}>
+                              ✅ Delivered on: {new Date(existingRequest.deliveryCompletedAt).toLocaleDateString()}
+                            </p>
+                          )}
+                          {existingRequest.status === 'cancelled' && (
+                            <p style={{ margin: '0.5rem 0', fontSize: '0.875rem', color: 'var(--gray-600)' }}>
+                              ❌ Delivery Cancelled
+                            </p>
+                          )}
                           <button
                             className="btn"
                             onClick={() => openViewModal(existingRequest)}
@@ -489,24 +520,52 @@ const SupplyRequests: React.FC = () => {
                 <p style={{ marginTop: '0.5rem' }}>{selectedRequest.description}</p>
               </div>
               <div>
-                <strong>Status:</strong> {selectedRequest.status}
+                <strong>Status:</strong> 
+                <span
+                  style={{
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '12px',
+                    fontSize: '0.875rem',
+                    fontWeight: 'bold',
+                    color: getStatusColor(selectedRequest.status),
+                    backgroundColor: getStatusBgColor(selectedRequest.status),
+                    marginLeft: '0.5rem'
+                  }}
+                >
+                  {getStatusText(selectedRequest.status)}
+                </span>
               </div>
               <div>
                 <strong>Requested on:</strong> {new Date(selectedRequest.createdAt).toLocaleString()}
               </div>
-              {selectedRequest.status === 'approved' && selectedRequest.expectedDeliveryDate && (
+              {selectedRequest.expectedDeliveryDate && (
                 <div>
                   <strong>Expected Delivery Date:</strong> {new Date(selectedRequest.expectedDeliveryDate).toLocaleDateString()}
                 </div>
               )}
-              {selectedRequest.status === 'approved' && selectedRequest.deliveryLocation && (
+              {selectedRequest.deliveryLocation && (
                 <div>
-                  <strong>Delivery Method:</strong> {selectedRequest.deliveryLocation === 'home' ? 'Home Delivery' : selectedRequest.deliveryLocation === 'ward' ? 'Anganvaadi Ward Collection' : selectedRequest.deliveryLocation}
+                  <strong>Delivery Method:</strong> {selectedRequest.deliveryLocation === 'home' ? 'Home Delivery' : selectedRequest.deliveryLocation === 'ward' ? 'Anganwadi Ward Collection' : selectedRequest.deliveryLocation}
                 </div>
               )}
-              {selectedRequest.scheduledAt && selectedRequest.scheduledBy && (
+              {selectedRequest.scheduledAt && (
                 <div>
-                  <strong>Scheduled on:</strong> {new Date(selectedRequest.scheduledAt).toLocaleString()} by {selectedRequest.scheduledBy}
+                  <strong>Scheduled on:</strong> {new Date(selectedRequest.scheduledAt).toLocaleString()}
+                </div>
+              )}
+              {selectedRequest.scheduledBy && (
+                <div>
+                  <strong>Scheduled By:</strong> {selectedRequest.scheduledBy}
+                </div>
+              )}
+              {selectedRequest.deliveryCompletedAt && (
+                <div>
+                  <strong>Delivered on:</strong> {new Date(selectedRequest.deliveryCompletedAt).toLocaleString()}
+                </div>
+              )}
+              {selectedRequest.deliveryCompletedBy && (
+                <div>
+                  <strong>Delivered By:</strong> {selectedRequest.deliveryCompletedBy}
                 </div>
               )}
               {selectedRequest.status === 'rejected' && selectedRequest.reviewNotes && (
