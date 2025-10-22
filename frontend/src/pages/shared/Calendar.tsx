@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import MaternityLayout from '../maternity/MaternityLayout';
 import PalliativeLayout from '../palliative/PalliativeLayout';
 import { calendarAPI } from '../../services/api';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Calendar as CalendarIcon, MapPin, Clock } from 'lucide-react';
 
 interface CalendarEvent {
   id: string;
@@ -85,33 +85,117 @@ const Calendar: React.FC = () => {
     return map;
   }, [events]);
 
+  // Function to get category color
+  const getCategoryColor = (category?: string) => {
+    switch (category) {
+      case 'community_class':
+        return { bg: '#f5f3ff', border: '#8b5cf6', text: '#6d28d9' };
+      case 'local_camp':
+        return { bg: '#f0fdf4', border: '#10b981', text: '#047857' };
+      case 'vaccination':
+        return { bg: '#fffbeb', border: '#f59e0b', text: '#d97706' };
+      case 'visit':
+        return { bg: '#eff6ff', border: '#3b82f6', text: '#1d4ed8' };
+      default:
+        return { bg: '#f0f9ff', border: '#0ea5e9', text: '#0369a1' };
+    }
+  };
+
   const header = (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <button onClick={() => setCursor(new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() - 1, 1)))} className="btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-          <ChevronLeft size={16} /> Prev
+    <div style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'space-between', 
+      marginBottom: '1.5rem',
+      padding: '1rem',
+      backgroundColor: '#f8fafc',
+      borderRadius: '0.5rem',
+      border: '1px solid #e2e8f0'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <button 
+          onClick={() => setCursor(new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() - 1, 1)))} 
+          className="btn" 
+          style={{ 
+            display: 'inline-flex', 
+            alignItems: 'center', 
+            gap: '0.5rem',
+            padding: '0.5rem 1rem',
+            borderRadius: '0.375rem',
+            border: '1px solid #cbd5e1',
+            backgroundColor: 'white',
+            color: '#334155',
+            fontWeight: 500,
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+        >
+          <ChevronLeft size={18} /> Prev
         </button>
-        <button onClick={() => setCursor(new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1)))} className="btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-          Next <ChevronRight size={16} />
+        <button 
+          onClick={() => setCursor(new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1)))} 
+          className="btn" 
+          style={{ 
+            display: 'inline-flex', 
+            alignItems: 'center', 
+            gap: '0.5rem',
+            padding: '0.5rem 1rem',
+            borderRadius: '0.375rem',
+            border: '1px solid #cbd5e1',
+            backgroundColor: 'white',
+            color: '#334155',
+            fontWeight: 500,
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+        >
+          Next <ChevronRight size={18} />
         </button>
-        <button onClick={() => setCursor(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1)))} className="btn" style={{ marginLeft: 8 }}>Today</button>
+        <button 
+          onClick={() => setCursor(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1)))} 
+          className="btn" 
+          style={{ 
+            marginLeft: '0.75rem',
+            padding: '0.5rem 1rem',
+            borderRadius: '0.375rem',
+            border: '1px solid #cbd5e1',
+            backgroundColor: 'white',
+            color: '#334155',
+            fontWeight: 500,
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+        >
+          Today
+        </button>
       </div>
-      <h3 style={{ margin: 0 }}>
+      <h2 style={{ margin: 0, color: '#0f172a', fontWeight: 700 }}>
         {cursor.toLocaleString(undefined, { month: 'long', year: 'numeric' })}
-      </h3>
+      </h2>
       <div />
     </div>
   );
 
   const weekdayHeader = (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: 4 }}>
+    <div style={{ 
+      display: 'grid', 
+      gridTemplateColumns: 'repeat(7, 1fr)', 
+      gap: '0.25rem', 
+      marginBottom: '0.5rem',
+      padding: '0.5rem 0'
+    }}>
       {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
         <div
           key={d}
           style={{
             textAlign: 'center',
-            fontWeight: 700,
-            color: d === 'Sun' ? 'var(--red-700)' : 'var(--gray-700)'
+            fontWeight: 600,
+            color: d === 'Sun' ? '#dc2626' : '#64748b',
+            fontSize: '0.875rem',
+            padding: '0.5rem 0'
           }}
         >
           {d}
@@ -123,7 +207,11 @@ const Calendar: React.FC = () => {
   const monthView = (
     <div>
       {weekdayHeader}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(7, 1fr)', 
+        gap: '0.25rem'
+      }}>
         {monthCells.map(({ date, inMonth }, idx) => {
           const key = date.toISOString().slice(0,10);
           const dayEvents = eventsByDay[key] || [];
@@ -133,52 +221,87 @@ const Calendar: React.FC = () => {
               key={idx}
               className="card"
               style={{
-                padding: '0.5rem',
+                padding: '0.75rem',
                 background: inMonth
-                  ? (date.getUTCDay() === 0 ? 'rgba(254, 226, 226, 0.6)' : 'white')
-                  : 'var(--gray-50)',
+                  ? (isToday ? '#dbeafe' : (date.getUTCDay() === 0 ? 'rgba(254, 226, 226, 0.6)' : 'white'))
+                  : '#f1f5f9',
                 border: isToday
-                  ? '2px solid var(--primary-600)'
+                  ? '2px solid #3b82f6'
                   : date.getUTCDay() === 0
-                    ? '1px solid var(--red-200)'
-                    : '1px solid var(--gray-200)',
-                boxShadow: isToday ? '0 0 0 3px rgba(59,130,246,0.2)' : 'none',
+                    ? '1px solid #fecaca'
+                    : '1px solid #e2e8f0',
+                borderRadius: '0.5rem',
                 cursor: 'pointer',
-                minHeight: 96,
-                transition: 'transform 120ms ease, box-shadow 120ms ease',
+                minHeight: '120px',
+                transition: 'all 0.2s ease',
+                position: 'relative',
+                boxShadow: isToday ? '0 0 0 3px rgba(59, 130, 246, 0.3)' : '0 1px 3px rgba(0,0,0,0.05)'
               }}
               onClick={() => setSelectedDate(date)}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 6px 14px rgba(0,0,0,0.08)'; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = isToday ? '0 0 0 3px rgba(59,130,246,0.2)' : 'none'; }}
+              onMouseEnter={(e) => { 
+                (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
+                (e.currentTarget as HTMLDivElement).style.boxShadow = isToday 
+                  ? '0 4px 6px rgba(59, 130, 246, 0.3)' 
+                  : '0 4px 6px rgba(0,0,0,0.1)';
+              }}
+              onMouseLeave={(e) => { 
+                (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+                (e.currentTarget as HTMLDivElement).style.boxShadow = isToday 
+                  ? '0 0 0 3px rgba(59, 130, 246, 0.3)' 
+                  : '0 1px 3px rgba(0,0,0,0.05)';
+              }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontWeight: 800, color: inMonth ? (date.getUTCDay() === 0 ? 'var(--red-700)' : 'var(--gray-900)') : 'var(--gray-400)' }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                marginBottom: '0.5rem'
+              }}>
+                <span style={{ 
+                  fontWeight: isToday ? 700 : 600, 
+                  color: inMonth 
+                    ? (isToday ? '#1d4ed8' : (date.getUTCDay() === 0 ? '#dc2626' : '#0f172a'))
+                    : '#94a3b8',
+                  fontSize: '1rem'
+                }}>
                   {date.getUTCDate()}
                 </span>
                 {date.getUTCDay() === 0 && inMonth && (
-                  <span style={{ fontSize: '0.7rem', color: 'var(--red-600)', fontWeight: 600 }}>Holiday</span>
+                  <span style={{ 
+                    fontSize: '0.65rem', 
+                    color: '#dc2626', 
+                    fontWeight: 600,
+                    backgroundColor: '#fee2e2',
+                    padding: '0.125rem 0.25rem',
+                    borderRadius: '0.25rem'
+                  }}>
+                    Sun
+                  </span>
                 )}
               </div>
-              <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '0.25rem',
+                maxHeight: '70px',
+                overflowY: 'auto'
+              }}>
                 {dayEvents.slice(0,3).map(ev => {
-                  const isClass = ev.category === 'community_class';
-                  const isCamp = ev.category === 'local_camp';
-                  const bg = isClass ? 'var(--purple-50)' : isCamp ? 'var(--green-50)' : 'var(--blue-50)';
-                  const fg = isClass ? 'var(--purple-700)' : isCamp ? 'var(--green-700)' : 'var(--blue-700)';
-                  const bd = isClass ? '1px solid var(--purple-100)' : isCamp ? '1px solid var(--green-100)' : '1px solid var(--blue-100)';
+                  const colors = getCategoryColor(ev.category);
                   return (
                   <div
                     key={ev.id}
                     style={{
-                      fontSize: '0.75rem',
-                      padding: '2px 6px',
-                      borderRadius: 6,
-                      background: bg,
-                      color: fg,
+                      fontSize: '0.7rem',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '0.25rem',
+                      background: colors.bg,
+                      color: colors.text,
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
-                      border: bd
+                      borderLeft: `3px solid ${colors.border}`,
+                      fontWeight: 500
                     }}
                     title={ev.title}
                   >
@@ -186,7 +309,14 @@ const Calendar: React.FC = () => {
                   </div>
                 )})}
                 {dayEvents.length > 3 && (
-                  <div style={{ fontSize: '0.75rem', color: 'var(--gray-600)' }}>+{dayEvents.length - 3} more</div>
+                  <div style={{ 
+                    fontSize: '0.7rem', 
+                    color: '#64748b',
+                    fontWeight: 500,
+                    textAlign: 'center'
+                  }}>
+                    +{dayEvents.length - 3} more
+                  </div>
                 )}
               </div>
             </div>
@@ -202,42 +332,193 @@ const Calendar: React.FC = () => {
   const content = (
     <div className="card">
       <div className="card-header">
-        <h2 className="card-title">Health Events Calendar</h2>
+        <h2 className="card-title" style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '0.75rem',
+          color: '#0f172a'
+        }}>
+          <CalendarIcon size={24} color="#3b82f6" />
+          Health Events Calendar
+        </h2>
       </div>
       <div className="card-content">
         {header}
-        {loading && <div>Loading...</div>}
-        {error && !loading && <div style={{ color: 'var(--red-600)' }}>{error}</div>}
+        {loading && <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>Loading calendar events...</div>}
+        {error && !loading && <div style={{ 
+          textAlign: 'center', 
+          padding: '2rem', 
+          color: '#dc2626',
+          backgroundColor: '#fef2f2',
+          borderRadius: '0.5rem',
+          border: '1px solid #fecaca'
+        }}>{error}</div>}
         {!loading && !error && (
-          <div style={{ display: 'grid', gridTemplateColumns: selectedDate ? '2fr 1fr' : '1fr', gap: '1rem' }}>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: selectedDate ? '2fr 1fr' : '1fr', 
+            gap: '1.5rem' 
+          }}>
             <div>
               {view === 'month' && monthView}
               {view !== 'month' && (
-                <div style={{ padding: '2rem', background: 'var(--gray-50)', border: '1px solid var(--gray-200)', borderRadius: 8, textAlign: 'center', color: 'var(--gray-600)' }}>
+                <div style={{ 
+                  padding: '2rem', 
+                  background: '#f8fafc', 
+                  border: '1px solid #e2e8f0', 
+                  borderRadius: '0.5rem', 
+                  textAlign: 'center', 
+                  color: '#64748b' 
+                }}>
                   {view === 'week' ? 'Week view will show here' : 'Day view will show here'}
                 </div>
               )}
             </div>
             {selectedDate && (
-              <div className="card" style={{ border: '1px solid var(--gray-200)' }}>
-                <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <h3 className="card-title" style={{ margin: 0 }}>{selectedDate.toLocaleDateString()}</h3>
-                  <button className="btn" aria-label="Close details" title="Close" onClick={() => setSelectedDate(null)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, padding: 0 }}>
-                    <X size={18} />
+              <div className="card" style={{ 
+                border: '1px solid #e2e8f0',
+                borderRadius: '0.5rem',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
+              }}>
+                <div className="card-header" style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  backgroundColor: '#f1f5f9',
+                  borderRadius: '0.5rem 0.5rem 0 0',
+                  padding: '1rem'
+                }}>
+                  <h3 className="card-title" style={{ 
+                    margin: 0, 
+                    color: '#0f172a',
+                    fontWeight: 600
+                  }}>
+                    {selectedDate.toLocaleDateString(undefined, { 
+                      weekday: 'long', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </h3>
+                  <button 
+                    className="btn" 
+                    aria-label="Close details" 
+                    title="Close" 
+                    onClick={() => setSelectedDate(null)} 
+                    style={{ 
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      width: '2rem', 
+                      height: '2rem', 
+                      padding: 0,
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '0.25rem',
+                      backgroundColor: 'white',
+                      color: '#64748b',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                  >
+                    <X size={16} />
                   </button>
                 </div>
-                <div className="card-content" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  {selectedList.length === 0 && <div style={{ color: 'var(--gray-500)' }}>No events</div>}
-                  {selectedList.map(ev => (
-                    <div key={ev.id} className="card" style={{ padding: '0.75rem', border: '1px solid var(--gray-200)' }}>
-                      <div style={{ fontWeight: 700 }}>{ev.title}</div>
-                      {ev.place && <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>{ev.place}</div>}
-                      <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>
-                        {ev.allDay ? 'All day event' : 'Event scheduled'}
+                <div className="card-content" style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '1rem',
+                  maxHeight: '500px',
+                  overflowY: 'auto'
+                }}>
+                  {selectedList.length === 0 && <div style={{ 
+                    color: '#64748b',
+                    textAlign: 'center',
+                    padding: '2rem'
+                  }}>
+                    No events scheduled for this day
+                  </div>}
+                  {selectedList.map(ev => {
+                    const colors = getCategoryColor(ev.category);
+                    return (
+                      <div 
+                        key={ev.id} 
+                        className="card" 
+                        style={{ 
+                          padding: '1rem', 
+                          border: `1px solid ${colors.border}`,
+                          borderRadius: '0.5rem',
+                          backgroundColor: colors.bg,
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                        }}
+                      >
+                        <div style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'flex-start',
+                          marginBottom: '0.75rem'
+                        }}>
+                          <h4 style={{ 
+                            margin: 0, 
+                            color: colors.text,
+                            fontWeight: 600,
+                            fontSize: '1rem'
+                          }}>
+                            {ev.title}
+                          </h4>
+                          <span style={{ 
+                            fontSize: '0.75rem', 
+                            color: colors.text,
+                            backgroundColor: 'white',
+                            padding: '0.25rem 0.5rem',
+                            borderRadius: '0.25rem',
+                            fontWeight: 500
+                          }}>
+                            {ev.category === 'community_class' ? 'Class' : 
+                             ev.category === 'local_camp' ? 'Camp' : 
+                             ev.category === 'vaccination' ? 'Vaccination' : 
+                             ev.category === 'visit' ? 'Visit' : 'Event'}
+                          </span>
+                        </div>
+                        
+                        {ev.place && (
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '0.5rem',
+                            marginBottom: '0.5rem',
+                            color: '#64748b'
+                          }}>
+                            <MapPin size={16} />
+                            <span style={{ fontSize: '0.875rem' }}>{ev.place}</span>
+                          </div>
+                        )}
+                        
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '0.5rem',
+                          color: '#64748b',
+                          marginBottom: '0.75rem'
+                        }}>
+                          <Clock size={16} />
+                          <span style={{ fontSize: '0.875rem' }}>
+                            {ev.allDay ? 'All day event' : 'Scheduled event'}
+                          </span>
+                        </div>
+                        
+                        {ev.description && (
+                          <p style={{ 
+                            margin: '0.75rem 0 0', 
+                            color: '#475569',
+                            fontSize: '0.875rem',
+                            lineHeight: '1.5'
+                          }}>
+                            {ev.description}
+                          </p>
+                        )}
                       </div>
-                      {ev.description && <p style={{ marginTop: 6 }}>{ev.description}</p>}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
