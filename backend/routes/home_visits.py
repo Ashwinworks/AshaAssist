@@ -12,7 +12,12 @@ import os
 
 home_visits_bp = Blueprint('home_visits', __name__)
 
-UPLOAD_FOLDER = 'uploads/visit_photos'
+# Use /tmp for Vercel serverless, otherwise use local uploads folder
+if os.getenv('VERCEL'):
+    UPLOAD_FOLDER = '/tmp/uploads/visit_photos'
+else:
+    UPLOAD_FOLDER = 'uploads/visit_photos'
+    
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'heic', 'heif'}
 
 def allowed_file(filename):
