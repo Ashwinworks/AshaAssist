@@ -49,8 +49,14 @@ def create_app(config_name='default'):
     app.config.from_object(config[config_name])
     
     # Create upload folder if it doesn't exist
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
+    # Use /tmp for serverless environments like Vercel
+    upload_folder = app.config['UPLOAD_FOLDER']
+    if os.getenv('VERCEL'):
+        upload_folder = '/tmp/uploads'
+        app.config['UPLOAD_FOLDER'] = upload_folder
+    
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder)
     
     # Set custom JSON encoder
     app.json_encoder = JSONEncoder

@@ -67,3 +67,12 @@ secrets.json
 firebase-service-account-key.json
 **/firebase-service-account-key.json
 firebase-adminsdk-*.json
+
+# Vercel deployment files
+.vercel
+firebase_base64.txt
+encode_firebase_credentials.txt
+
+# Uploads directory (use cloud storage for production)
+uploads/
+backend/uploads/

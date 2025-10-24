@@ -1,0 +1,41 @@
+# Node modules
+node_modules/
+frontend/node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+.env.local
+backend/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local uploads (use cloud storage for production)
+backend/uploads/
+uploads/
+
+# Development
+*.log
+.pytest_cache/
+.coverage
+
+# Frontend build (not needed for backend)
+frontend/build/
+frontend/dist/
