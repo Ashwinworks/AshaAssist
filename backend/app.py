@@ -61,8 +61,17 @@ def create_app(config_name='default'):
     # Set custom JSON encoder
     app.json_encoder = JSONEncoder
     
-    # Initialize extensions
-    CORS(app)
+    # Configure CORS with environment-based allowed origins
+    cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000')
+    allowed_origins = [origin.strip() for origin in cors_origins.split(',')]
+    
+    # Initialize CORS with specific origins and credentials support
+    CORS(app, 
+         origins=allowed_origins,
+         supports_credentials=True,
+         allow_headers=['Content-Type', 'Authorization'],
+         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
+    
     jwt = init_jwt_middleware(app)
     
     # Initialize database
