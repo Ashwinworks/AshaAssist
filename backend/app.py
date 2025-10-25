@@ -65,9 +65,11 @@ def create_app(config_name='default'):
     cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000')
     allowed_origins = [origin.strip() for origin in cors_origins.split(',')]
     
+    print(f"[CORS DEBUG] Allowed origins: {allowed_origins}")  # Debug logging
+    
     # Initialize CORS with specific origins and credentials support
     CORS(app, 
-         origins=allowed_origins,
+         resources={r"/*": {"origins": allowed_origins}},
          supports_credentials=True,
          allow_headers=['Content-Type', 'Authorization'],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
