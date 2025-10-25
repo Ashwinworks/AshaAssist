@@ -26,9 +26,13 @@ def init_auth_routes(app, collections):
         except Exception as e:
             return jsonify({'error': f'Registration failed: {str(e)}'}), 500
 
-    @auth_bp.route('/api/login', methods=['POST'])
+    @auth_bp.route('/api/login', methods=['POST', 'OPTIONS'])
     def login():
         """Authenticate user login"""
+        # Handle OPTIONS preflight request
+        if request.method == 'OPTIONS':
+            return '', 204
+        
         try:
             data = request.get_json()
             result, status_code = auth_service.login_user(data)
