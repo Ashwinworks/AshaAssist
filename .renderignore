@@ -1,0 +1,36 @@
+# Backend files
+backend/
+api/
+
+# Development
+.env
+.env.local
+*.log
+
+# Dependencies
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation (not needed for build)
+*.md
+!frontend/README.md
+
+# Build artifacts
+frontend/build/
+frontend/node_modules/
+
+# Testing
+coverage/
+.nyc_output/
