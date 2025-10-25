@@ -61,18 +61,15 @@ def create_app(config_name='default'):
     # Set custom JSON encoder
     app.json_encoder = JSONEncoder
     
-    # Configure CORS with environment-based allowed origins
-    cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000')
-    allowed_origins = [origin.strip() for origin in cors_origins.split(',')]
-    
-    print(f"[CORS DEBUG] Allowed origins: {allowed_origins}")  # Debug logging
-    
-    # Initialize CORS with specific origins and credentials support
+    # Configure CORS - Allow all origins for now to test
+    # Once working, restrict to specific origins via CORS_ALLOWED_ORIGINS env var
     CORS(app, 
-         resources={r"/*": {"origins": allowed_origins}},
          supports_credentials=True,
-         allow_headers=['Content-Type', 'Authorization'],
-         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
+         allow_headers=['Content-Type', 'Authorization', 'Access-Control-Allow-Credentials'],
+         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+         expose_headers=['Content-Type', 'Authorization'])
+    
+    print(f"[CORS DEBUG] CORS enabled for all origins (testing mode)")  # Debug logging
     
     jwt = init_jwt_middleware(app)
     
