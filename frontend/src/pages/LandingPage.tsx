@@ -1,10 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Heart, Users, Calendar, Shield, Phone, Mail, ArrowRight, TrendingUp, FileText, Bell } from 'lucide-react';
 import Orb from '../components/Orb';
+import LanguageToggle from '../components/LanguageToggle';
 import './LandingPage.css';
 
 const LandingPage: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <div className="landing-page">
       {/* Header */}
@@ -16,11 +19,12 @@ const LandingPage: React.FC = () => {
               <span className="logo-text">AshaAssist</span>
             </div>
             <div className="nav-links">
+              <LanguageToggle />
               <Link to="/login" className="btn btn-outline">
-                Login
+                {t('landing.login')}
               </Link>
               <Link to="/register" className="btn btn-primary">
-                Get Started
+                {t('landing.getStarted')}
               </Link>
             </div>
           </div>
@@ -41,20 +45,18 @@ const LandingPage: React.FC = () => {
           <div className="hero-content">
             <div className="hero-text">
               <h1 className="hero-title">
-                Connecting Communities with
-                <span className="text-primary-600"> Healthcare Excellence</span>
+                {t('landing.heroTitle')}
+                <span className="text-primary-600"> {t('landing.heroHighlight')}</span>
               </h1>
               <p className="hero-description">
-                AshaAssist bridges the gap between ASHA workers and families, 
-                providing seamless healthcare service delivery, maternal care support, 
-                and palliative care management in your community.
+                {t('landing.heroDesc')}
               </p>
               <div className="hero-buttons">
                 <Link to="/register" className="btn btn-primary btn-lg">
-                  Join AshaAssist
+                  {t('landing.joinUs')}
                 </Link>
                 <Link to="/login" className="btn btn-outline btn-lg">
-                  Sign In
+                  {t('landing.signIn')}
                 </Link>
               </div>
             </div>
@@ -64,15 +66,15 @@ const LandingPage: React.FC = () => {
                   <div className="hero-stats">
                     <div className="stat">
                       <div className="stat-number">500+</div>
-                      <div className="stat-label">Families Served</div>
+                      <div className="stat-label">{t('landing.familiesServed')}</div>
                     </div>
                     <div className="stat">
                       <div className="stat-number">1</div>
-                      <div className="stat-label">ASHA Worker</div>
+                      <div className="stat-label">{t('landing.ashaWorker')}</div>
                     </div>
                     <div className="stat">
                       <div className="stat-number">24/7</div>
-                      <div className="stat-label">Support</div>
+                      <div className="stat-label">{t('landing.support')}</div>
                     </div>
                   </div>
                 </div>
@@ -86,76 +88,70 @@ const LandingPage: React.FC = () => {
       <section className="features">
         <div className="container">
           <div className="section-header">
-            <h2 className="section-title">Comprehensive Healthcare Solutions</h2>
+            <h2 className="section-title">{t('landing.featuresTitle')}</h2>
             <p className="section-description">
-              Our platform provides everything needed for effective community healthcare management
+              {t('landing.featuresDesc')}
             </p>
           </div>
-          
+
           <div className="features-grid">
             <div className="feature-card">
               <div className="feature-icon">
                 <Heart />
               </div>
-              <h3 className="feature-title">Maternal Care</h3>
+              <h3 className="feature-title">{t('landing.maternalCare')}</h3>
               <p className="feature-description">
-                Complete support for pregnant women and new mothers with digital MCP cards, 
-                antenatal visit tracking, and vaccination schedules.
+                {t('landing.maternalCareDesc')}
               </p>
             </div>
-            
+
             <div className="feature-card">
               <div className="feature-icon">
                 <Shield />
               </div>
-              <h3 className="feature-title">Palliative Care</h3>
+              <h3 className="feature-title">{t('landing.palliativeCare')}</h3>
               <p className="feature-description">
-                Specialized care management for chronic and terminal illness patients 
-                with medication tracking and health status updates.
+                {t('landing.palliativeCareDesc')}
               </p>
             </div>
-            
+
             <div className="feature-card">
               <div className="feature-icon">
                 <Users />
               </div>
-              <h3 className="feature-title">Community Connect</h3>
+              <h3 className="feature-title">{t('landing.communityConnect')}</h3>
               <p className="feature-description">
-                Direct communication between families and ASHA workers for service requests, 
-                supply distribution, and health consultations.
+                {t('landing.communityConnectDesc')}
               </p>
             </div>
-            
+
             <div className="feature-card">
               <div className="feature-icon">
                 <Calendar />
               </div>
-              <h3 className="feature-title">Smart Scheduling</h3>
+              <h3 className="feature-title">{t('landing.smartScheduling')}</h3>
               <p className="feature-description">
-                Integrated calendar system for health visits, vaccination days, 
-                community classes, and monthly health camps.
+                {t('landing.smartSchedulingDesc')}
               </p>
             </div>
-            
+
             <div className="feature-card">
               <div className="feature-icon">
                 <FileText />
               </div>
-              <h3 className="feature-title">Digital Health Records</h3>
+              <h3 className="feature-title">{t('landing.digitalRecords')}</h3>
               <p className="feature-description">
-                Secure digital storage of health records, medical history, 
-                and treatment plans accessible to authorized healthcare providers.
+                {t('landing.digitalRecordsDesc')}
               </p>
             </div>
-            
+
             <div className="feature-card">
               <div className="feature-icon">
                 <Bell />
               </div>
-              <h3 className="feature-title">Health Notifications</h3>
+              <h3 className="feature-title">{t('landing.healthNotifications')}</h3>
               <p className="feature-description">
-                Automated reminders for medications, appointments, vaccinations, 
-                and health checkups to ensure continuous care.
+                {t('landing.healthNotificationsDesc')}
               </p>
             </div>
           </div>
@@ -166,61 +162,61 @@ const LandingPage: React.FC = () => {
       <section className="user-types">
         <div className="container">
           <div className="section-header">
-            <h2 className="section-title">Why Choose AshaAssist?</h2>
+            <h2 className="section-title">{t('landing.whyChoose')}</h2>
             <p className="section-description">
-              Discover how AshaAssist transforms healthcare delivery and creates positive impact in communities
+              {t('landing.whyChooseDesc')}
             </p>
           </div>
-          
+
           <div className="user-types-grid">
             <div className="user-type-card">
               <div className="user-type-header">
                 <div className="user-type-icon">
                   <Users />
                 </div>
-                <h3 className="user-type-title">Families & Individuals</h3>
-                <p className="user-type-subtitle">Healthcare Recipients</p>
+                <h3 className="user-type-title">{t('landing.familiesTitle')}</h3>
+                <p className="user-type-subtitle">{t('landing.familiesSubtitle')}</p>
               </div>
               <ul className="user-type-features">
-                <li>Request home visits and medical supplies</li>
-                <li>Track health records and vaccination schedules</li>
-                <li>Receive personalized health notifications</li>
-                <li>Access maternal or palliative care services</li>
-                <li>Provide feedback on ASHA worker services</li>
+                <li>{t('landing.familiesItem1')}</li>
+                <li>{t('landing.familiesItem2')}</li>
+                <li>{t('landing.familiesItem3')}</li>
+                <li>{t('landing.familiesItem4')}</li>
+                <li>{t('landing.familiesItem5')}</li>
               </ul>
             </div>
-            
+
             <div className="user-type-card">
               <div className="user-type-header">
                 <div className="user-type-icon">
                   <ArrowRight />
                 </div>
-                <h3 className="user-type-title">How AshaAssist Works</h3>
-                <p className="user-type-subtitle">Simple Steps to Better Healthcare</p>
+                <h3 className="user-type-title">{t('landing.howItWorksTitle')}</h3>
+                <p className="user-type-subtitle">{t('landing.howItWorksSubtitle')}</p>
               </div>
               <ul className="user-type-features">
-                <li>Sign up and complete your health profile</li>
-                <li>Connect with your local ASHA worker</li>
-                <li>Request services like home visits or supplies</li>
-                <li>Track your health records and appointments</li>
-                <li>Receive timely health notifications and reminders</li>
+                <li>{t('landing.howItWorksItem1')}</li>
+                <li>{t('landing.howItWorksItem2')}</li>
+                <li>{t('landing.howItWorksItem3')}</li>
+                <li>{t('landing.howItWorksItem4')}</li>
+                <li>{t('landing.howItWorksItem5')}</li>
               </ul>
             </div>
-            
+
             <div className="user-type-card">
               <div className="user-type-header">
                 <div className="user-type-icon">
                   <TrendingUp />
                 </div>
-                <h3 className="user-type-title">Community Impact</h3>
-                <p className="user-type-subtitle">Making a Difference Together</p>
+                <h3 className="user-type-title">{t('landing.impactTitle')}</h3>
+                <p className="user-type-subtitle">{t('landing.impactSubtitle')}</p>
               </div>
               <ul className="user-type-features">
-                <li>Reduced waiting times for healthcare services</li>
-                <li>Better maternal and child health outcomes</li>
-                <li>Improved medication adherence tracking</li>
-                <li>Enhanced communication with healthcare providers</li>
-                <li>Digital health records for better care continuity</li>
+                <li>{t('landing.impactItem1')}</li>
+                <li>{t('landing.impactItem2')}</li>
+                <li>{t('landing.impactItem3')}</li>
+                <li>{t('landing.impactItem4')}</li>
+                <li>{t('landing.impactItem5')}</li>
               </ul>
             </div>
           </div>
@@ -231,17 +227,16 @@ const LandingPage: React.FC = () => {
       <section className="cta">
         <div className="container">
           <div className="cta-content">
-            <h2 className="cta-title">Ready to Transform Healthcare in Your Community?</h2>
+            <h2 className="cta-title">{t('landing.ctaTitle')}</h2>
             <p className="cta-description">
-              Join thousands of families and healthcare workers already using AshaAssist 
-              to improve healthcare delivery and outcomes.
+              {t('landing.ctaDesc')}
             </p>
             <div className="cta-buttons">
               <Link to="/register" className="btn btn-primary btn-lg">
-                Get Started Today
+                {t('landing.getStartedToday')}
               </Link>
               <Link to="/login" className="btn btn-outline btn-lg">
-                Already have an account?
+                {t('landing.alreadyAccount')}
               </Link>
             </div>
           </div>
@@ -258,11 +253,11 @@ const LandingPage: React.FC = () => {
                 <span className="logo-text">AshaAssist</span>
               </div>
               <p className="footer-description">
-                Empowering communities through digital healthcare solutions and 
+                Empowering communities through digital healthcare solutions and
                 seamless ASHA worker-family connections.
               </p>
             </div>
-            
+
             <div className="footer-section">
               <h4 className="footer-title">Quick Links</h4>
               <ul className="footer-links">
@@ -272,7 +267,7 @@ const LandingPage: React.FC = () => {
                 <li><Link to="/contact">Contact</Link></li>
               </ul>
             </div>
-            
+
             <div className="footer-section">
               <h4 className="footer-title">Services</h4>
               <ul className="footer-links">
@@ -282,7 +277,7 @@ const LandingPage: React.FC = () => {
                 <li><a href="#community-programs">Community Programs</a></li>
               </ul>
             </div>
-            
+
             <div className="footer-section">
               <h4 className="footer-title">Contact Info</h4>
               <div className="contact-info">
@@ -297,7 +292,7 @@ const LandingPage: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="footer-bottom">
             <p>&copy; 2025 AshaAssist. All rights reserved.</p>
             <div className="footer-bottom-links">

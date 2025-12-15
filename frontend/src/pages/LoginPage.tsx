@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { Heart, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import GoogleSignInButton from '../components/GoogleSignInButton';
@@ -12,6 +13,7 @@ interface LoginFormData {
 }
 
 const LoginPage: React.FC = () => {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
@@ -55,24 +57,23 @@ const LoginPage: React.FC = () => {
               <span className="logo-text">AshaAssist</span>
             </Link>
             <h1 className="auth-branding-title">
-              Welcome Back to Your Healthcare Community
+              {t('auth.welcomeBack')}
             </h1>
             <p className="auth-branding-description">
-              Continue your journey in connecting with ASHA workers and accessing 
-              quality healthcare services for you and your family.
+              {t('auth.welcomeBackDesc')}
             </p>
             <div className="auth-features">
               <div className="auth-feature">
                 <div className="auth-feature-icon">✓</div>
-                <span>Secure and private health records</span>
+                <span>{t('auth.secureRecords')}</span>
               </div>
               <div className="auth-feature">
                 <div className="auth-feature-icon">✓</div>
-                <span>Direct communication with ASHA workers</span>
+                <span>{t('auth.directComm')}</span>
               </div>
               <div className="auth-feature">
                 <div className="auth-feature-icon">✓</div>
-                <span>Personalized healthcare notifications</span>
+                <span>{t('auth.personalizedNotif')}</span>
               </div>
             </div>
           </div>
@@ -82,19 +83,17 @@ const LoginPage: React.FC = () => {
         <div className="auth-form-container">
           <div className="auth-form-content">
             <div className="auth-header">
-              <h2 className="auth-title">Sign In</h2>
+              <h2 className="auth-title">{t('auth.loginTitle')}</h2>
               <p className="auth-subtitle">
-                Enter your credentials to access your account
+                {t('auth.loginSubtitle')}
               </p>
-              
 
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="auth-form">
-              {/* Email Field */}
               <div className="form-group">
                 <label htmlFor="email" className="form-label">
-                  Email Address <span className="required-asterisk">*</span>
+                  {t('auth.email')} <span className="required-asterisk">*</span>
                 </label>
                 <div className="input-wrapper">
                   <Mail className="input-icon" />
@@ -121,10 +120,9 @@ const LoginPage: React.FC = () => {
                 )}
               </div>
 
-              {/* Password Field */}
               <div className="form-group">
                 <label htmlFor="password" className="form-label">
-                  Password <span className="required-asterisk">*</span>
+                  {t('auth.password')} <span className="required-asterisk">*</span>
                 </label>
                 <div className="input-wrapper">
                   <Lock className="input-icon" />
@@ -158,14 +156,13 @@ const LoginPage: React.FC = () => {
                 )}
               </div>
 
-              {/* Remember Me & Forgot Password */}
               <div className="form-options">
                 <label className="checkbox-label">
                   <input type="checkbox" className="checkbox" />
-                  <span className="checkbox-text">Remember me</span>
+                  <span className="checkbox-text">{t('auth.rememberMe')}</span>
                 </label>
                 <Link to="/forgot-password" className="forgot-password-link">
-                  Forgot password?
+                  {t('auth.forgotPassword')}
                 </Link>
               </div>
 
@@ -178,30 +175,27 @@ const LoginPage: React.FC = () => {
                 {isLoading ? (
                   <>
                     <span className="loading-spinner"></span>
-                    Signing In...
+                    {t('auth.signingIn')}
                   </>
                 ) : (
-                  'Sign In'
+                  t('auth.signIn')
                 )}
               </button>
 
-              {/* Divider */}
               <div className="auth-divider">
-                <span>or</span>
+                <span>{t('auth.or')}</span>
               </div>
 
-              {/* Google Login */}
               <GoogleSignInButton className="btn-lg auth-google-btn">
-                Continue with Google
+                {t('auth.continueWithGoogle')}
               </GoogleSignInButton>
             </form>
 
-            {/* Sign Up Link */}
             <div className="auth-footer">
               <p className="auth-footer-text">
-                Don't have an account?{' '}
+                {t('auth.noAccount')}{' '}
                 <Link to="/register" className="auth-footer-link">
-                  Sign up here
+                  {t('auth.signUpHere')}
                 </Link>
               </p>
             </div>

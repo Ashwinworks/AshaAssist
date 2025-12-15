@@ -36,6 +36,7 @@ def get_collections(db):
         'home_visits': db.home_visits,
         'developmental_milestones': db.developmental_milestones,
         'milestone_records': db.milestone_records,
+        'maternity_profiles': db.maternity_profiles,
     }
 
 def ensure_indexes(collections):

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import MaternityLayout from './MaternityLayout';
-import { Calendar, Syringe, MapPin, Clock, CheckCircle, Award, Download } from 'lucide-react';
+import { Calendar, Syringe, MapPin, Clock, CheckCircle, Award, Download, Eye, X } from 'lucide-react';
 import { vaccinationAPI } from '../../services/api';
 
 const VaccinationBooking: React.FC = () => {
@@ -15,6 +15,8 @@ const VaccinationBooking: React.FC = () => {
   const [childName, setChildName] = useState('');
   const [selectedVaccines, setSelectedVaccines] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewBookingId, setPreviewBookingId] = useState<string | null>(null);
 
   const fetchSchedules = async () => {
     try {
@@ -22,7 +24,7 @@ const VaccinationBooking: React.FC = () => {
       // Fetch schedules from 1 year ago to show past completed vaccinations
       const oneYearAgo = new Date();
       oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-      const res = await vaccinationAPI.listSchedules({ fromDate: oneYearAgo.toISOString().slice(0,10) });
+      const res = await vaccinationAPI.listSchedules({ fromDate: oneYearAgo.toISOString().slice(0, 10) });
       setSchedules(res.schedules || []);
     } catch (e: any) {
       setError(e?.response?.data?.error || 'Failed to load schedules');
@@ -51,7 +53,7 @@ const VaccinationBooking: React.FC = () => {
     const preload = async () => {
       for (const s of schedules) {
         if (!myBookings[s.id]) {
-          try { await fetchMyBookings(s.id); } catch (_) {}
+          try { await fetchMyBookings(s.id); } catch (_) { }
         }
       }
     };
@@ -93,60 +95,52 @@ const VaccinationBooking: React.FC = () => {
     }
   };
 
-  const handleDownloadCertificate = (booking: any, schedule: any) => {
+  const handlePreviewCertificate = async (booking: any) => {
     const bookingId = booking?.id;
+    if (!bookingId) return;
+
     setDownloadingId(bookingId);
     try {
-      const issuedDate = new Date().toISOString().slice(0,10);
-      const html = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Vaccination Certificate</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; color: #111827; }
-            .header { text-align: center; border-bottom: 3px solid #ec4899; padding-bottom: 16px; margin-bottom: 28px; }
-            .title { font-size: 24px; font-weight: 700; color: #ec4899; }
-            .subtitle { font-size: 14px; color: #6b7280; }
-            .section { margin: 20px 0; }
-            .row { margin: 10px 0; }
-            .label { font-weight: 600; color: #374151; display: inline-block; width: 180px; }
-            .value { color: #111827; }
-            .pill { background: #f0f9ff; color: #0c4a6e; padding: 6px 10px; border-radius: 8px; display: inline-block; margin: 4px 6px 0 0; }
-            .footer { text-align: center; margin-top: 36px; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px; }
-            @media print { @page { size: A4 portrait; margin: 12mm; } }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="title">VACCINATION COMPLETION CERTIFICATE</div>
-            <div class="subtitle">Mother and Child Protection Program</div>
-          </div>
-          <div class="section">
-            <div class="row"><span class="label">Child's Name:</span><span class="value">${booking?.childName || '-'}</span></div>
-            <div class="row"><span class="label">Vaccination Date:</span><span class="value">${schedule?.date || '-'}</span></div>
-            <div class="row"><span class="label">Location:</span><span class="value">${schedule?.location || '-'}</span></div>
-            <div class="row"><span class="label">Vaccines:</span><span class="value">${(booking?.vaccines || []).map((v: string) => `<span class='pill'>${v}</span>`).join('')}</span></div>
-            <div class="row"><span class="label">Certificate ID:</span><span class="value">${bookingId}</span></div>
-            <div class="row"><span class="label">Issued Date:</span><span class="value">${issuedDate}</span></div>
-            <div class="row"><span class="label">Status:</span><span class="value">Completed</span></div>
-          </div>
-          <div class="footer">This certificate confirms the successful completion of vaccination as per the immunization schedule.</div>
-          <script>window.onload = function() { window.print(); }</script>
-        </body>
-        </html>`;
-      const win = window.open('', '_blank');
-      if (win) {
-        win.document.open('text/html');
-        win.document.write(html);
-        win.document.close();
-      } else {
-        alert('Pop-up blocked. Please allow pop-ups to print the certificate.');
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/vaccination-certificate/${bookingId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to load certificate');
       }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      setPreviewUrl(url);
+      setPreviewBookingId(bookingId);
+    } catch (error: any) {
+      console.error('Certificate preview error:', error);
+      alert(error.message || 'Failed to load certificate. Please try again.');
     } finally {
       setDownloadingId(null);
     }
+  };
+
+  const handleDownloadFromPreview = () => {
+    if (!previewUrl || !previewBookingId) return;
+    const a = document.createElement('a');
+    a.href = previewUrl;
+    a.download = `vaccination-certificate-${previewBookingId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const closePreview = () => {
+    if (previewUrl) {
+      window.URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
+    setPreviewBookingId(null);
   };
 
   return (
@@ -207,12 +201,12 @@ const VaccinationBooking: React.FC = () => {
                               {b.status === 'Completed' && (
                                 <button
                                   className="btn"
-                                  onClick={() => handleDownloadCertificate(b, s)}
+                                  onClick={() => handlePreviewCertificate(b)}
                                   disabled={downloadingId === b.id}
                                   style={{ backgroundColor: '#db2777', color: 'white', padding: '0.4rem 0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
-                                  title="Download vaccination certificate (PDF)"
+                                  title="Preview vaccination certificate"
                                 >
-                                  <Download size={16} /> {downloadingId === b.id ? 'Downloading...' : 'Certificate PDF'}
+                                  <Eye size={16} /> {downloadingId === b.id ? 'Loading...' : 'View Certificate'}
                                 </button>
                               )}
                             </div>
@@ -268,10 +262,56 @@ const VaccinationBooking: React.FC = () => {
                   )}
                 </div>
               ))}
-          </div>
+            </div>
           )}
         </div>
       </div>
+
+      {/* Certificate Preview Modal */}
+      {previewUrl && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)', zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+        }}>
+          <div style={{
+            backgroundColor: 'white', borderRadius: '0.75rem', width: '100%', maxWidth: '900px',
+            maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden'
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '1rem 1.25rem', borderBottom: '1px solid #e5e7eb'
+            }}>
+              <h3 style={{ margin: 0, fontWeight: 600, color: '#1f2937' }}>Certificate Preview</h3>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={handleDownloadFromPreview}
+                  className="btn"
+                  style={{ backgroundColor: '#16a34a', color: 'white', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                >
+                  <Download size={16} /> Download PDF
+                </button>
+                <button
+                  onClick={closePreview}
+                  className="btn"
+                  style={{ backgroundColor: '#f3f4f6', color: '#374151', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                >
+                  <X size={16} /> Close
+                </button>
+              </div>
+            </div>
+            {/* PDF Viewer */}
+            <div style={{ flex: 1, overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
+              <iframe
+                src={previewUrl}
+                style={{ width: '100%', height: '70vh', border: 'none' }}
+                title="Certificate Preview"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </MaternityLayout>
   );
 };

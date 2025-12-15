@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { Heart, Eye, EyeOff, Mail, Lock, User, Phone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import GoogleSignInButton from '../components/GoogleSignInButton';
@@ -18,6 +19,7 @@ interface RegisterFormData {
 }
 
 const RegisterPage: React.FC = () => {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +30,7 @@ const RegisterPage: React.FC = () => {
   const { register: registerUser, checkEmailAvailability } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  
+
   const defaultUserType = searchParams.get('type') as 'user' | 'asha_worker' | 'admin' | 'anganvaadi' || 'user';
 
   const {
@@ -157,24 +159,23 @@ const RegisterPage: React.FC = () => {
               <span className="logo-text">AshaAssist</span>
             </Link>
             <h1 className="auth-branding-title">
-              Join Our Healthcare Community
+              {t('auth.joinCommunity')}
             </h1>
             <p className="auth-branding-description">
-              Connect with ASHA workers, access quality healthcare services, 
-              and be part of a community that cares about your well-being.
+              {t('auth.joinCommunityDesc')}
             </p>
             <div className="auth-features">
               <div className="auth-feature">
                 <div className="auth-feature-icon">✓</div>
-                <span>Free registration and account setup</span>
+                <span>{t('auth.freeReg')}</span>
               </div>
               <div className="auth-feature">
                 <div className="auth-feature-icon">✓</div>
-                <span>Personalized healthcare dashboard</span>
+                <span>{t('auth.personalizedDash')}</span>
               </div>
               <div className="auth-feature">
                 <div className="auth-feature-icon">✓</div>
-                <span>24/7 access to health services</span>
+                <span>{t('auth.access247')}</span>
               </div>
             </div>
           </div>
@@ -184,9 +185,9 @@ const RegisterPage: React.FC = () => {
         <div className="auth-form-container">
           <div className="auth-form-content">
             <div className="auth-header">
-              <h2 className="auth-title">Create Your Account</h2>
+              <h2 className="auth-title">{t('auth.registerTitle')}</h2>
               <p className="auth-subtitle">
-                Register to access healthcare services and connect with your local ASHA worker
+                {t('auth.registerSubtitle')}
               </p>
             </div>
 
@@ -198,46 +199,44 @@ const RegisterPage: React.FC = () => {
                 {...register('userType', { required: false })}
               />
 
-              {/* Beneficiary Category - Always show since only users can register */}
-                <div className="form-group">
-                  <label className="form-label">Care Category <span className="required-asterisk">*</span></label>
-                  <div className="beneficiary-selector">
-                    <label className="beneficiary-option">
-                      <input
-                        type="radio"
-                        value="maternity"
-                        {...register('beneficiaryCategory', { 
-                          required: 'Please select a care category'
-                        })}
-                      />
-                      <div className="beneficiary-card">
-                        <div className="beneficiary-title">Maternity Care</div>
-                        <div className="beneficiary-desc">Pregnant women & new mothers</div>
-                      </div>
-                    </label>
-                    <label className="beneficiary-option">
-                      <input
-                        type="radio"
-                        value="palliative"
-                        {...register('beneficiaryCategory', { 
-                          required: 'Please select a care category'
-                        })}
-                      />
-                      <div className="beneficiary-card">
-                        <div className="beneficiary-title">Palliative Care</div>
-                        <div className="beneficiary-desc">Chronic & terminal illness support</div>
-                      </div>
-                    </label>
-                  </div>
-                  {errors.beneficiaryCategory && (
-                    <span className="form-error">{errors.beneficiaryCategory.message}</span>
-                  )}
+              <div className="form-group">
+                <label className="form-label">{t('auth.careCategory')} <span className="required-asterisk">*</span></label>
+                <div className="beneficiary-selector">
+                  <label className="beneficiary-option">
+                    <input
+                      type="radio"
+                      value="maternity"
+                      {...register('beneficiaryCategory', {
+                        required: 'Please select a care category'
+                      })}
+                    />
+                    <div className="beneficiary-card">
+                      <div className="beneficiary-title">{t('auth.maternityCare')}</div>
+                      <div className="beneficiary-desc">{t('auth.maternityDesc')}</div>
+                    </div>
+                  </label>
+                  <label className="beneficiary-option">
+                    <input
+                      type="radio"
+                      value="palliative"
+                      {...register('beneficiaryCategory', {
+                        required: 'Please select a care category'
+                      })}
+                    />
+                    <div className="beneficiary-card">
+                      <div className="beneficiary-title">{t('auth.palliativeCare')}</div>
+                      <div className="beneficiary-desc">{t('auth.palliativeDesc')}</div>
+                    </div>
+                  </label>
                 </div>
+                {errors.beneficiaryCategory && (
+                  <span className="form-error">{errors.beneficiaryCategory.message}</span>
+                )}
+              </div>
 
-              {/* Name Field */}
               <div className="form-group">
                 <label htmlFor="name" className="form-label">
-                  Full Name <span className="required-asterisk">*</span>
+                  {t('auth.fullName')} <span className="required-asterisk">*</span>
                 </label>
                 <div className="input-wrapper">
                   <User className="input-icon" />
@@ -501,30 +500,27 @@ const RegisterPage: React.FC = () => {
                 {isLoading ? (
                   <>
                     <span className="loading-spinner"></span>
-                    Creating Account...
+                    {t('auth.creatingAccount')}
                   </>
                 ) : (
-                  'Create Account'
+                  t('auth.createAccount')
                 )}
               </button>
 
-              {/* Divider */}
               <div className="auth-divider">
-                <span>or</span>
+                <span>{t('auth.or')}</span>
               </div>
 
-              {/* Google Signup */}
               <GoogleSignInButton className="btn-lg auth-google-btn">
-                Continue with Google
+                {t('auth.continueWithGoogle')}
               </GoogleSignInButton>
             </form>
 
-            {/* Sign In Link */}
             <div className="auth-footer">
               <p className="auth-footer-text">
-                Already have an account?{' '}
+                {t('auth.hasAccount')}{' '}
                 <Link to="/login" className="auth-footer-link">
-                  Sign in here
+                  {t('auth.signInHere')}
                 </Link>
               </p>
             </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Heart,
   LogOut,
@@ -18,21 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import ChatBot from '../../components/ChatBot';
-
-// Navigation items for maternity users
-const navigationItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/maternity-dashboard' },
-  { id: 'milestones', label: 'Milestones', icon: Baby, path: '/maternity/milestones' },
-  { id: 'blogs', label: 'Health Blogs', icon: BookOpen, path: '/maternity/blogs' },
-  { id: 'calendar', label: 'Integrated Calendar', icon: Calendar, path: '/maternity/calendar' },
-  { id: 'supplies', label: 'Request Supplies', icon: Package, path: '/maternity/supplies' },
-  { id: 'ration', label: 'Monthly Ration', icon: ShoppingBag, path: '/maternity/ration' },
-  { id: 'visits', label: 'Antenatal Visits', icon: UserCheck, path: '/maternity/visits' },
-  { id: 'visit-requests', label: 'Visit Requests', icon: UserCheck, path: '/maternity/visit-requests' },
-  { id: 'vaccinations', label: 'Vaccination Booking', icon: Syringe, path: '/maternity/vaccinations' },
-  { id: 'mcp-card', label: 'Digital MCP Card', icon: CreditCard, path: '/maternity/mcp-card' },
-  { id: 'feedback', label: 'Feedback', icon: MessageSquare, path: '/maternity/feedback' },
-];
+import LanguageToggle from '../../components/LanguageToggle';
 
 interface MaternityLayoutProps {
   children: React.ReactNode;
@@ -43,7 +30,23 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Navigation items with translation keys
+  const navigationItems = [
+    { id: 'dashboard', labelKey: 'nav.dashboard', icon: Home, path: '/maternity-dashboard' },
+    { id: 'milestones', labelKey: 'maternity.title', icon: Baby, path: '/maternity/milestones' },
+    { id: 'blogs', labelKey: 'nav.healthBlogs', icon: BookOpen, path: '/maternity/blogs' },
+    { id: 'calendar', labelKey: 'nav.calendar', icon: Calendar, path: '/maternity/calendar' },
+    { id: 'supplies', label: 'Request Supplies', icon: Package, path: '/maternity/supplies' },
+    { id: 'ration', label: 'Monthly Ration', icon: ShoppingBag, path: '/maternity/ration' },
+    { id: 'visits', label: 'Antenatal Visits', icon: UserCheck, path: '/maternity/visits' },
+    { id: 'visit-requests', label: 'Visit Requests', icon: UserCheck, path: '/maternity/visit-requests' },
+    { id: 'vaccinations', labelKey: 'nav.vaccinations', icon: Syringe, path: '/maternity/vaccinations' },
+    { id: 'mcp-card', label: 'Digital MCP Card', icon: CreditCard, path: '/maternity/mcp-card' },
+    { id: 'feedback', label: 'Feedback', icon: MessageSquare, path: '/maternity/feedback' },
+  ];
 
   const handleLogout = () => {
     logout();
@@ -51,7 +54,13 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
 
   const getCurrentPageTitle = () => {
     const currentItem = navigationItems.find(item => item.path === location.pathname);
+    if (currentItem?.labelKey) return t(currentItem.labelKey);
     return currentItem?.label || title;
+  };
+
+  const getNavLabel = (item: any) => {
+    if (item.labelKey) return t(item.labelKey);
+    return item.label;
   };
 
   return (
@@ -109,9 +118,9 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               {user?.profilePicture ? (
-                <img 
-                  src={user.profilePicture} 
-                  alt="Profile" 
+                <img
+                  src={user.profilePicture}
+                  alt="Profile"
                   style={{
                     width: '50px',
                     height: '50px',
@@ -139,9 +148,9 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
                 <div style={{ fontWeight: '600', color: 'var(--gray-900)', fontSize: '1rem' }}>
                   {user?.name}
                 </div>
-                <div style={{ 
-                  fontSize: '0.875rem', 
-                  color: 'var(--blue-700)', 
+                <div style={{
+                  fontSize: '0.875rem',
+                  color: 'var(--blue-700)',
                   fontWeight: '500',
                   backgroundColor: 'var(--blue-100)',
                   padding: '0.25rem 0.5rem',
@@ -149,7 +158,7 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
                   display: 'inline-block',
                   marginTop: '0.375rem'
                 }}>
-                  Maternity Care
+                  {t('maternity.title')}
                 </div>
               </div>
             </div>
@@ -161,7 +170,7 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
-            
+
             return (
               <button
                 key={item.id}
@@ -194,7 +203,7 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
                 }}
               >
                 <Icon size={22} />
-                {sidebarOpen && <span>{item.label}</span>}
+                {sidebarOpen && <span>{getNavLabel(item)}</span>}
               </button>
             );
           })}
@@ -232,7 +241,7 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
             }}
           >
             <LogOut size={20} />
-            {sidebarOpen && <span>Logout</span>}
+            {sidebarOpen && <span>{t('common.logout')}</span>}
           </button>
         </div>
       </div>
@@ -259,18 +268,18 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
             alignItems: 'center'
           }}>
             <div>
-              <h1 style={{ 
-                fontSize: '2rem', 
-                fontWeight: '700', 
-                color: 'var(--gray-900)', 
-                margin: 0 
+              <h1 style={{
+                fontSize: '2rem',
+                fontWeight: '700',
+                color: 'var(--gray-900)',
+                margin: 0
               }}>
                 {getCurrentPageTitle()}
               </h1>
-              <p style={{ 
-                color: 'var(--gray-600)', 
-                margin: '0.5rem 0 0', 
-                fontSize: '1rem' 
+              <p style={{
+                color: 'var(--gray-600)',
+                margin: '0.5rem 0 0',
+                fontSize: '1rem'
               }}>
                 Maternity Care Dashboard
               </p>
@@ -284,8 +293,9 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
                 fontSize: '1rem',
                 fontWeight: '600'
               }}>
-                Welcome, {user?.name}
+                {t('dashboard.welcomeBack')}, {user?.name}
               </div>
+              <LanguageToggle />
             </div>
           </div>
         </header>

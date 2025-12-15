@@ -12,6 +12,35 @@ interface User {
   isFirstLogin: boolean;
   profileCompleted: boolean;
   profilePicture?: string;
+  // Extended profile fields
+  phone?: string;
+  dateOfBirth?: string;
+  address?: string;
+  bloodGroup?: string;
+  height?: string;
+  weight?: string;
+  // Nested profile data
+  medicalHistory?: {
+    chronicConditions?: string;
+    allergies?: string;
+    currentMedications?: string;
+    previousSurgeries?: string;
+    familyHistory?: string;
+  };
+  pregnancyDetails?: {
+    lmpDate?: string;
+    eddDate?: string;
+    gravida?: string;
+    para?: string;
+    previousComplications?: string;
+    currentConditions?: string;
+  };
+  emergencyContact?: {
+    name?: string;
+    relationship?: string;
+    phone?: string;
+    alternatePhone?: string;
+  };
 }
 
 interface AuthContextType {
@@ -85,13 +114,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       const response = await authAPI.login({ email, password });
-      
+
       const { access_token, user: userData } = response;
-      
+
       localStorage.setItem('token', access_token);
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
-      
+
       toast.success('Login successful!');
     } catch (error: any) {
       const message = error.response?.data?.error || 'Login failed';
@@ -143,31 +172,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       console.log('Starting Google sign-in...');
       const firebaseUser = await signInWithGoogle();
-      
+
       if (firebaseUser) {
         console.log('Firebase user obtained:', firebaseUser.email);
         // Get the ID token from Firebase
         const idToken = await firebaseUser.getIdToken();
         console.log('ID token obtained');
-        
+
         // Send the token to your backend for verification and user creation/login
         const response = await authAPI.googleLogin(idToken);
         console.log('Backend response:', response);
-        
+
         const { access_token, user: userData } = response;
-        
+
         localStorage.setItem('token', access_token);
         localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
-        
+
         console.log('User set in context:', userData);
-        
+
         // Check if user needs to select category (new Google users)
         if (userData.isFirstLogin && userData.beneficiaryCategory === 'maternity' && !userData.profileCompleted) {
           console.log('New Google user detected, showing category selection');
           setShowCategorySelection(true);
         }
-        
+
         toast.success('Google sign-in successful!');
       }
     } catch (error: any) {
@@ -184,12 +213,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // Sign out from Firebase
       await signOutUser();
-      
+
       // Clear local storage
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       setUser(null);
-      
+
       toast.success('Logged out successfully');
     } catch (error) {
       console.error('Logout error:', error);

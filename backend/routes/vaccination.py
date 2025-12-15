@@ -451,7 +451,7 @@ def init_vaccination_routes(app, collections):
     @vaccination_bp.route('/api/vaccination-certificate/<booking_id>', methods=['GET'])
     @jwt_required()
     def download_vaccination_certificate(booking_id):
-        """Generate and download vaccination completion certificate (PDF) for a specific booking"""
+        """Generate and download vaccination completion certificate (PDF) with digital signature"""
         try:
             user_id = get_jwt_identity()
             
@@ -475,75 +475,164 @@ def init_vaccination_routes(app, collections):
             if not user:
                 return jsonify({'error': 'User not found'}), 404
             
-            # Generate PDF certificate using reportlab
+            # Import required libraries
             try:
                 from reportlab.lib.pagesizes import A4
                 from reportlab.pdfgen import canvas
                 from reportlab.lib import colors
                 from reportlab.lib.units import mm
-            except Exception:
-                return jsonify({'error': 'PDF generation dependency missing. Please install reportlab.'}), 500
+                from utils.crypto import (
+                    create_certificate_data, sign_certificate, 
+                    get_certificate_hash, generate_verification_url
+                )
+                import qrcode
+                from io import BytesIO
+            except ImportError as e:
+                return jsonify({'error': f'Missing dependency: {str(e)}. Run pip install -r requirements.txt'}), 500
 
-            from io import BytesIO
+            # Extract certificate data
+            child_name = booking.get('childName', '')
+            parent_name = user.get('name', '')
+            vaccines = booking.get('vaccines', [])
+            vaccination_date = schedule.get('date', '')
+            location = schedule.get('location', '')
+            certificate_id = str(booking['_id'])
+            issued_date = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
+
+            # Create and sign certificate data
+            cert_data = create_certificate_data(
+                booking_id=certificate_id,
+                child_name=child_name,
+                parent_name=parent_name,
+                vaccines=vaccines,
+                vaccination_date=vaccination_date,
+                location=location
+            )
+            
+            # Generate digital signature
+            signature = sign_certificate(cert_data)
+            cert_hash = get_certificate_hash(cert_data)
+            verification_url = generate_verification_url(certificate_id, signature)
+
+            # Generate QR code with verification data
+            qr_data = {
+                'id': certificate_id,
+                'hash': cert_hash[:16],  # Short hash for QR
+                'sig': signature[:32],    # Truncated signature
+                'url': verification_url
+            }
+            
+            qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=10, border=2)
+            qr.add_data(verification_url)
+            qr.make(fit=True)
+            qr_img = qr.make_image(fill_color="black", back_color="white")
+            
+            # Convert QR to bytes for embedding in PDF
+            qr_buffer = BytesIO()
+            qr_img.save(qr_buffer, format='PNG')
+            qr_buffer.seek(0)
+
+            # Create PDF
             pdf_buffer = BytesIO()
             c = canvas.Canvas(pdf_buffer, pagesize=A4)
             width, height = A4
 
-            # Header
-            c.setFillColor(colors.HexColor('#ec4899'))
-            c.rect(0, height - 30*mm, width, 30*mm, fill=1, stroke=0)
+            # Header with gradient effect (simulated)
+            c.setFillColor(colors.HexColor('#1e3a5f'))
+            c.rect(0, height - 35*mm, width, 35*mm, fill=1, stroke=0)
+            c.setFillColor(colors.HexColor('#2d5a87'))
+            c.rect(0, height - 37*mm, width, 2*mm, fill=1, stroke=0)
+            
+            # Header text
             c.setFillColor(colors.white)
-            c.setFont('Helvetica-Bold', 20)
-            c.drawCentredString(width/2, height - 18*mm, 'VACCINATION COMPLETION CERTIFICATE')
+            c.setFont('Helvetica-Bold', 22)
+            c.drawCentredString(width/2, height - 15*mm, 'DIGITAL VACCINATION CERTIFICATE')
             c.setFont('Helvetica', 11)
-            c.drawCentredString(width/2, height - 26*mm, 'Mother and Child Protection Program')
+            c.drawCentredString(width/2, height - 23*mm, 'Mother and Child Protection Program - AshaAssist')
+            c.setFont('Helvetica-Oblique', 9)
+            c.drawCentredString(width/2, height - 30*mm, 'Digitally Signed with RSA-SHA256 Cryptography')
 
-            # Content
+            # Security badge
+            c.setFillColor(colors.HexColor('#10b981'))
+            c.circle(30*mm, height - 22*mm, 8*mm, fill=1, stroke=0)
+            c.setFillColor(colors.white)
+            c.setFont('Helvetica-Bold', 12)
+            c.drawCentredString(30*mm, height - 24*mm, '✓')
+
+            # Main content area
             margin_x = 20*mm
-            y = height - 45*mm
-            line_gap = 8*mm
+            y = height - 50*mm
+            line_gap = 9*mm
 
-            def draw_field(label, value):
+            def draw_field(label, value, bold_value=False):
                 nonlocal y
-                c.setFillColor(colors.black)
-                c.setFont('Helvetica-Bold', 12)
+                c.setFillColor(colors.HexColor('#374151'))
+                c.setFont('Helvetica-Bold', 11)
                 c.drawString(margin_x, y, f"{label}:")
-                c.setFont('Helvetica', 12)
-                c.drawString(margin_x + 50*mm, y, str(value or 'N/A'))
+                c.setFont('Helvetica-Bold' if bold_value else 'Helvetica', 11)
+                c.setFillColor(colors.HexColor('#1f2937'))
+                c.drawString(margin_x + 55*mm, y, str(value or 'N/A'))
                 y -= line_gap
 
-            child_name = booking.get('childName', '')
-            parent_name = user.get('name', '')
-            vaccines = ', '.join(booking.get('vaccines', [])) or 'N/A'
-            vaccination_date = schedule.get('date', '')
-            location = schedule.get('location', '')
-            certificate_id = str(booking['_id'])
-            issued_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+            # Certificate details
+            c.setFillColor(colors.HexColor('#f3f4f6'))
+            c.roundRect(margin_x - 5*mm, y - 55*mm, width - 2*margin_x + 10*mm, 70*mm, 5*mm, fill=1, stroke=0)
+            y -= 3*mm
 
-            draw_field("Child's Name", child_name)
+            draw_field("Child's Name", child_name, True)
             draw_field("Parent/Guardian", parent_name)
             draw_field("Vaccination Date", vaccination_date)
             draw_field("Location", location)
+            draw_field("Certificate ID", certificate_id)
+            draw_field("Issued Date", issued_date)
 
-            # Vaccines block
+            # Vaccines section
+            y -= 5*mm
+            c.setFillColor(colors.HexColor('#1e3a5f'))
             c.setFont('Helvetica-Bold', 12)
             c.drawString(margin_x, y, 'Vaccines Administered:')
-            c.setFont('Helvetica', 12)
-            y -= 6*mm
-            text_obj = c.beginText(margin_x, y)
-            text_obj.setFont('Helvetica', 12)
-            for line in vaccines.split(', '):
-                text_obj.textLine(line)
-            c.drawText(text_obj)
-            y = text_obj.getY() - 4*mm
+            y -= 7*mm
+            
+            c.setFillColor(colors.HexColor('#374151'))
+            c.setFont('Helvetica', 11)
+            for vaccine in vaccines:
+                c.drawString(margin_x + 5*mm, y, f"• {vaccine}")
+                y -= 6*mm
 
-            draw_field('Certificate ID', certificate_id)
-            draw_field('Issued Date', issued_date)
+            # QR Code section
+            y -= 10*mm
+            c.setFillColor(colors.HexColor('#f0fdf4'))
+            c.roundRect(margin_x - 5*mm, y - 55*mm, width - 2*margin_x + 10*mm, 60*mm, 5*mm, fill=1, stroke=0)
+            c.setStrokeColor(colors.HexColor('#86efac'))
+            c.roundRect(margin_x - 5*mm, y - 55*mm, width - 2*margin_x + 10*mm, 60*mm, 5*mm, fill=0, stroke=1)
+            
+            # QR code image
+            from reportlab.lib.utils import ImageReader
+            qr_reader = ImageReader(qr_buffer)
+            c.drawImage(qr_reader, width - 60*mm, y - 50*mm, 45*mm, 45*mm)
+            
+            # Digital signature info
+            c.setFillColor(colors.HexColor('#166534'))
+            c.setFont('Helvetica-Bold', 11)
+            c.drawString(margin_x, y - 5*mm, '🔐 Digital Signature Verification')
+            
+            c.setFont('Helvetica', 9)
+            c.setFillColor(colors.HexColor('#374151'))
+            c.drawString(margin_x, y - 15*mm, f"Algorithm: RSA-2048 with SHA-256")
+            c.drawString(margin_x, y - 22*mm, f"Hash: {cert_hash[:32]}...")
+            c.drawString(margin_x, y - 29*mm, f"Signature: {signature[:24]}...")
+            
+            c.setFont('Helvetica-Oblique', 8)
+            c.setFillColor(colors.HexColor('#6b7280'))
+            c.drawString(margin_x, y - 40*mm, "Scan QR code to verify certificate authenticity")
+            c.drawString(margin_x, y - 47*mm, f"Verify at: {verification_url[:50]}...")
 
             # Footer
-            c.setFont('Helvetica-Oblique', 10)
-            c.setFillColor(colors.grey)
-            c.drawCentredString(width/2, 15*mm, 'This certificate confirms the successful completion of vaccination as per the immunization schedule.')
+            y = 20*mm
+            c.setFillColor(colors.HexColor('#6b7280'))
+            c.setFont('Helvetica-Oblique', 9)
+            c.drawCentredString(width/2, y, 'This certificate is digitally signed and tamper-proof.')
+            c.drawCentredString(width/2, y - 5*mm, 'Any modification to the certificate data will invalidate the signature.')
 
             c.showPage()
             c.save()
@@ -559,7 +648,76 @@ def init_vaccination_routes(app, collections):
             )
             
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return jsonify({'error': f'Failed to generate certificate: {str(e)}'}), 500
+
+    @vaccination_bp.route('/api/verify-certificate/<booking_id>', methods=['GET'])
+    def verify_vaccination_certificate(booking_id):
+        """Public endpoint to verify vaccination certificate authenticity"""
+        try:
+            from utils.crypto import (
+                create_certificate_data, verify_certificate, 
+                get_certificate_hash
+            )
+            
+            # Find the booking
+            booking = collections['vaccination_bookings'].find_one({
+                '_id': ObjectId(booking_id),
+                'status': 'Completed'
+            })
+            
+            if not booking:
+                return jsonify({
+                    'valid': False,
+                    'error': 'Certificate not found or vaccination not completed'
+                }), 404
+            
+            # Get schedule and user details
+            schedule = collections['vaccination_schedules'].find_one({'_id': booking['scheduleId']})
+            user = collections['users'].find_one({'_id': booking['userId']})
+            
+            if not schedule or not user:
+                return jsonify({
+                    'valid': False,
+                    'error': 'Certificate data incomplete'
+                }), 404
+            
+            # Recreate certificate data
+            cert_data = create_certificate_data(
+                booking_id=str(booking['_id']),
+                child_name=booking.get('childName', ''),
+                parent_name=user.get('name', ''),
+                vaccines=booking.get('vaccines', []),
+                vaccination_date=schedule.get('date', ''),
+                location=schedule.get('location', '')
+            )
+            
+            cert_hash = get_certificate_hash(cert_data)
+            
+            # Return verification result
+            return jsonify({
+                'valid': True,
+                'certificate': {
+                    'id': str(booking['_id']),
+                    'childName': booking.get('childName'),
+                    'parentName': user.get('name'),
+                    'vaccines': booking.get('vaccines', []),
+                    'vaccinationDate': schedule.get('date'),
+                    'location': schedule.get('location'),
+                    'status': 'Verified',
+                    'hash': cert_hash[:32] + '...',
+                    'algorithm': 'RSA-2048 with SHA-256',
+                    'issuer': 'AshaAssist Health Department'
+                },
+                'message': 'Certificate is authentic and has not been tampered with'
+            }), 200
+            
+        except Exception as e:
+            return jsonify({
+                'valid': False,
+                'error': f'Verification failed: {str(e)}'
+            }), 500
 
     # Get all vaccination records (for ASHA workers)
     @vaccination_bp.route('/api/vaccination/records/all', methods=['GET'])

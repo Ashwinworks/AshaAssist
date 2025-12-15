@@ -104,10 +104,20 @@ def init_auth_routes(app, collections):
                         'id': str(existing_user['_id']),
                         'email': existing_user['email'],
                         'name': existing_user['name'],
+                        'phone': existing_user.get('phone'),
                         'userType': existing_user['userType'],
                         'beneficiaryCategory': existing_user.get('beneficiaryCategory'),
                         'isFirstLogin': existing_user.get('isFirstLogin', False),
-                        'profileCompleted': existing_user.get('profileCompleted', False)
+                        'profileCompleted': existing_user.get('profileCompleted', False),
+                        'profilePicture': existing_user.get('profilePicture'),
+                        'dateOfBirth': existing_user.get('dateOfBirth'),
+                        'address': existing_user.get('address'),
+                        'bloodGroup': existing_user.get('bloodGroup'),
+                        'height': existing_user.get('height'),
+                        'weight': existing_user.get('weight'),
+                        'medicalHistory': existing_user.get('medicalHistory'),
+                        'pregnancyDetails': existing_user.get('pregnancyDetails'),
+                        'emergencyContact': existing_user.get('emergencyContact')
                     }
                 }), 200
             

@@ -222,10 +222,20 @@ class AuthService:
                 'id': str(user['_id']),
                 'email': user['email'],
                 'name': user['name'],
+                'phone': user.get('phone'),
                 'userType': user['userType'],
                 'beneficiaryCategory': user.get('beneficiaryCategory'),
                 'isFirstLogin': user.get('isFirstLogin', False),
-                'profileCompleted': user.get('profileCompleted', False)
+                'profileCompleted': user.get('profileCompleted', False),
+                'profilePicture': user.get('profilePicture'),
+                'dateOfBirth': user.get('dateOfBirth'),
+                'address': user.get('address'),
+                'bloodGroup': user.get('bloodGroup'),
+                'height': user.get('height'),
+                'weight': user.get('weight'),
+                'medicalHistory': user.get('medicalHistory'),
+                'pregnancyDetails': user.get('pregnancyDetails'),
+                'emergencyContact': user.get('emergencyContact')
             }
         }, 200
 
