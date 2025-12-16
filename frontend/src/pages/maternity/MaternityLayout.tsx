@@ -36,16 +36,16 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
   // Navigation items with translation keys
   const navigationItems = [
     { id: 'dashboard', labelKey: 'nav.dashboard', icon: Home, path: '/maternity-dashboard' },
-    { id: 'milestones', labelKey: 'maternity.title', icon: Baby, path: '/maternity/milestones' },
+    { id: 'milestones', labelKey: 'nav.milestones', icon: Baby, path: '/maternity/milestones' },
     { id: 'blogs', labelKey: 'nav.healthBlogs', icon: BookOpen, path: '/maternity/blogs' },
     { id: 'calendar', labelKey: 'nav.calendar', icon: Calendar, path: '/maternity/calendar' },
-    { id: 'supplies', label: 'Request Supplies', icon: Package, path: '/maternity/supplies' },
-    { id: 'ration', label: 'Monthly Ration', icon: ShoppingBag, path: '/maternity/ration' },
-    { id: 'visits', label: 'Antenatal Visits', icon: UserCheck, path: '/maternity/visits' },
-    { id: 'visit-requests', label: 'Visit Requests', icon: UserCheck, path: '/maternity/visit-requests' },
+    { id: 'supplies', labelKey: 'nav.supplies', icon: Package, path: '/maternity/supplies' },
+    { id: 'ration', labelKey: 'nav.ration', icon: ShoppingBag, path: '/maternity/ration' },
+    { id: 'visits', labelKey: 'nav.visits', icon: UserCheck, path: '/maternity/visits' },
+    { id: 'visit-requests', labelKey: 'nav.visitRequests', icon: UserCheck, path: '/maternity/visit-requests' },
     { id: 'vaccinations', labelKey: 'nav.vaccinations', icon: Syringe, path: '/maternity/vaccinations' },
-    { id: 'mcp-card', label: 'Digital MCP Card', icon: CreditCard, path: '/maternity/mcp-card' },
-    { id: 'feedback', label: 'Feedback', icon: MessageSquare, path: '/maternity/feedback' },
+    { id: 'mcp-card', labelKey: 'nav.mcpCard', icon: CreditCard, path: '/maternity/mcp-card' },
+    { id: 'feedback', labelKey: 'nav.feedback', icon: MessageSquare, path: '/maternity/feedback' },
   ];
 
   const handleLogout = () => {
@@ -55,12 +55,11 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
   const getCurrentPageTitle = () => {
     const currentItem = navigationItems.find(item => item.path === location.pathname);
     if (currentItem?.labelKey) return t(currentItem.labelKey);
-    return currentItem?.label || title;
+    return title;
   };
 
-  const getNavLabel = (item: any) => {
-    if (item.labelKey) return t(item.labelKey);
-    return item.label;
+  const getNavLabel = (item: typeof navigationItems[0]) => {
+    return t(item.labelKey);
   };
 
   return (

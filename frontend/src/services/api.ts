@@ -218,10 +218,10 @@ export const maternityAPI = {
     const response = await api.get('/maternity/schedule');
     return response.data;
   },
-  getAllRecords: async (params?: { 
-    userName?: string; 
-    dateFrom?: string; 
-    dateTo?: string; 
+  getAllRecords: async (params?: {
+    userName?: string;
+    dateFrom?: string;
+    dateTo?: string;
   }) => {
     const response = await api.get('/maternity/records/all', { params });
     return response.data as { records: any[] };
@@ -279,10 +279,10 @@ export const vaccinationAPI = {
     return response;
   },
   // Get all vaccination records (for ASHA workers)
-  getAllRecords: async (params?: { 
-    userName?: string; 
-    dateFrom?: string; 
-    dateTo?: string; 
+  getAllRecords: async (params?: {
+    userName?: string;
+    dateFrom?: string;
+    dateTo?: string;
     status?: string;
   }) => {
     const response = await api.get('/vaccination/records/all', { params });
@@ -486,7 +486,7 @@ export const supplyAPI = {
       try {
         const response = await api.get('/supply-requests');
         const allRequests = response.data.requests || [];
-        const scheduledRequests = allRequests.filter((req: any) => 
+        const scheduledRequests = allRequests.filter((req: any) =>
           req.expectedDeliveryDate || req.status === 'scheduled'
         );
         console.log('Filtered scheduled requests from all requests:', scheduledRequests);
@@ -513,7 +513,7 @@ export const supplyAPI = {
     }
     console.log('API: Scheduling delivery with payload:', payload);
     console.log('API: Request URL:', `/supply-requests/${requestId}/schedule`);
-    
+
     const response = await api.put(`/supply-requests/${requestId}/schedule`, payload);
     console.log('API: Schedule delivery response:', response.data);
     return response.data as { message: string };
@@ -736,7 +736,7 @@ export const maternityDashboardAPI = {
   getStats: async () => {
     try {
       console.log('Fetching maternity dashboard stats...');
-      
+
       // Fetch visits data
       let visits: any[] = [];
       try {
@@ -747,7 +747,7 @@ export const maternityDashboardAPI = {
         console.log('Failed to fetch visits:', visitsError);
         visits = [];
       }
-      
+
       // Fetch supply requests
       let supplyRequests: any[] = [];
       try {
@@ -758,7 +758,7 @@ export const maternityDashboardAPI = {
         console.log('Failed to fetch supply requests:', supplyError);
         supplyRequests = [];
       }
-      
+
       // Fetch monthly ration status
       let rationStatus: any = null;
       try {
@@ -769,7 +769,7 @@ export const maternityDashboardAPI = {
         console.log('Failed to fetch ration status:', rationError);
         rationStatus = null;
       }
-      
+
       // Fetch vaccination records
       let vaccinationRecords: any[] = [];
       try {
@@ -780,7 +780,7 @@ export const maternityDashboardAPI = {
         console.log('Failed to fetch vaccination records:', vaccinationError);
         vaccinationRecords = [];
       }
-      
+
       // Fetch calendar events
       let calendarEvents: any[] = [];
       try {
@@ -791,11 +791,11 @@ export const maternityDashboardAPI = {
         console.log('Failed to fetch calendar events:', calendarError);
         calendarEvents = [];
       }
-      
+
       // Calculate statistics
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       const upcomingAppointments = visits.filter((visit: any) => {
         if (!visit.visitDate) return false;
         try {
@@ -806,11 +806,11 @@ export const maternityDashboardAPI = {
           return false;
         }
       }).length;
-      
-      const pendingRequests = supplyRequests.filter((req: any) => 
+
+      const pendingRequests = supplyRequests.filter((req: any) =>
         req.status === 'pending'
       ).length;
-      
+
       const completedVisits = visits.filter((visit: any) => {
         if (!visit.visitDate) return false;
         try {
@@ -821,28 +821,28 @@ export const maternityDashboardAPI = {
           return false;
         }
       }).length;
-      
+
       // Get next vaccination date
       let nextVaccination: any = null;
       if (vaccinationRecords.length > 0) {
         // Filter for scheduled vaccinations
-        const scheduledVaccinations = vaccinationRecords.filter((record: any) => 
+        const scheduledVaccinations = vaccinationRecords.filter((record: any) =>
           record.status === 'Scheduled' && record.date
         );
-        
+
         if (scheduledVaccinations.length > 0) {
           // Sort by date and get the earliest
-          scheduledVaccinations.sort((a: any, b: any) => 
+          scheduledVaccinations.sort((a: any, b: any) =>
             new Date(a.date).getTime() - new Date(b.date).getTime()
           );
           nextVaccination = scheduledVaccinations[0];
         }
       }
-      
+
       // Get upcoming calendar events (next 7 days)
       const nextWeek = new Date();
       nextWeek.setDate(nextWeek.getDate() + 7);
-      
+
       const upcomingEvents = calendarEvents.filter((event: any) => {
         if (!event.date) return false;
         try {
@@ -852,16 +852,16 @@ export const maternityDashboardAPI = {
           return false;
         }
       }).slice(0, 3); // Limit to 3 events
-      
-      console.log('Calculated stats:', { 
-        upcomingAppointments, 
-        pendingRequests, 
+
+      console.log('Calculated stats:', {
+        upcomingAppointments,
+        pendingRequests,
         completedVisits,
         rationStatus,
         nextVaccination,
         upcomingEvents
       });
-      
+
       return {
         upcomingAppointments,
         pendingRequests,
@@ -889,7 +889,7 @@ export const palliativeDashboardAPI = {
   getStats: async () => {
     try {
       console.log('Fetching palliative dashboard stats...');
-      
+
       // Fetch health records
       let records: any[] = [];
       try {
@@ -900,7 +900,7 @@ export const palliativeDashboardAPI = {
         console.log('Failed to fetch health records:', recordsError);
         records = [];
       }
-      
+
       // Fetch visit requests
       let visitRequests: any[] = [];
       try {
@@ -911,7 +911,7 @@ export const palliativeDashboardAPI = {
         console.log('Failed to fetch visit requests:', visitError);
         visitRequests = [];
       }
-      
+
       // Fetch supply requests
       let supplyRequests: any[] = [];
       try {
@@ -922,7 +922,7 @@ export const palliativeDashboardAPI = {
         console.log('Failed to fetch supply requests:', supplyError);
         supplyRequests = [];
       }
-      
+
       // Fetch calendar events
       let calendarEvents: any[] = [];
       try {
@@ -933,23 +933,23 @@ export const palliativeDashboardAPI = {
         console.log('Failed to fetch calendar events:', calendarError);
         calendarEvents = [];
       }
-      
-      const upcomingAppointments = visitRequests.filter((req: any) => 
+
+      const upcomingAppointments = visitRequests.filter((req: any) =>
         req.status === 'scheduled' || req.status === 'approved'
       ).length;
-      
-      const pendingRequests = supplyRequests.filter((req: any) => 
+
+      const pendingRequests = supplyRequests.filter((req: any) =>
         req.status === 'pending'
       ).length;
-      
+
       const careVisits = records.length;
-      
+
       // Get upcoming calendar events (next 7 days)
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const nextWeek = new Date();
       nextWeek.setDate(nextWeek.getDate() + 7);
-      
+
       const upcomingEvents = calendarEvents.filter((event: any) => {
         if (!event.date) return false;
         try {
@@ -959,7 +959,7 @@ export const palliativeDashboardAPI = {
           return false;
         }
       }).slice(0, 3); // Limit to 3 events
-      
+
       // Get recent health records (last 3)
       const recentRecords = [...records]
         .sort((a: any, b: any) => {
@@ -968,15 +968,15 @@ export const palliativeDashboardAPI = {
           return dateB.getTime() - dateA.getTime();
         })
         .slice(0, 3);
-      
-      console.log('Calculated stats:', { 
-        upcomingAppointments, 
-        pendingRequests, 
+
+      console.log('Calculated stats:', {
+        upcomingAppointments,
+        pendingRequests,
         careVisits,
         upcomingEvents,
         recentRecords
       });
-      
+
       return {
         upcomingAppointments,
         pendingRequests,
@@ -992,7 +992,15 @@ export const palliativeDashboardAPI = {
         careVisits: 0,
         upcomingEvents: [],
         recentRecords: []
-      };
+      }
     }
+  }
+};
+
+// Chat API (Mistral AI Copilot)
+export const chatAPI = {
+  sendMessage: async (message: string) => {
+    const response = await api.post('/chat', { message });
+    return response.data as { reply: string };
   }
 };

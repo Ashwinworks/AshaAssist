@@ -116,6 +116,10 @@ def create_app(config_name='default'):
     init_anganvaadi_routes(app, collections)
     init_milestone_routes(app, collections)
     
+    # Initialize chatbot routes (Mistral AI)
+    from routes.chatbot import init_chatbot_routes
+    init_chatbot_routes(app)
+    
     # File upload endpoint
     @app.route('/api/upload', methods=['POST'])
     @jwt_required()

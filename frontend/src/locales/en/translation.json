@@ -28,15 +28,23 @@
     "nav": {
         "dashboard": "Dashboard",
         "profile": "Profile",
-        "vaccinations": "Vaccinations",
+        "vaccinations": "Vaccination Booking",
         "healthBlogs": "Health Blogs",
         "appointments": "Appointments",
-        "calendar": "Calendar",
+        "calendar": "Integrated Calendar",
         "settings": "Settings",
         "help": "Help",
         "language": "Language",
         "english": "English",
-        "malayalam": "മലയാളം"
+        "malayalam": "മലയാളം",
+        "milestones": "Milestones",
+        "supplies": "Request Supplies",
+        "ration": "Monthly Ration",
+        "visits": "Antenatal Visits",
+        "visitRequests": "Visit Requests",
+        "mcpCard": "Digital MCP Card",
+        "feedback": "Feedback",
+        "maternityCare": "Maternity Care Dashboard"
     },
     "auth": {
         "loginTitle": "Sign In",

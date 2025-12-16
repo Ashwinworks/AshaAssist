@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, X } from 'lucide-react';
+import { Send, Bot, X, Loader2 } from 'lucide-react';
+import { chatAPI } from '../services/api';
 
 interface Message {
   id: string;
@@ -13,12 +14,13 @@ const ChatBot: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Hello! I am your AshaAssist Copilot. How can I help you today?',
+      text: 'Hello! I am your AshaAssist Copilot. I can help you with maternity care, palliative care, and questions about the AshaAssist platform. How can I assist you today?',
       sender: 'bot',
       timestamp: new Date()
     }
   ]);
   const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const openButtonRef = useRef<HTMLButtonElement>(null);
@@ -39,10 +41,10 @@ const ChatBot: React.FC = () => {
         setIsOpen(false);
         openButtonRef.current?.focus();
       }
-      
+
       // Enter to send message (when chat is open and not using Shift+Enter for new line)
       if (e.key === 'Enter' && isOpen && !e.shiftKey) {
-        if (document.activeElement === textareaRef.current && inputText.trim() !== '') {
+        if (document.activeElement === textareaRef.current && inputText.trim() !== '' && !isLoading) {
           e.preventDefault();
           handleSend();
         }
@@ -51,7 +53,7 @@ const ChatBot: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, inputText]);
+  }, [isOpen, inputText, isLoading]);
 
   // Focus management
   useEffect(() => {
@@ -65,8 +67,8 @@ const ChatBot: React.FC = () => {
     }
   }, [isOpen]);
 
-  const handleSend = () => {
-    if (inputText.trim() === '') return;
+  const handleSend = async () => {
+    if (inputText.trim() === '' || isLoading) return;
 
     // Add user message
     const userMessage: Message = {
@@ -77,18 +79,33 @@ const ChatBot: React.FC = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const messageToSend = inputText;
     setInputText('');
+    setIsLoading(true);
 
-    // Simulate bot response after a short delay
-    setTimeout(() => {
+    try {
+      // Call the backend API
+      const response = await chatAPI.sendMessage(messageToSend);
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: 'Your Copilot is under constructions, please wait until fully deployed',
+        text: response.reply,
         sender: 'bot',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, botMessage]);
-    }, 1000);
+    } catch (error: any) {
+      // Handle error
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: error.response?.data?.error || 'Sorry, I encountered an error. Please try again.',
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -143,7 +160,7 @@ const ChatBot: React.FC = () => {
 
       {/* Chat Window */}
       {isOpen && (
-        <div 
+        <div
           style={{
             position: 'fixed',
             right: isMobile() ? '10px' : '24px',
@@ -163,9 +180,9 @@ const ChatBot: React.FC = () => {
           }}
         >
           {/* Chat Header */}
-          <div style={{ 
-            padding: '1rem 1.25rem', 
-            borderBottom: '1px solid var(--gray-200)', 
+          <div style={{
+            padding: '1rem 1.25rem',
+            borderBottom: '1px solid var(--gray-200)',
             backgroundColor: 'var(--blue-50)',
             display: 'flex',
             justifyContent: 'space-between',
@@ -228,11 +245,11 @@ const ChatBot: React.FC = () => {
                   maxWidth: '80%',
                   padding: '0.75rem 1rem',
                   borderRadius: '1rem',
-                  backgroundColor: message.sender === 'user' 
-                    ? 'var(--blue-600)' 
+                  backgroundColor: message.sender === 'user'
+                    ? 'var(--blue-600)'
                     : 'var(--gray-100)',
-                  color: message.sender === 'user' 
-                    ? 'white' 
+                  color: message.sender === 'user'
+                    ? 'white'
                     : 'var(--gray-800)',
                   borderBottomLeftRadius: message.sender === 'user' ? '1rem' : '0',
                   borderBottomRightRadius: message.sender === 'user' ? '0' : '1rem'
@@ -285,23 +302,23 @@ const ChatBot: React.FC = () => {
               />
               <button
                 onClick={handleSend}
-                disabled={inputText.trim() === ''}
-                aria-label="Send message"
+                disabled={inputText.trim() === '' || isLoading}
+                aria-label={isLoading ? "Sending..." : "Send message"}
                 style={{
                   width: '40px',
                   height: '40px',
                   borderRadius: '50%',
                   border: '1px solid var(--blue-600)',
-                  backgroundColor: inputText.trim() === '' ? 'var(--gray-200)' : 'var(--blue-600)',
-                  color: inputText.trim() === '' ? 'var(--gray-500)' : 'white',
-                  cursor: inputText.trim() === '' ? 'not-allowed' : 'pointer',
+                  backgroundColor: (inputText.trim() === '' || isLoading) ? 'var(--gray-200)' : 'var(--blue-600)',
+                  color: (inputText.trim() === '' || isLoading) ? 'var(--gray-500)' : 'white',
+                  cursor: (inputText.trim() === '' || isLoading) ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   transition: 'all 0.2s ease'
                 }}
               >
-                <Send size={18} />
+                {isLoading ? <Loader2 size={18} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={18} />}
               </button>
             </div>
           </div>

@@ -28,15 +28,23 @@
     "nav": {
         "dashboard": "ഡാഷ്ബോർഡ്",
         "profile": "പ്രൊഫൈൽ",
-        "vaccinations": "വാക്സിനേഷൻ",
+        "vaccinations": "വാക്സിനേഷൻ ബുക്കിംഗ്",
         "healthBlogs": "ആരോഗ്യ ബ്ലോഗുകൾ",
         "appointments": "അപ്പോയിന്റ്മെന്റുകൾ",
-        "calendar": "കലണ്ടർ",
+        "calendar": "ഇന്റഗ്രേറ്റഡ് കലണ്ടർ",
         "settings": "ക്രമീകരണങ്ങൾ",
         "help": "സഹായം",
         "language": "ഭാഷ",
         "english": "English",
-        "malayalam": "മലയാളം"
+        "malayalam": "മലയാളം",
+        "milestones": "നാഴികക്കല്ലുകൾ",
+        "supplies": "സപ്ലൈസ് അഭ്യർത്ഥിക്കുക",
+        "ration": "പ്രതിമാസ റേഷൻ",
+        "visits": "ഗർഭകാല സന്ദർശനങ്ങൾ",
+        "visitRequests": "സന്ദർശന അഭ്യർത്ഥനകൾ",
+        "mcpCard": "ഡിജിറ്റൽ MCP കാർഡ്",
+        "feedback": "ഫീഡ്ബാക്ക്",
+        "maternityCare": "മാതൃത്വ പരിചരണ ഡാഷ്ബോർഡ്"
     },
     "auth": {
         "loginTitle": "സൈൻ ഇൻ",

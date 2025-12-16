@@ -21,6 +21,9 @@ class Config:
     # Firebase settings
     FIREBASE_CREDENTIALS_PATH = os.getenv('FIREBASE_CREDENTIALS_PATH')
     
+    # Mistral AI settings
+    MISTRAL_API_KEY = os.getenv('MISTRAL_API_KEY')
+    
     # Upload settings
     UPLOAD_FOLDER = 'uploads'
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
