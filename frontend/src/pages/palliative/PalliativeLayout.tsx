@@ -1,24 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
+import { useTranslation } from 'react-i18next';
+import {
   Heart, LogOut, User, Settings, Calendar, Baby, Stethoscope, Phone,
   Home, FileText, BookOpen, Package, UserCheck, Syringe, CreditCard, MessageSquare,
   Menu, X, Activity, Clipboard
 } from 'lucide-react';
 import ChatBot from '../../components/ChatBot';
+import LanguageToggle from '../../components/LanguageToggle';
 
-// Navigation items for palliative users
-const navigationItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/palliative-dashboard' },
-
-  { id: 'blogs', label: 'Health Blogs', icon: BookOpen, path: '/palliative/blogs' },
-  { id: 'calendar', label: 'Calendar', icon: Calendar, path: '/palliative/calendar' },
-  { id: 'supplies', label: 'Supply Requests', icon: Package, path: '/palliative/supplies' },
-  { id: 'visits', label: 'Visit Requests', icon: UserCheck, path: '/palliative/visits' },
-  { id: 'records', label: 'Health Records', icon: Clipboard, path: '/palliative/records' },
-  { id: 'feedback', label: 'Feedback', icon: MessageSquare, path: '/palliative/feedback' },
-];
 
 interface PalliativeLayoutProps {
   children: React.ReactNode;
@@ -29,7 +20,19 @@ const PalliativeLayout: React.FC<PalliativeLayoutProps> = ({ children, title }) 
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Navigation items with translation keys
+  const navigationItems = [
+    { id: 'dashboard', labelKey: 'nav.dashboard', icon: Home, path: '/palliative-dashboard' },
+    { id: 'blogs', labelKey: 'nav.healthBlogs', icon: BookOpen, path: '/palliative/blogs' },
+    { id: 'calendar', labelKey: 'nav.calendar', icon: Calendar, path: '/palliative/calendar' },
+    { id: 'supplies', labelKey: 'nav.supplies', icon: Package, path: '/palliative/supplies' },
+    { id: 'visits', labelKey: 'nav.visitRequests', icon: UserCheck, path: '/palliative/visits' },
+    { id: 'records', labelKey: 'nav.healthRecords', icon: Clipboard, path: '/palliative/records' },
+    { id: 'feedback', labelKey: 'nav.feedback', icon: MessageSquare, path: '/palliative/feedback' },
+  ];
 
   const handleLogout = () => {
     logout();
@@ -37,7 +40,12 @@ const PalliativeLayout: React.FC<PalliativeLayoutProps> = ({ children, title }) 
 
   const getCurrentPageTitle = () => {
     const currentItem = navigationItems.find(item => item.path === location.pathname);
-    return currentItem?.label || title;
+    if (currentItem?.labelKey) return t(currentItem.labelKey);
+    return title;
+  };
+
+  const getNavLabel = (item: typeof navigationItems[0]) => {
+    return t(item.labelKey);
   };
 
   return (
@@ -95,9 +103,9 @@ const PalliativeLayout: React.FC<PalliativeLayoutProps> = ({ children, title }) 
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               {user?.profilePicture ? (
-                <img 
-                  src={user.profilePicture} 
-                  alt="Profile" 
+                <img
+                  src={user.profilePicture}
+                  alt="Profile"
                   style={{
                     width: '50px',
                     height: '50px',
@@ -125,9 +133,9 @@ const PalliativeLayout: React.FC<PalliativeLayoutProps> = ({ children, title }) 
                 <div style={{ fontWeight: '600', color: 'var(--gray-900)', fontSize: '1rem' }}>
                   {user?.name}
                 </div>
-                <div style={{ 
-                  fontSize: '0.875rem', 
-                  color: 'var(--blue-700)', 
+                <div style={{
+                  fontSize: '0.875rem',
+                  color: 'var(--blue-700)',
                   fontWeight: '500',
                   backgroundColor: 'var(--blue-100)',
                   padding: '0.25rem 0.5rem',
@@ -135,7 +143,7 @@ const PalliativeLayout: React.FC<PalliativeLayoutProps> = ({ children, title }) 
                   display: 'inline-block',
                   marginTop: '0.375rem'
                 }}>
-                  Palliative Care
+                  {t('nav.palliativeCare')}
                 </div>
               </div>
             </div>
@@ -147,7 +155,7 @@ const PalliativeLayout: React.FC<PalliativeLayoutProps> = ({ children, title }) 
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
-            
+
             return (
               <button
                 key={item.id}
@@ -180,7 +188,7 @@ const PalliativeLayout: React.FC<PalliativeLayoutProps> = ({ children, title }) 
                 }}
               >
                 <Icon size={22} />
-                {sidebarOpen && <span>{item.label}</span>}
+                {sidebarOpen && <span>{getNavLabel(item)}</span>}
               </button>
             );
           })}
@@ -218,7 +226,7 @@ const PalliativeLayout: React.FC<PalliativeLayoutProps> = ({ children, title }) 
             }}
           >
             <LogOut size={20} />
-            {sidebarOpen && <span>Logout</span>}
+            {sidebarOpen && <span>{t('common.logout')}</span>}
           </button>
         </div>
       </div>
@@ -245,33 +253,34 @@ const PalliativeLayout: React.FC<PalliativeLayoutProps> = ({ children, title }) 
             alignItems: 'center'
           }}>
             <div>
-              <h1 style={{ 
-                fontSize: '2rem', 
-                fontWeight: '700', 
-                color: 'var(--gray-900)', 
-                margin: 0 
+              <h1 style={{
+                fontSize: '2rem',
+                fontWeight: '700',
+                color: 'var(--gray-900)',
+                margin: 0
               }}>
                 {getCurrentPageTitle()}
               </h1>
-              <p style={{ 
-                color: 'var(--gray-600)', 
-                margin: '0.5rem 0 0', 
-                fontSize: '1rem' 
+              <p style={{
+                color: 'var(--gray-600)',
+                margin: '0.5rem 0 0',
+                fontSize: '1rem'
               }}>
-                Palliative Care Dashboard
+                {t('nav.palliativeCare')}
               </p>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <div style={{
-                backgroundColor: 'var(--blue-100)',
-                color: 'var(--blue-700)',
-                padding: '0.75rem 1.5rem',
-                borderRadius: '0.75rem',
-                fontSize: '1rem',
-                fontWeight: '600'
-              }}>
-                Welcome, {user?.name}
-              </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <LanguageToggle />
+            <div style={{
+              backgroundColor: 'var(--blue-100)',
+              color: 'var(--blue-700)',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '0.75rem',
+              fontSize: '1rem',
+              fontWeight: '600'
+            }}>
+              {t('common.welcome')}, {user?.name}
             </div>
           </div>
         </header>

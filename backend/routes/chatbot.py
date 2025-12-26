@@ -11,7 +11,6 @@ chatbot_bp = Blueprint('chatbot', __name__)
 
 # Mistral AI Configuration
 MISTRAL_API_URL = "https://api.mistral.ai/v1/chat/completions"
-MISTRAL_API_KEY = os.getenv('MISTRAL_API_KEY')
 
 # System prompt to focus the AI on AshaAssist-related topics
 SYSTEM_PROMPT = """You are AshaAssist Copilot, a helpful AI assistant for the AshaAssist healthcare platform in India.
@@ -57,8 +56,12 @@ def init_chatbot_routes(app):
     def chat():
         """Handle chat messages and get AI response from Mistral"""
         try:
+            # Read API key at runtime (not at import time) for deployment compatibility
+            api_key = os.getenv('MISTRAL_API_KEY')
+            
             # Check if API key is configured
-            if not MISTRAL_API_KEY:
+            if not api_key:
+                print("MISTRAL_API_KEY environment variable is not set!")
                 return jsonify({
                     'error': 'Chatbot service is not configured. Please contact administrator.'
                 }), 503
@@ -78,7 +81,7 @@ def init_chatbot_routes(app):
             # Prepare Mistral API request
             headers = {
                 'Content-Type': 'application/json',
-                'Authorization': f'Bearer {MISTRAL_API_KEY}'
+                'Authorization': f'Bearer {api_key}'
             }
             
             payload = {

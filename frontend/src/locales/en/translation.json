@@ -44,7 +44,9 @@
         "visitRequests": "Visit Requests",
         "mcpCard": "Digital MCP Card",
         "feedback": "Feedback",
-        "maternityCare": "Maternity Care Dashboard"
+        "maternityCare": "Maternity Care Dashboard",
+        "palliativeCare": "Palliative Care Dashboard",
+        "healthRecords": "Health Records"
     },
     "auth": {
         "loginTitle": "Sign In",

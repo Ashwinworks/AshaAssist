@@ -44,7 +44,9 @@
         "visitRequests": "സന്ദർശന അഭ്യർത്ഥനകൾ",
         "mcpCard": "ഡിജിറ്റൽ MCP കാർഡ്",
         "feedback": "ഫീഡ്ബാക്ക്",
-        "maternityCare": "മാതൃത്വ പരിചരണ ഡാഷ്ബോർഡ്"
+        "maternityCare": "മാതൃത്വ പരിചരണ ഡാഷ്ബോർഡ്",
+        "palliativeCare": "ഉപശമന പരിചരണ ഡാഷ്ബോർഡ്",
+        "healthRecords": "ആരോഗ്യ രേഖകൾ"
     },
     "auth": {
         "loginTitle": "സൈൻ ഇൻ",
