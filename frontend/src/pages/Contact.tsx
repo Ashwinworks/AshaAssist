@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, Mail, MapPin, Send, ArrowLeft, Clock, MessageSquare } from 'lucide-react';
+import { Phone, Mail, MapPin, Send, ArrowLeft, Clock, MessageSquare, Heart } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './LandingPage.css';
 
@@ -263,7 +263,7 @@ const Contact: React.FC = () => {
           <div className="footer-content">
             <div className="footer-section">
               <div className="footer-logo">
-                <Phone className="logo-icon" />
+                <Heart className="logo-icon" />
                 <span className="logo-text">AshaAssist</span>
               </div>
               <p className="footer-description">
