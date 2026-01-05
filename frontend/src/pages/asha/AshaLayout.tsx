@@ -1,77 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Heart, LogOut, Calendar, Home, Package,
   MessageSquare, Menu, X, ChevronDown, ChevronRight, Clipboard, MapPin, Baby
 } from 'lucide-react';
-
-// Navigation items for ASHA workers with dropdown support
-const navigationItems = [
-  { 
-    id: 'dashboard', 
-    label: 'Dashboard', 
-    icon: Home, 
-    path: '/asha-dashboard' 
-  },
-  {
-    id: 'requests',
-    label: 'Requests',
-    icon: Package,
-    isDropdown: true,
-    children: [
-      { id: 'visit-requests', label: 'Home Visit Requests', path: '/asha/visit-requests' },
-      { id: 'supply-requests', label: 'Supply Requests', path: '/asha/supply-requests' }
-    ]
-  },
-  {
-    id: 'records',
-    label: 'Records Management',
-    icon: Clipboard,
-    isDropdown: true,
-    children: [
-      { id: 'maternal-records', label: 'Maternal Records', path: '/asha/maternal-records' },
-      { id: 'palliative-records', label: 'Palliative Records', path: '/asha/palliative-records' },
-      { id: 'vaccination-records', label: 'Child Vaccination Records', path: '/asha/vaccination-records' }
-    ]
-  },
-  { 
-    id: 'milestone-monitoring', 
-    label: 'Milestone Monitoring', 
-    icon: Baby, 
-    path: '/asha/milestone-monitoring' 
-  },
-  { 
-    id: 'home-visits', 
-    label: 'Home Visits', 
-    icon: MapPin, 
-    path: '/asha/home-visits' 
-  },
-  { 
-    id: 'calendar', 
-    label: 'Calendar', 
-    icon: Calendar, 
-    path: '/asha/calendar' 
-  },
-  {
-    id: 'communication',
-    label: 'Communication',
-    icon: MessageSquare,
-    isDropdown: true,
-    children: [
-      { id: 'health-blogs', label: 'Health Blogs', path: '/asha/health-blogs' },
-      { id: 'vaccination-schedules', label: 'Vaccination Schedules', path: '/asha/vaccination-schedules' },
-      { id: 'community-classes', label: 'Community Class Details', path: '/asha/community-classes' },
-      { id: 'local-camps', label: 'Local Camp Announcements', path: '/asha/local-camps' }
-    ]
-  },
-  { 
-    id: 'supply-distribution', 
-    label: 'Supply Distribution', 
-    icon: Package, 
-    path: '/asha/supply-distribution' 
-  }
-];
+import LanguageToggle from '../../components/LanguageToggle';
 
 interface AshaLayoutProps {
   children: React.ReactNode;
@@ -82,16 +17,84 @@ const AshaLayout: React.FC<AshaLayoutProps> = ({ children, title }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
+
+  // Navigation items with translations
+  const navigationItems = [
+    {
+      id: 'dashboard',
+      label: t('asha.dashboard'),
+      icon: Home,
+      path: '/asha-dashboard'
+    },
+    {
+      id: 'requests',
+      label: t('asha.requests'),
+      icon: Package,
+      isDropdown: true,
+      children: [
+        { id: 'visit-requests', label: t('asha.homeVisitRequests'), path: '/asha/visit-requests' },
+        { id: 'supply-requests', label: t('asha.supplyRequests'), path: '/asha/supply-requests' }
+      ]
+    },
+    {
+      id: 'records',
+      label: t('asha.recordsManagement'),
+      icon: Clipboard,
+      isDropdown: true,
+      children: [
+        { id: 'maternal-records', label: t('asha.maternalRecords'), path: '/asha/maternal-records' },
+        { id: 'palliative-records', label: t('asha.palliativeRecords'), path: '/asha/palliative-records' },
+        { id: 'vaccination-records', label: t('asha.vaccinationRecords'), path: '/asha/vaccination-records' }
+      ]
+    },
+    {
+      id: 'milestone-monitoring',
+      label: t('asha.milestoneMonitoring'),
+      icon: Baby,
+      path: '/asha/milestone-monitoring'
+    },
+    {
+      id: 'home-visits',
+      label: t('asha.homeVisits'),
+      icon: MapPin,
+      path: '/asha/home-visits'
+    },
+    {
+      id: 'calendar',
+      label: t('asha.calendar'),
+      icon: Calendar,
+      path: '/asha/calendar'
+    },
+    {
+      id: 'communication',
+      label: t('asha.communication'),
+      icon: MessageSquare,
+      isDropdown: true,
+      children: [
+        { id: 'health-blogs', label: t('asha.healthBlogs'), path: '/asha/health-blogs' },
+        { id: 'vaccination-schedules', label: t('asha.vaccinationSchedules'), path: '/asha/vaccination-schedules' },
+        { id: 'community-classes', label: t('asha.communityClasses'), path: '/asha/community-classes' },
+        { id: 'local-camps', label: t('asha.localCamps'), path: '/asha/local-camps' }
+      ]
+    },
+    {
+      id: 'supply-distribution',
+      label: t('asha.supplyDistribution'),
+      icon: Package,
+      path: '/asha/supply-distribution'
+    }
+  ];
 
   const handleLogout = () => {
     logout();
   };
 
   const toggleDropdown = (itemId: string) => {
-    setOpenDropdowns(prev => 
-      prev.includes(itemId) 
+    setOpenDropdowns(prev =>
+      prev.includes(itemId)
         ? prev.filter(id => id !== itemId)
         : [...prev, itemId]
     );
@@ -208,9 +211,9 @@ const AshaLayout: React.FC<AshaLayoutProps> = ({ children, title }) => {
                 <div style={{ fontWeight: '600', color: 'var(--gray-900)', fontSize: '1rem' }}>
                   {user?.name}
                 </div>
-                <div style={{ 
-                  fontSize: '0.875rem', 
-                  color: 'var(--blue-700)', 
+                <div style={{
+                  fontSize: '0.875rem',
+                  color: 'var(--blue-700)',
                   fontWeight: '500',
                   backgroundColor: 'var(--blue-100)',
                   padding: '0.25rem 0.5rem',
@@ -218,7 +221,7 @@ const AshaLayout: React.FC<AshaLayoutProps> = ({ children, title }) => {
                   display: 'inline-block',
                   marginTop: '0.375rem'
                 }}>
-                  ASHA Worker
+                  {t('asha.ashaWorker')}
                 </div>
               </div>
             </div>
@@ -231,7 +234,7 @@ const AshaLayout: React.FC<AshaLayoutProps> = ({ children, title }) => {
             const Icon = item.icon;
             const isActive = isActiveItem(item);
             const isDropdownOpen = openDropdowns.includes(item.id);
-            
+
             return (
               <div key={item.id}>
                 {/* Main Navigation Item */}
@@ -354,7 +357,7 @@ const AshaLayout: React.FC<AshaLayoutProps> = ({ children, title }) => {
             }}
           >
             <LogOut size={20} />
-            {sidebarOpen && <span>Logout</span>}
+            {sidebarOpen && <span>{t('asha.logout')}</span>}
           </button>
         </div>
       </div>
@@ -381,23 +384,24 @@ const AshaLayout: React.FC<AshaLayoutProps> = ({ children, title }) => {
             alignItems: 'center'
           }}>
             <div>
-              <h1 style={{ 
-                fontSize: '2rem', 
-                fontWeight: '700', 
-                color: 'var(--gray-900)', 
-                margin: 0 
+              <h1 style={{
+                fontSize: '2rem',
+                fontWeight: '700',
+                color: 'var(--gray-900)',
+                margin: 0
               }}>
                 {getCurrentPageTitle()}
               </h1>
-              <p style={{ 
-                color: 'var(--gray-600)', 
-                margin: '0.5rem 0 0', 
-                fontSize: '1rem' 
+              <p style={{
+                color: 'var(--gray-600)',
+                margin: '0.5rem 0 0',
+                fontSize: '1rem'
               }}>
-                ASHA Worker Dashboard
+                {t('asha.ashaWorkerDashboard')}
               </p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <LanguageToggle />
               <div style={{
                 backgroundColor: 'var(--blue-100)',
                 color: 'var(--blue-700)',
@@ -406,7 +410,7 @@ const AshaLayout: React.FC<AshaLayoutProps> = ({ children, title }) => {
                 fontSize: '1rem',
                 fontWeight: '600'
               }}>
-                Welcome, {user?.name}
+                {t('asha.welcome')}, {user?.name}
               </div>
             </div>
           </div>

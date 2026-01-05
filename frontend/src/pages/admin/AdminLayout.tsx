@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { 
-  Home, 
-  Users, 
-  FileText, 
-  MessageSquare, 
-  LogOut, 
-  Menu, 
+import { useTranslation } from 'react-i18next';
+import {
+  Home,
+  Users,
+  FileText,
+  MessageSquare,
+  LogOut,
+  Menu,
   X,
   Heart,
   ChevronDown,
   ChevronRight,
   MapPin
 } from 'lucide-react';
+import LanguageToggle from '../../components/LanguageToggle';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -24,57 +26,58 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useAuth();
+  const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [contentManagementOpen, setContentManagementOpen] = useState(false);
 
   const menuItems = [
-    { 
-      path: '/admin/dashboard', 
-      icon: Home, 
-      label: 'Dashboard',
+    {
+      path: '/admin/dashboard',
+      icon: Home,
+      label: t('admin.dashboard'),
       color: 'var(--blue-600)'
     },
-    { 
-      path: '/admin/asha-management', 
-      icon: Users, 
-      label: 'ASHA Worker Management',
+    {
+      path: '/admin/asha-management',
+      icon: Users,
+      label: t('admin.ashaManagement'),
       color: 'var(--green-600)'
     },
-    { 
-      path: '/admin/users', 
-      icon: Users, 
-      label: 'User Management',
+    {
+      path: '/admin/users',
+      icon: Users,
+      label: t('admin.userManagement'),
       color: 'var(--blue-600)'
     },
-    { 
-      path: '', 
-      icon: FileText, 
-      label: 'Content Management',
+    {
+      path: '',
+      icon: FileText,
+      label: t('admin.contentManagement'),
       color: 'var(--purple-600)',
       isDropdown: true,
       subItems: [
-        { path: '/admin/content/health-blogs', label: 'Health Blogs' },
-        { path: '/admin/content/vaccination-schedules', label: 'Vaccination Schedules' },
-        { path: '/admin/content/community-classes', label: 'Community Classes' },
-        { path: '/admin/content/local-camps', label: 'Local Camps' }
+        { path: '/admin/content/health-blogs', label: t('admin.healthBlogs') },
+        { path: '/admin/content/vaccination-schedules', label: t('admin.vaccinationSchedules') },
+        { path: '/admin/content/community-classes', label: t('admin.communityClasses') },
+        { path: '/admin/content/local-camps', label: t('admin.localCamps') }
       ]
     },
     {
       path: '/admin/supply-requests',
       icon: FileText,
-      label: 'Supply Requests',
+      label: t('admin.supplyRequests'),
       color: 'var(--orange-600)'
     },
     {
       path: '/admin/feedbacks',
       icon: MessageSquare,
-      label: 'Feedbacks',
+      label: t('admin.feedbacks'),
       color: 'var(--yellow-600)'
     },
     {
       path: '/admin/visit-monitoring',
       icon: MapPin,
-      label: 'Visit Monitoring',
+      label: t('admin.visitMonitoring'),
       color: 'var(--green-600)'
     },
   ];
@@ -131,8 +134,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
         overflowY: 'auto'
       }}>
         {/* Header */}
-        <div style={{ 
-          padding: '1.5rem', 
+        <div style={{
+          padding: '1.5rem',
           borderBottom: '1px solid var(--gray-200)',
           backgroundColor: 'var(--primary-600)',
           color: 'white',
@@ -149,12 +152,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
               </div>
             )}
           </div>
-          <button 
+          <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            style={{ 
-              background: 'none', 
-              border: 'none', 
-              color: 'white', 
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'white',
               cursor: 'pointer',
               padding: '0.25rem'
             }}
@@ -314,22 +317,22 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
             }}
           >
             <LogOut size={22} />
-            {sidebarOpen && 'Logout'}
+            {sidebarOpen && t('admin.logout')}
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div style={{ 
-        flex: 1, 
+      <div style={{
+        flex: 1,
         marginLeft: sidebarOpen ? '280px' : '90px',
         display: 'flex',
         flexDirection: 'column',
         transition: 'margin-left 0.3s ease'
       }}>
         {/* Top Bar */}
-        <header style={{ 
-          backgroundColor: 'white', 
+        <header style={{
+          backgroundColor: 'white',
           borderBottom: '1px solid var(--gray-200)',
           padding: '1rem 1.5rem',
           display: 'flex',
@@ -337,44 +340,45 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
           justifyContent: 'space-between'
         }}>
           <div>
-            <h1 style={{ 
-              margin: 0, 
-              fontSize: '1.5rem', 
-              fontWeight: '600', 
-              color: 'var(--gray-900)' 
+            <h1 style={{
+              margin: 0,
+              fontSize: '1.5rem',
+              fontWeight: '600',
+              color: 'var(--gray-900)'
             }}>
               {title}
             </h1>
-            <p style={{ 
-              margin: 0, 
-              fontSize: '0.875rem', 
+            <p style={{
+              margin: 0,
+              fontSize: '0.875rem',
               color: 'var(--gray-600)',
               fontWeight: '500'
             }}>
-              Admin Panel
+              {t('admin.adminPanel')}
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ 
+            <LanguageToggle />
+            <div style={{
               padding: '0.5rem 1rem',
               backgroundColor: 'var(--blue-50)',
               borderRadius: '0.5rem',
               border: '1px solid var(--blue-200)'
             }}>
-              <span style={{ 
-                fontSize: '0.875rem', 
-                fontWeight: '600', 
-                color: 'var(--blue-700)' 
+              <span style={{
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                color: 'var(--blue-700)'
               }}>
-                Admin
+                {t('admin.admin')}
               </span>
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main style={{ 
-          flex: 1, 
+        <main style={{
+          flex: 1,
           padding: '2rem 1.5rem',
           overflow: 'auto'
         }}>
