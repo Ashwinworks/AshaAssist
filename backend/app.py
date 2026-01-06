@@ -120,6 +120,10 @@ def create_app(config_name='default'):
     from routes.chatbot import init_chatbot_routes
     init_chatbot_routes(app)
     
+    # Initialize translation routes (Argos Translate)
+    from routes.translation import translation_bp
+    app.register_blueprint(translation_bp)
+    
     # File upload endpoint
     @app.route('/api/upload', methods=['POST'])
     @jwt_required()
