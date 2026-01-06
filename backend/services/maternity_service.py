@@ -41,6 +41,12 @@ class MaternityService:
 
         if not update:
             return {'error': 'No valid fields to update'}, 400
+        
+        # Update LMP/EDD in maternalHealth (which should already exist from registration)
+        if lmp:
+            update['maternalHealth.lmp'] = lmp
+        if edd:
+            update['maternalHealth.edd'] = edd
 
         res = self.users.update_one({'_id': ObjectId(user_id)}, {'$set': update})
         if res.matched_count == 0:

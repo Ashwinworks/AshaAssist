@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import MaternityLayout from './MaternityLayout';
-import { Calendar, Syringe, MapPin, Clock, CheckCircle, Award, Download, Eye, X } from 'lucide-react';
-import { vaccinationAPI } from '../../services/api';
+import { Calendar, Syringe, MapPin, Clock, CheckCircle, Award, Download, Eye, X, Lock, Baby } from 'lucide-react';
+import { vaccinationAPI, maternityAPI } from '../../services/api';
 
 const VaccinationBooking: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -17,6 +17,10 @@ const VaccinationBooking: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewBookingId, setPreviewBookingId] = useState<string | null>(null);
+
+  // Pregnancy status check
+  const [isPregnant, setIsPregnant] = useState<boolean | null>(null);
+  const [pregnancyStatusLoading, setPregnancyStatusLoading] = useState(true);
 
   const fetchSchedules = async () => {
     try {
@@ -47,7 +51,22 @@ const VaccinationBooking: React.FC = () => {
 
   useEffect(() => {
     fetchSchedules();
+    checkPregnancyStatus();
   }, []);
+
+  const checkPregnancyStatus = async () => {
+    try {
+      setPregnancyStatusLoading(true);
+      const response = await maternityAPI.getPregnancyStatus();
+      const pregnancyStatus = response.user?.maternalHealth?.pregnancyStatus;
+      setIsPregnant(pregnancyStatus === 'pregnant');
+    } catch (e) {
+      console.error('Failed to check pregnancy status:', e);
+      setIsPregnant(false); // Default to allowing access if check fails
+    } finally {
+      setPregnancyStatusLoading(false);
+    }
+  };
 
   useEffect(() => {
     const preload = async () => {
@@ -156,113 +175,180 @@ const VaccinationBooking: React.FC = () => {
             </div>
           )}
 
-          {loading ? (
-            <p>Loading schedules...</p>
+          {/* Pregnancy Lock UI */}
+          {pregnancyStatusLoading ? (
+            <p>Checking eligibility...</p>
+          ) : isPregnant ? (
+            <div style={{
+              textAlign: 'center',
+              padding: '3rem 2rem',
+              background: 'linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%)',
+              borderRadius: '1rem',
+              border: '2px solid #fbbf24'
+            }}>
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                background: '#fef3c7',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1.5rem',
+                border: '3px solid #fbbf24'
+              }}>
+                <Lock size={40} color="#f59e0b" />
+              </div>
+
+              <h3 style={{ color: '#92400e', marginBottom: '1rem', fontSize: '1.5rem' }}>
+                Vaccination Booking Currently Locked
+              </h3>
+
+              <p style={{ color: '#78350f', marginBottom: '1.5rem', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto 1.5rem' }}>
+                Vaccination scheduling is available after your baby is born. This ensures we can properly track your child's immunization records.
+              </p>
+
+              <div style={{
+                background: 'white',
+                padding: '1.5rem',
+                borderRadius: '0.75rem',
+                maxWidth: '500px',
+                margin: '0 auto',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', justifyContent: 'center' }}>
+                  <Baby size={24} color="#16a34a" />
+                  <h4 style={{ margin: 0, color: '#166534', fontSize: '1.1rem' }}>After Birth is Recorded</h4>
+                </div>
+                <ul style={{
+                  textAlign: 'left',
+                  color: '#4b5563',
+                  lineHeight: '1.8',
+                  paddingLeft: '1.5rem',
+                  margin: 0
+                }}>
+                  <li>Your ASHA worker will record the birth</li>
+                  <li>A child profile will be created automatically</li>
+                  <li>Vaccination scheduling will unlock</li>
+                  <li>You can book all required immunizations</li>
+                </ul>
+              </div>
+
+              <p style={{ color: '#78350f', marginTop: '1.5rem', fontSize: '0.9rem', fontStyle: 'italic' }}>
+                Continue with your prenatal care visits. We'll notify you when vaccination features are available.
+              </p>
+            </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
-              {schedules.map((s) => (
-                <div key={s.id} className="card" style={{ padding: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    <Syringe size={18} color="#db2777" />
-                    <strong>{s.title || 'Vaccination Schedule'}</strong>
-                  </div>
-                  <div style={{ display: 'grid', gap: '0.25rem', color: 'var(--gray-700)', fontSize: '0.9rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Calendar size={16} /> {s.date}
-                    </div>
-                    {s.time && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Clock size={16} /> {s.time}
+            <>
+              {loading ? (
+                <p>Loading schedules...</p>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
+                  {schedules.map((s) => (
+                    <div key={s.id} className="card" style={{ padding: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                        <Syringe size={18} color="#db2777" />
+                        <strong>{s.title || 'Vaccination Schedule'}</strong>
                       </div>
-                    )}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <MapPin size={16} /> {s.location}
-                    </div>
-                    <div>
-                      <span style={{ fontWeight: 600 }}>Vaccines:</span> {Array.isArray(s.vaccines) ? s.vaccines.join(', ') : '-'}
-                    </div>
-                  </div>
+                      <div style={{ display: 'grid', gap: '0.25rem', color: 'var(--gray-700)', fontSize: '0.9rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Calendar size={16} /> {s.date}
+                        </div>
+                        {s.time && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Clock size={16} /> {s.time}
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <MapPin size={16} /> {s.location}
+                        </div>
+                        <div>
+                          <span style={{ fontWeight: 600 }}>Vaccines:</span> {Array.isArray(s.vaccines) ? s.vaccines.join(', ') : '-'}
+                        </div>
+                      </div>
 
-                  {/* My booking(s) for this schedule */}
-                  <div style={{ marginTop: '0.75rem', borderTop: '1px solid var(--gray-200)', paddingTop: '0.75rem' }}>
-                    {bookingsLoading && !myBookings[s.id] && <div>Loading your bookings...</div>}
-                    {myBookings[s.id] && myBookings[s.id].length > 0 ? (
-                      <div style={{ display: 'grid', gap: '0.5rem' }}>
-                        {myBookings[s.id].map((b) => (
-                          <div key={b.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', background: 'var(--gray-50)', border: '1px solid var(--gray-200)', borderRadius: '0.5rem', padding: '0.5rem 0.75rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              {b.status === 'Completed' ? <CheckCircle size={16} color="#16a34a" /> : <Clock size={16} color="#475569" />}
-                              <div style={{ fontSize: '0.875rem' }}>
-                                <div style={{ fontWeight: 600 }}>{b.childName}</div>
-                                <div style={{ color: 'var(--gray-600)' }}>{b.vaccines?.join(', ')}</div>
+                      {/* My booking(s) for this schedule */}
+                      <div style={{ marginTop: '0.75rem', borderTop: '1px solid var(--gray-200)', paddingTop: '0.75rem' }}>
+                        {bookingsLoading && !myBookings[s.id] && <div>Loading your bookings...</div>}
+                        {myBookings[s.id] && myBookings[s.id].length > 0 ? (
+                          <div style={{ display: 'grid', gap: '0.5rem' }}>
+                            {myBookings[s.id].map((b) => (
+                              <div key={b.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', background: 'var(--gray-50)', border: '1px solid var(--gray-200)', borderRadius: '0.5rem', padding: '0.5rem 0.75rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  {b.status === 'Completed' ? <CheckCircle size={16} color="#16a34a" /> : <Clock size={16} color="#475569" />}
+                                  <div style={{ fontSize: '0.875rem' }}>
+                                    <div style={{ fontWeight: 600 }}>{b.childName}</div>
+                                    <div style={{ color: 'var(--gray-600)' }}>{b.vaccines?.join(', ')}</div>
+                                  </div>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  {b.status === 'Completed' && (
+                                    <button
+                                      className="btn"
+                                      onClick={() => handlePreviewCertificate(b)}
+                                      disabled={downloadingId === b.id}
+                                      style={{ backgroundColor: '#db2777', color: 'white', padding: '0.4rem 0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                                      title="Preview vaccination certificate"
+                                    >
+                                      <Eye size={16} /> {downloadingId === b.id ? 'Loading...' : 'View Certificate'}
+                                    </button>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              {b.status === 'Completed' && (
-                                <button
-                                  className="btn"
-                                  onClick={() => handlePreviewCertificate(b)}
-                                  disabled={downloadingId === b.id}
-                                  style={{ backgroundColor: '#db2777', color: 'white', padding: '0.4rem 0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
-                                  title="Preview vaccination certificate"
-                                >
-                                  <Eye size={16} /> {downloadingId === b.id ? 'Loading...' : 'View Certificate'}
-                                </button>
-                              )}
-                            </div>
+                            ))}
                           </div>
-                        ))}
+                        ) : (
+                          <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>No bookings yet for this schedule.</div>
+                        )}
                       </div>
-                    ) : (
-                      <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>No bookings yet for this schedule.</div>
-                    )}
-                  </div>
 
-                  {/* Booking form (only if user has not booked this schedule) */}
-                  {!userHasAnyBookingFor(s.id) && (
-                    <div style={{ marginTop: '0.75rem', borderTop: '1px solid var(--gray-200)', paddingTop: '0.75rem' }}>
-                      {activeScheduleId !== s.id ? (
-                        <button
-                          className="btn"
-                          onClick={() => startBooking(s)}
-                          style={{ backgroundColor: '#16a34a', color: 'white', padding: '0.45rem 0.85rem' }}
-                        >
-                          Book This Schedule
-                        </button>
-                      ) : (
-                        <form onSubmit={(e) => submitBooking(e, s)} style={{ display: 'grid', gap: '0.5rem' }}>
-                          <div>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.25rem' }}>Child Name</label>
-                            <input
-                              value={childName}
-                              onChange={(e) => setChildName(e.target.value)}
-                              className="input"
-                              placeholder="Enter child's name"
-                            />
-                          </div>
-                          <div>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.25rem' }}>Select Vaccines</label>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                              {(Array.isArray(s.vaccines) ? s.vaccines : []).map((v: string) => (
-                                <label key={v} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', border: '1px solid var(--gray-200)', padding: '0.35rem 0.5rem', borderRadius: '0.375rem', background: selectedVaccines.includes(v) ? 'var(--primary-50)' : 'white' }}>
-                                  <input type="checkbox" checked={selectedVaccines.includes(v)} onChange={() => toggleVaccine(v)} /> {v}
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <button className="btn" type="submit" disabled={submitting} style={{ backgroundColor: '#0ea5e9', color: 'white' }}>
-                              {submitting ? 'Booking...' : 'Confirm Booking'}
+                      {/* Booking form (only if user has not booked this schedule) */}
+                      {!userHasAnyBookingFor(s.id) && (
+                        <div style={{ marginTop: '0.75rem', borderTop: '1px solid var(--gray-200)', paddingTop: '0.75rem' }}>
+                          {activeScheduleId !== s.id ? (
+                            <button
+                              className="btn"
+                              onClick={() => startBooking(s)}
+                              style={{ backgroundColor: '#16a34a', color: 'white', padding: '0.45rem 0.85rem' }}
+                            >
+                              Book This Schedule
                             </button>
-                            <button type="button" className="btn" onClick={() => setActiveScheduleId(null)} style={{ backgroundColor: 'white', border: '1px solid var(--gray-300)', color: 'var(--gray-800)' }}>Cancel</button>
-                          </div>
-                        </form>
+                          ) : (
+                            <form onSubmit={(e) => submitBooking(e, s)} style={{ display: 'grid', gap: '0.5rem' }}>
+                              <div>
+                                <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.25rem' }}>Child Name</label>
+                                <input
+                                  value={childName}
+                                  onChange={(e) => setChildName(e.target.value)}
+                                  className="input"
+                                  placeholder="Enter child's name"
+                                />
+                              </div>
+                              <div>
+                                <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.25rem' }}>Select Vaccines</label>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                  {(Array.isArray(s.vaccines) ? s.vaccines : []).map((v: string) => (
+                                    <label key={v} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', border: '1px solid var(--gray-200)', padding: '0.35rem 0.5rem', borderRadius: '0.375rem', background: selectedVaccines.includes(v) ? 'var(--primary-50)' : 'white' }}>
+                                      <input type="checkbox" checked={selectedVaccines.includes(v)} onChange={() => toggleVaccine(v)} /> {v}
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <button className="btn" type="submit" disabled={submitting} style={{ backgroundColor: '#0ea5e9', color: 'white' }}>
+                                  {submitting ? 'Booking...' : 'Confirm Booking'}
+                                </button>
+                                <button type="button" className="btn" onClick={() => setActiveScheduleId(null)} style={{ backgroundColor: 'white', border: '1px solid var(--gray-300)', color: 'var(--gray-800)' }}>Cancel</button>
+                              </div>
+                            </form>
+                          )}
+                        </div>
                       )}
                     </div>
-                  )}
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>

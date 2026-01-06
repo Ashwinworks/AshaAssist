@@ -135,6 +135,17 @@ class AuthService:
             'updatedAt': datetime.now(timezone.utc),
             'isActive': True
         }
+        
+        # Initialize maternalHealth for maternity users (mark as pregnant from registration)
+        if data['userType'] == 'user' and data['beneficiaryCategory'] == 'maternity':
+            user_doc['maternalHealth'] = {
+                'pregnancyStatus': 'pregnant',  # New mothers start as pregnant
+                'lmp': None,  # Will be filled when profile is completed
+                'edd': None,  # Will be filled when profile is completed
+                'deliveryDate': None,
+                'deliveryDetails': None,
+                'children': []
+            }
 
         # Insert user
         try:

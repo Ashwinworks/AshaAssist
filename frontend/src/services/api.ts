@@ -225,6 +225,11 @@ export const maternityAPI = {
   }) => {
     const response = await api.get('/maternity/records/all', { params });
     return response.data as { records: any[] };
+  },
+  // Check pregnancy status for vaccination eligibility
+  getPregnancyStatus: async () => {
+    const response = await api.get('/profile');
+    return response.data as { user: { maternalHealth?: { pregnancyStatus?: string; lmp?: string; edd?: string; deliveryDate?: string; children?: string[] } } };
   }
 };
 
