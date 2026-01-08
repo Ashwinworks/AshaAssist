@@ -5,10 +5,11 @@ import { useTranslation } from 'react-i18next';
 import {
   Heart, LogOut, User, Settings, Calendar, Baby, Stethoscope, Phone,
   Home, FileText, BookOpen, Package, UserCheck, Syringe, CreditCard, MessageSquare,
-  Menu, X, Activity, Clipboard
+  Menu, X, Activity, Clipboard, Bell
 } from 'lucide-react';
 import ChatBot from '../../components/ChatBot';
 import LanguageToggle from '../../components/LanguageToggle';
+import NotificationPanel from '../../components/NotificationPanel';
 
 
 interface PalliativeLayoutProps {
@@ -22,6 +23,7 @@ const PalliativeLayout: React.FC<PalliativeLayoutProps> = ({ children, title }) 
   const location = useLocation();
   const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [notificationOpen, setNotificationOpen] = useState(false);
 
   // Navigation items with translation keys
   const navigationItems = [
@@ -271,6 +273,56 @@ const PalliativeLayout: React.FC<PalliativeLayoutProps> = ({ children, title }) 
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {/* Notification Button */}
+            <button
+              onClick={() => setNotificationOpen(!notificationOpen)}
+              style={{
+                position: 'relative',
+                background: 'white',
+                border: '2px solid #e2e8f0',
+                borderRadius: '0.75rem',
+                padding: '0.75rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+                color: '#64748b'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#f8fafc';
+                e.currentTarget.style.borderColor = '#8b5cf6';
+                e.currentTarget.style.color = '#8b5cf6';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'white';
+                e.currentTarget.style.borderColor = '#e2e8f0';
+                e.currentTarget.style.color = '#64748b';
+              }}
+              title="Notifications"
+            >
+              <Bell size={20} />
+              {/* Notification Badge */}
+              <span style={{
+                position: 'absolute',
+                top: '-4px',
+                right: '-4px',
+                background: '#8b5cf6',
+                color: 'white',
+                fontSize: '0.65rem',
+                fontWeight: '700',
+                borderRadius: '50%',
+                width: '20px',
+                height: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '2px solid white',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}>
+                0
+              </span>
+            </button>
             <LanguageToggle />
             <div style={{
               backgroundColor: 'var(--blue-100)',
@@ -292,6 +344,13 @@ const PalliativeLayout: React.FC<PalliativeLayoutProps> = ({ children, title }) 
 
         {/* Chat Bot */}
         <ChatBot />
+
+        {/* Notification Panel */}
+        <NotificationPanel
+          isOpen={notificationOpen}
+          onClose={() => setNotificationOpen(false)}
+          categoryColor="#8b5cf6"
+        />
       </div>
     </div>
   );

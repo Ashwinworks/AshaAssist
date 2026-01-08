@@ -19,6 +19,25 @@ interface User {
   bloodGroup?: string;
   height?: string;
   weight?: string;
+  // Maternal health tracking
+  maternalHealth?: {
+    pregnancyStatus?: 'pregnant' | 'delivered';
+    lmp?: string;
+    edd?: string;
+    deliveryDate?: string;
+    deliveryDetails?: {
+      type?: string;
+      location?: string;
+      complications?: string;
+    };
+    children?: Array<{
+      name?: string;
+      gender?: string;
+      weight?: number;
+      height?: number;
+      dateOfBirth?: string;
+    }>;
+  };
   // Nested profile data
   medicalHistory?: {
     chronicConditions?: string;

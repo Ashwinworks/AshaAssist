@@ -230,6 +230,20 @@ export const maternityAPI = {
   getPregnancyStatus: async () => {
     const response = await api.get('/profile');
     return response.data as { user: { maternalHealth?: { pregnancyStatus?: string; lmp?: string; edd?: string; deliveryDate?: string; children?: string[] } } };
+  },
+  // Record birth details
+  recordBirth: async (birthData: {
+    deliveryDate: string;
+    deliveryType: 'normal' | 'c-section' | 'home';
+    location: string;
+    complications?: string;
+    childName: string;
+    childGender: 'male' | 'female';
+    childWeight: number;
+    childHeight: number;
+  }) => {
+    const response = await api.post('/maternity/record-birth', birthData);
+    return response.data as { success: boolean; message: string; user: any; vaccinationsUnlocked: boolean };
   }
 };
 

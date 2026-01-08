@@ -3,7 +3,7 @@ import PalliativeLayout from './PalliativeLayout';
 import { useAuth } from '../../context/AuthContext';
 import { supplyAPI } from '../../services/api';
 import toast from 'react-hot-toast';
-import { Eye, Package, RefreshCw } from 'lucide-react';
+import { Eye, Package, RefreshCw, Heart, Baby, Pill, CheckCircle, Clock, XCircle, Calendar, MapPin, Phone, FileText, Accessibility } from 'lucide-react';
 
 interface Supply {
   name: string;
@@ -53,17 +53,6 @@ const SupplyRequests: React.FC = () => {
     setRequestsLoading(true);
     try {
       const response = await supplyAPI.getUserRequests();
-      console.log('Palliative - Fetched supply requests:', response.requests);
-      response.requests?.forEach((req: any) => {
-        console.log('Request:', {
-          id: req._id,
-          supply: req.supplyName,
-          status: req.status,
-          expectedDeliveryDate: req.expectedDeliveryDate,
-          deliveryLocation: req.deliveryLocation,
-          anganwadiLocation: req.anganwadiLocation
-        });
-      });
       setRequests(response.requests || []);
     } catch (error: any) {
       toast.error('Failed to fetch requests');
@@ -76,49 +65,6 @@ const SupplyRequests: React.FC = () => {
   useEffect(() => {
     fetchRequests();
   }, []);
-
-  const maternalSupplies: Supply[] = [
-    {
-      name: 'Amrutham Podi',
-      description: 'Nutritional supplement powder for mothers and children',
-      eligibility: 'Available for maternal and child health programs'
-    },
-    {
-      name: 'Baby kits',
-      description: 'Essential newborn care kit including clothes, diapers, and hygiene items',
-      eligibility: 'For expecting mothers and newborns'
-    },
-    {
-      name: 'Diapers',
-      description: 'Disposable diapers for infants',
-      eligibility: 'For maternal care and newborn hygiene'
-    },
-    {
-      name: 'Iron tablets',
-      description: 'Iron supplements to prevent anemia during pregnancy',
-      eligibility: 'For pregnant women with low hemoglobin'
-    },
-    {
-      name: 'Folic Acid Tablets',
-      description: 'Essential vitamin supplement for fetal development',
-      eligibility: 'For pregnant women in first trimester'
-    },
-    {
-      name: 'Calcium Tablets',
-      description: 'Calcium supplements for bone health during pregnancy',
-      eligibility: 'For pregnant women and nursing mothers'
-    },
-    {
-      name: 'ORS Packets & Zinc Tablets',
-      description: 'Oral rehydration solution and zinc supplements for dehydration and immunity',
-      eligibility: 'For maternal and child health emergencies'
-    },
-    {
-      name: 'Thermal Blanket for Newborns',
-      description: 'Specialized blanket to maintain newborn body temperature',
-      eligibility: 'For newborn care in delivery and postpartum'
-    }
-  ];
 
   const palliativeSupplies: Supply[] = [
     {
@@ -168,7 +114,7 @@ const SupplyRequests: React.FC = () => {
     }
   ];
 
-  const supplies = user?.beneficiaryCategory === 'maternity' ? maternalSupplies : palliativeSupplies;
+  const supplies = palliativeSupplies;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -273,17 +219,64 @@ const SupplyRequests: React.FC = () => {
     return requests.find(request => request.supplyName === supplyName);
   };
 
+  // Get icon for supply
+  const getSupplyIcon = (supplyName: string) => {
+    const name = supplyName.toLowerCase();
+    if (name.includes('wheelchair') || name.includes('walker') || name.includes('crutch') || name.includes('stick')) {
+      return <Accessibility size={20} />;
+    } else if (name.includes('tablet') || name.includes('monitor') || name.includes('kit')) {
+      return <Pill size={20} />;
+    } else if (name.includes('bed') || name.includes('diaper') || name.includes('bag')) {
+      return <Package size={20} />;
+    } else {
+      return <Heart size={20} />;
+    }
+  };
+
+  // Get category colors (palliative color scheme)
+  const categoryColors = {
+    bg: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
+    border: '#8b5cf6',
+    text: '#6d28d9',
+    icon: '#8b5cf6'
+  };
+
   return (
     <PalliativeLayout title="Supply Requests">
       <div className="card">
         <div className="card-header">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 className="card-title">Request Medical Supplies</h2>
+          <h2 className="card-title" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            color: '#0f172a'
+          }}>
+            <Package size={24} color={categoryColors.icon} />
+            Request Medical Supplies
+          </h2>
+          <p style={{
+            color: '#64748b',
+            fontSize: '0.95rem',
+            marginTop: '0.5rem',
+            marginBottom: '0'
+          }}>
+            Request medical supplies, comfort items, and mobility aids for palliative care
+          </p>
+          <div style={{ marginTop: '1rem' }}>
             <button
               className="btn"
               onClick={fetchRequests}
               disabled={requestsLoading}
-              style={{ padding: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              style={{
+                padding: '0.5rem 1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: 'white',
+                border: '1px solid #e2e8f0',
+                borderRadius: '0.5rem',
+                transition: 'all 0.2s ease'
+              }}
               title="Refresh requests"
             >
               <RefreshCw size={16} />
@@ -292,126 +285,295 @@ const SupplyRequests: React.FC = () => {
           </div>
         </div>
         <div className="card-content">
-          <p style={{ marginBottom: '2rem' }}>
-            Request medical supplies, comfort items, mobility aids, and other essential equipment for palliative care.
-            Select from the available supplies below and submit your request with necessary documentation.
-          </p>
-
           {requestsLoading ? (
-            <div style={{ textAlign: 'center', padding: '2rem' }}>
-              Loading your requests...
+            <div style={{
+              textAlign: 'center',
+              padding: '3rem',
+              color: '#64748b'
+            }}>
+              <div style={{
+                width: '3rem',
+                height: '3rem',
+                border: '4px solid #e2e8f0',
+                borderTop: `4px solid ${categoryColors.icon}`,
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite',
+                margin: '0 auto 1rem'
+              }}></div>
+              Loading your supply requests...
             </div>
           ) : (
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-              gap: '1rem'
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gap: '1.75rem',
+              marginTop: '1rem'
             }}>
               {supplies.map((supply, index) => {
                 const existingRequest = getRequestForSupply(supply.name);
                 return (
-                  <div key={index} className="card" style={{ margin: 0 }}>
-                    <div className="card-header">
-                      <h3 className="card-title" style={{ fontSize: '1rem' }}>{supply.name}</h3>
+                  <div
+                    key={index}
+                    className="card"
+                    style={{
+                      padding: '0',
+                      border: '1px solid #e2e8f0',
+                      textDecoration: 'none',
+                      transition: 'all 0.3s ease',
+                      cursor: existingRequest ? 'default' : 'pointer',
+                      borderRadius: '0.75rem',
+                      overflow: 'hidden',
+                      backgroundColor: 'white',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column'
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-8px)';
+                      (e.currentTarget as HTMLDivElement).style.boxShadow = '0 15px 30px rgba(0,0,0,0.12)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+                      (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+                    }}
+                  >
+                    {/* Header with Gradient */}
+                    <div style={{
+                      padding: '1rem 1.25rem',
+                      background: categoryColors.bg,
+                      borderBottom: `2px solid ${categoryColors.border}`,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ color: categoryColors.icon }}>
+                          {getSupplyIcon(supply.name)}
+                        </div>
+                        <span style={{
+                          fontWeight: 700,
+                          color: categoryColors.text,
+                          fontSize: '0.875rem'
+                        }}>
+                          {supply.name}
+                        </span>
+                      </div>
                       {existingRequest && (
                         <span
                           style={{
                             padding: '0.25rem 0.5rem',
                             borderRadius: '12px',
-                            fontSize: '0.75rem',
-                            fontWeight: 'bold',
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
                             color: getStatusColor(existingRequest.status),
                             backgroundColor: getStatusBgColor(existingRequest.status),
-                            marginLeft: '0.5rem'
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px'
                           }}
                         >
-                          {existingRequest.status.toUpperCase()}
+                          {existingRequest.status}
                         </span>
                       )}
                     </div>
-                    <div className="card-content">
-                      <p style={{ fontSize: '0.875rem', color: 'var(--gray-600)', marginBottom: '0.5rem' }}>
+
+                    {/* Content */}
+                    <div style={{
+                      padding: '1.5rem',
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column'
+                    }}>
+                      <p style={{
+                        margin: '0 0 1rem',
+                        color: '#64748b',
+                        fontSize: '0.95rem',
+                        lineHeight: 1.6,
+                        flex: 1
+                      }}>
                         {supply.description}
                       </p>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--blue-600)', marginBottom: '1rem' }}>
-                        <strong>Eligibility:</strong> {supply.eligibility}
-                      </p>
+
+                      <div style={{
+                        padding: '0.75rem',
+                        background: '#f8fafc',
+                        borderRadius: '0.5rem',
+                        marginBottom: '1rem',
+                        border: '1px dashed #cbd5e1'
+                      }}>
+                        <p style={{
+                          fontSize: '0.8rem',
+                          color: '#475569',
+                          margin: 0,
+                          lineHeight: 1.5
+                        }}>
+                          <strong style={{ color: categoryColors.text }}>Eligibility:</strong> {supply.eligibility}
+                        </p>
+                      </div>
 
                       {existingRequest ? (
-                        <div style={{ marginBottom: '1rem' }}>
-                          <p style={{ margin: '0.5rem 0', fontSize: '0.875rem', color: 'var(--gray-500)' }}>
-                            Requested on: {new Date(existingRequest.createdAt).toLocaleDateString()}
-                          </p>
+                        <div>
+                          {/* Request Date */}
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            color: '#94a3b8',
+                            fontSize: '0.8rem',
+                            marginBottom: '0.75rem'
+                          }}>
+                            <Calendar size={14} />
+                            <span>Requested: {new Date(existingRequest.createdAt).toLocaleDateString()}</span>
+                          </div>
+
+                          {/* Delivery Info */}
                           {(existingRequest.status === 'approved' || existingRequest.status === 'scheduled') && existingRequest.expectedDeliveryDate && (
-                            <div style={{ margin: '0.5rem 0', padding: '0.75rem', backgroundColor: 'var(--green-50)', borderRadius: '0.5rem', border: '1px solid var(--green-200)' }}>
-                              <p style={{ fontSize: '0.875rem', color: 'var(--green-700)', fontWeight: 'bold', margin: '0.25rem 0' }}>
-                                📅 Expected Delivery: {new Date(existingRequest.expectedDeliveryDate).toLocaleDateString()}
-                              </p>
-                              <p style={{ fontSize: '0.875rem', color: 'var(--blue-700)', fontWeight: '600', margin: '0.25rem 0' }}>
-                                {existingRequest.deliveryLocation === 'home' ? (
-                                  <>🏠 Home Delivery</>
-                                ) : existingRequest.deliveryLocation === 'ward' ? (
-                                  <>🏢 Anganwadi Ward Collection</>
-                                ) : (
-                                  <>📍 To be determined</>
-                                )}
-                              </p>
+                            <div style={{
+                              margin: '0.75rem 0',
+                              padding: '1rem',
+                              background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                              borderRadius: '0.5rem',
+                              border: '1px solid #86efac'
+                            }}>
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                fontSize: '0.875rem',
+                                color: '#15803d',
+                                fontWeight: 600,
+                                marginBottom: '0.5rem'
+                              }}>
+                                <CheckCircle size={16} />
+                                <span>Expected: {new Date(existingRequest.expectedDeliveryDate).toLocaleDateString()}</span>
+                              </div>
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                fontSize: '0.875rem',
+                                color: '#0369a1',
+                                fontWeight: 600
+                              }}>
+                                <MapPin size={16} />
+                                <span>
+                                  {existingRequest.deliveryLocation === 'home' ? 'Home Delivery' :
+                                    existingRequest.deliveryLocation === 'ward' ? 'Ward Collection' : 'TBD'}
+                                </span>
+                              </div>
                               {existingRequest.deliveryLocation === 'ward' && (existingRequest as any).anganwadiLocation && (
-                                <div style={{ marginTop: '0.5rem', padding: '0.5rem', backgroundColor: 'white', borderRadius: '0.375rem' }}>
-                                  <p style={{ fontSize: '0.875rem', color: 'var(--gray-700)', fontWeight: '600', margin: '0.25rem 0' }}>
-                                    📍 Collection Point:
-                                  </p>
-                                  <p style={{ fontSize: '0.875rem', color: 'var(--gray-600)', margin: '0.25rem 0' }}>
-                                    {(existingRequest as any).anganwadiLocation.name}
-                                  </p>
+                                <div style={{
+                                  marginTop: '0.5rem',
+                                  padding: '0.5rem',
+                                  backgroundColor: 'white',
+                                  borderRadius: '0.375rem',
+                                  fontSize: '0.8rem',
+                                  color: '#475569'
+                                }}>
+                                  <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
+                                    📍 {(existingRequest as any).anganwadiLocation.name}
+                                  </div>
                                   {(existingRequest as any).anganwadiLocation.address && (
-                                    <p style={{ fontSize: '0.875rem', color: 'var(--gray-600)', margin: '0.25rem 0' }}>
-                                      {(existingRequest as any).anganwadiLocation.address}
-                                    </p>
+                                    <div>{(existingRequest as any).anganwadiLocation.address}</div>
                                   )}
-                                  <p style={{ fontSize: '0.875rem', color: 'var(--gray-600)', margin: '0.25rem 0' }}>
-                                    Ward: {(existingRequest as any).anganwadiLocation.ward}
-                                  </p>
+                                  <div>Ward: {(existingRequest as any).anganwadiLocation.ward}</div>
                                 </div>
                               )}
                             </div>
                           )}
+
+                          {/* Rejection Info */}
                           {existingRequest.status === 'rejected' && existingRequest.reviewNotes && (
-                            <p style={{ margin: '0.5rem 0', fontSize: '0.875rem', color: 'var(--red-600)' }}>
-                              <strong>Rejection Reason:</strong> {existingRequest.reviewNotes}
-                            </p>
+                            <div style={{
+                              padding: '0.75rem',
+                              background: '#fef2f2',
+                              borderRadius: '0.5rem',
+                              border: '1px solid #fecaca',
+                              marginBottom: '0.75rem'
+                            }}>
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                color: '#dc2626',
+                                fontSize: '0.8rem',
+                                fontWeight: 600
+                              }}>
+                                <XCircle size={14} />
+                                <span>{existingRequest.reviewNotes}</span>
+                              </div>
+                            </div>
                           )}
-                          {existingRequest.status === 'approved' && !existingRequest.expectedDeliveryDate && (
-                            <p style={{ margin: '0.5rem 0', fontSize: '0.875rem', color: 'var(--orange-600)' }}>
-                              Approved - Delivery scheduling in progress
-                            </p>
-                          )}
+
+                          {/* Delivered Info */}
                           {existingRequest.status === 'delivered' && existingRequest.deliveryCompletedAt && (
-                            <p style={{ margin: '0.5rem 0', fontSize: '0.875rem', color: 'var(--green-600)' }}>
-                              ✅ Delivered on: {new Date(existingRequest.deliveryCompletedAt).toLocaleDateString()}
-                            </p>
+                            <div style={{
+                              padding: '0.75rem',
+                              background: '#f0fdf4',
+                              borderRadius: '0.5rem',
+                              border: '1px solid #86efac',
+                              marginBottom: '0.75rem'
+                            }}>
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                color: '#15803d',
+                                fontSize: '0.8rem',
+                                fontWeight: 600
+                              }}>
+                                <CheckCircle size={14} />
+                                <span>Delivered: {new Date(existingRequest.deliveryCompletedAt).toLocaleDateString()}</span>
+                              </div>
+                            </div>
                           )}
-                          {existingRequest.status === 'cancelled' && (
-                            <p style={{ margin: '0.5rem 0', fontSize: '0.875rem', color: 'var(--gray-600)' }}>
-                              ❌ Delivery Cancelled
-                            </p>
-                          )}
+
+                          {/* View Details Button */}
                           <button
                             className="btn"
                             onClick={() => openViewModal(existingRequest)}
-                            style={{ width: '100%', marginTop: '0.5rem' }}
+                            style={{
+                              width: '100%',
+                              marginTop: '0.5rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.5rem',
+                              background: 'white',
+                              border: '1px solid #e2e8f0',
+                              borderRadius: '0.5rem',
+                              padding: '0.75rem',
+                              color: '#475569',
+                              fontWeight: 600,
+                              transition: 'all 0.2s ease'
+                            }}
                           >
-                            <Eye size={16} style={{ marginRight: '0.5rem' }} />
-                            View Details
+                            <Eye size={16} />
+                            View Full Details
                           </button>
                         </div>
                       ) : (
                         <button
-                          className="btn btn-primary"
+                          className="btn"
                           onClick={() => handleRequestClick(supply)}
-                          style={{ width: '100%' }}
+                          style={{
+                            width: '100%',
+                            background: `linear-gradient(135deg, ${categoryColors.icon} 0%, ${categoryColors.text} 100%)`,
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '0.5rem',
+                            padding: '0.75rem',
+                            fontWeight: 700,
+                            fontSize: '0.95rem',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem'
+                          }}
                         >
-                          Request
+                          <Package size={18} />
+                          Request Supply
                         </button>
                       )}
                     </div>
@@ -427,19 +589,65 @@ const SupplyRequests: React.FC = () => {
         <div style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0,0,0,0.4)',
+          background: 'rgba(0,0,0,0.5)',
+          backdropFilter: 'blur(4px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1000
+          zIndex: 1000,
+          padding: '1rem'
         }}>
-          <div className="card" style={{ width: '90%', maxWidth: '500px', background: 'white', padding: '1rem', border: '1px solid var(--gray-200)' }}>
-            <div className="card-header">
-              <h3 className="card-title">Request {selectedSupply.name}</h3>
+          <div className="card" style={{
+            width: '90%',
+            maxWidth: '550px',
+            background: 'white',
+            padding: 0,
+            border: 'none',
+            borderRadius: '0.75rem',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+            overflow: 'hidden'
+          }}>
+            {/* Modal Header with Gradient */}
+            <div style={{
+              padding: '1.5rem',
+              background: categoryColors.bg,
+              borderBottom: `2px solid ${categoryColors.border}`
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ color: categoryColors.icon }}>
+                  {getSupplyIcon(selectedSupply.name)}
+                </div>
+                <h3 style={{
+                  margin: 0,
+                  fontSize: '1.25rem',
+                  fontWeight: 700,
+                  color: categoryColors.text
+                }}>
+                  Request {selectedSupply.name}
+                </h3>
+              </div>
+              <p style={{
+                margin: '0.5rem 0 0 0',
+                fontSize: '0.875rem',
+                color: '#64748b'
+              }}>
+                Fill in the required details to submit your request
+              </p>
             </div>
-            <div className="card-content" style={{ display: 'grid', gap: '1rem' }}>
+
+            {/* Modal Content */}
+            <div style={{ padding: '1.5rem', display: 'grid', gap: '1.25rem' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginBottom: '0.5rem',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  color: '#334155'
+                }}>
+                  <MapPin size={16} color={categoryColors.icon} />
                   Delivery Address *
                 </label>
                 <textarea
@@ -448,12 +656,38 @@ const SupplyRequests: React.FC = () => {
                   placeholder="House No., Street, Ward, City, PIN Code"
                   rows={3}
                   required
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8 }}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '0.5rem',
+                    fontSize: '0.95rem',
+                    fontFamily: 'inherit',
+                    transition: 'all 0.2s ease',
+                    outline: 'none'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = categoryColors.icon;
+                    e.target.style.boxShadow = `0 0 0 3px ${categoryColors.icon}20`;
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0';
+                    e.target.style.boxShadow = 'none';
+                  }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginBottom: '0.5rem',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  color: '#334155'
+                }}>
+                  <Phone size={16} color={categoryColors.icon} />
                   Contact Phone Number *
                 </label>
                 <input
@@ -462,24 +696,80 @@ const SupplyRequests: React.FC = () => {
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="9876543210"
                   required
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8 }}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '0.5rem',
+                    fontSize: '0.95rem',
+                    fontFamily: 'inherit',
+                    transition: 'all 0.2s ease',
+                    outline: 'none'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = categoryColors.icon;
+                    e.target.style.boxShadow = `0 0 0 3px ${categoryColors.icon}20`;
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0';
+                    e.target.style.boxShadow = 'none';
+                  }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginBottom: '0.5rem',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  color: '#334155'
+                }}>
+                  <FileText size={16} color={categoryColors.icon} />
                   Upload Proof (Medical Certificate/Prescription) *
                 </label>
                 <input
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png"
                   onChange={(e) => setFile(e.target.files?.[0] || null)}
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8 }}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '0.5rem',
+                    fontSize: '0.9rem',
+                    fontFamily: 'inherit',
+                    cursor: 'pointer'
+                  }}
                 />
+                {file && (
+                  <p style={{
+                    margin: '0.5rem 0 0 0',
+                    fontSize: '0.8rem',
+                    color: '#15803d',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem'
+                  }}>
+                    <CheckCircle size={14} />
+                    {file.name}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginBottom: '0.5rem',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  color: '#334155'
+                }}>
+                  <FileText size={16} color={categoryColors.icon} />
                   Description of Medical Need *
                 </label>
                 <textarea
@@ -487,18 +777,72 @@ const SupplyRequests: React.FC = () => {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Please describe your medical condition and why you need this supply..."
                   rows={4}
-                  style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--gray-300)', borderRadius: 8 }}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '0.5rem',
+                    fontSize: '0.95rem',
+                    fontFamily: 'inherit',
+                    transition: 'all 0.2s ease',
+                    outline: 'none'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = categoryColors.icon;
+                    e.target.style.boxShadow = `0 0 0 3px ${categoryColors.icon}20`;
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e2e8f0';
+                    e.target.style.boxShadow = 'none';
+                  }}
                 />
               </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
-              <button className="btn" onClick={() => setModalOpen(false)} disabled={loading}>
+
+            {/* Modal Footer */}
+            <div style={{
+              padding: '1.25rem 1.5rem',
+              background: '#f8fafc',
+              borderTop: '1px solid #e2e8f0',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '0.75rem'
+            }}>
+              <button
+                className="btn"
+                onClick={() => setModalOpen(false)}
+                disabled={loading}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: 'white',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '0.5rem',
+                  color: '#475569',
+                  fontWeight: 600,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.5 : 1
+                }}
+              >
                 Cancel
               </button>
               <button
-                className="btn btn-primary"
+                className="btn"
                 onClick={handleSubmit}
                 disabled={loading || !description.trim() || !file || !address.trim() || !phone.trim()}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: (loading || !description.trim() || !file || !address.trim() || !phone.trim())
+                    ? '#cbd5e1'
+                    : `linear-gradient(135deg, ${categoryColors.icon} 0%, ${categoryColors.text} 100%)`,
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  fontWeight: 700,
+                  cursor: (loading || !description.trim() || !file || !address.trim() || !phone.trim())
+                    ? 'not-allowed'
+                    : 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
               >
                 {loading ? 'Submitting...' : 'Submit Request'}
               </button>
@@ -512,17 +856,39 @@ const SupplyRequests: React.FC = () => {
         <div style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0,0,0,0.4)',
+          background: 'rgba(0,0,0,0.5)',
+          backdropFilter: 'blur(4px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1000
+          zIndex: 1000,
+          padding: '1rem'
         }}>
-          <div className="card" style={{ width: '90%', maxWidth: '600px', background: 'white', padding: '1rem', border: '1px solid var(--gray-200)' }}>
-            <div className="card-header">
-              <h3 className="card-title">{selectedRequest.supplyName}</h3>
+          <div className="card" style={{
+            width: '90%',
+            maxWidth: '600px',
+            background: 'white',
+            padding: 0,
+            border: 'none',
+            borderRadius: '0.75rem',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              padding: '1.5rem',
+              background: categoryColors.bg,
+              borderBottom: `2px solid ${categoryColors.border}`
+            }}>
+              <h3 style={{
+                margin: 0,
+                fontSize: '1.25rem',
+                fontWeight: 700,
+                color: categoryColors.text
+              }}>
+                {selectedRequest.supplyName}
+              </h3>
             </div>
-            <div className="card-content" style={{ display: 'grid', gap: '1rem' }}>
+            <div style={{ padding: '1.5rem', display: 'grid', gap: '1rem' }}>
               <div>
                 <strong>Category:</strong> {selectedRequest.category}
               </div>
@@ -531,7 +897,7 @@ const SupplyRequests: React.FC = () => {
                 <p style={{ marginTop: '0.5rem' }}>{selectedRequest.description}</p>
               </div>
               <div>
-                <strong>Status:</strong> 
+                <strong>Status:</strong>
                 <span
                   style={{
                     padding: '0.25rem 0.5rem',
@@ -559,24 +925,9 @@ const SupplyRequests: React.FC = () => {
                   <strong>Delivery Method:</strong> {selectedRequest.deliveryLocation === 'home' ? 'Home Delivery' : selectedRequest.deliveryLocation === 'ward' ? 'Anganwadi Ward Collection' : selectedRequest.deliveryLocation}
                 </div>
               )}
-              {selectedRequest.scheduledAt && (
-                <div>
-                  <strong>Scheduled on:</strong> {new Date(selectedRequest.scheduledAt).toLocaleString()}
-                </div>
-              )}
-              {selectedRequest.scheduledBy && (
-                <div>
-                  <strong>Scheduled By:</strong> {selectedRequest.scheduledBy}
-                </div>
-              )}
               {selectedRequest.deliveryCompletedAt && (
                 <div>
                   <strong>Delivered on:</strong> {new Date(selectedRequest.deliveryCompletedAt).toLocaleString()}
-                </div>
-              )}
-              {selectedRequest.deliveryCompletedBy && (
-                <div>
-                  <strong>Delivered By:</strong> {selectedRequest.deliveryCompletedBy}
                 </div>
               )}
               {selectedRequest.status === 'rejected' && selectedRequest.reviewNotes && (
@@ -586,15 +937,31 @@ const SupplyRequests: React.FC = () => {
                 </div>
               )}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-              <button className="btn" onClick={() => setViewModalOpen(false)}>
+            <div style={{
+              padding: '1.25rem 1.5rem',
+              background: '#f8fafc',
+              borderTop: '1px solid #e2e8f0',
+              display: 'flex',
+              justifyContent: 'flex-end'
+            }}>
+              <button
+                className="btn"
+                onClick={() => setViewModalOpen(false)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: 'white',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '0.5rem',
+                  color: '#475569',
+                  fontWeight: 600
+                }}
+              >
                 Close
               </button>
             </div>
           </div>
         </div>
       )}
-
     </PalliativeLayout>
   );
 };
