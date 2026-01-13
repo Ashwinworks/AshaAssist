@@ -13,7 +13,8 @@ import {
   CheckCircle,
   AlertCircle,
   ShoppingBag,
-  Baby
+  Baby,
+  Eye
 } from 'lucide-react';
 import BirthRecordingModal from '../../components/BirthRecordingModal';
 
@@ -360,6 +361,28 @@ const Dashboard: React.FC = () => {
               >
                 <Package size={32} color="#8b5cf6" style={{ marginBottom: '0.5rem' }} />
                 <span style={{ fontWeight: 500, color: '#374151' }}>Monthly Ration</span>
+              </button>
+
+              <button
+                className="btn"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '1.5rem 1rem',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '0.5rem',
+                  backgroundColor: 'white',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                onClick={() => navigate('/maternity/jaundice-detection')}
+              >
+                <Eye size={32} color="#f59e0b" style={{ marginBottom: '0.5rem' }} />
+                <span style={{ fontWeight: 500, color: '#374151' }}>Jaundice Detection</span>
               </button>
             </div>
           </div>

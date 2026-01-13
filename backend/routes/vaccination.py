@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from datetime import datetime, timezone
 from bson import ObjectId
+import json
 
 # Create blueprint
 vaccination_bp = Blueprint('vaccination', __name__)
@@ -514,16 +515,49 @@ def init_vaccination_routes(app, collections):
             cert_hash = get_certificate_hash(cert_data)
             verification_url = generate_verification_url(certificate_id, signature)
 
-            # Generate QR code with verification data
-            qr_data = {
-                'id': certificate_id,
-                'hash': cert_hash[:16],  # Short hash for QR
-                'sig': signature[:32],    # Truncated signature
-                'url': verification_url
-            }
+            # Generate QR code with human-readable formatted certificate data
+            # This creates a beautiful, easy-to-read certificate when scanned
+            vaccines_list = '\n'.join([f'  • {v}' for v in vaccines])
             
-            qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=10, border=2)
-            qr.add_data(verification_url)
+            qr_text = f"""╔══════════════════════════════════════╗
+║   VACCINATION CERTIFICATE            ║
+║   AshaAssist Health Department       ║
+╚══════════════════════════════════════╝
+
+📋 CERTIFICATE ID
+   {certificate_id}
+
+👶 CHILD'S NAME
+   {child_name}
+
+👨‍👩‍👧 PARENT/GUARDIAN
+   {parent_name}
+
+💉 VACCINES ADMINISTERED
+{vaccines_list}
+
+📅 VACCINATION DATE
+   {vaccination_date}
+
+📍 LOCATION
+   {location}
+
+📝 ISSUED ON
+   {issued_date}
+
+🔐 DIGITAL SIGNATURE
+   {signature[:48]}...
+
+✓ CERTIFICATE VERIFIED
+   This is an authentic vaccination certificate
+   issued by AshaAssist Health Department
+
+🌐 Online Verification:
+   {verification_url}
+"""
+            
+            qr = qrcode.QRCode(version=None, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=2)
+            qr.add_data(qr_text)
             qr.make(fit=True)
             qr_img = qr.make_image(fill_color="black", back_color="white")
             
@@ -614,7 +648,7 @@ def init_vaccination_routes(app, collections):
             # Digital signature info
             c.setFillColor(colors.HexColor('#166534'))
             c.setFont('Helvetica-Bold', 11)
-            c.drawString(margin_x, y - 5*mm, '🔐 Digital Signature Verification')
+            c.drawString(margin_x, y - 5*mm, '🔐 Digital Signature & Quick Verification')
             
             c.setFont('Helvetica', 9)
             c.setFillColor(colors.HexColor('#374151'))
@@ -622,10 +656,14 @@ def init_vaccination_routes(app, collections):
             c.drawString(margin_x, y - 22*mm, f"Hash: {cert_hash[:32]}...")
             c.drawString(margin_x, y - 29*mm, f"Signature: {signature[:24]}...")
             
+            c.setFont('Helvetica-Bold', 9)
+            c.setFillColor(colors.HexColor('#166534'))
+            c.drawString(margin_x, y - 38*mm, "📱 Scan QR Code to View Certificate Details")
+            
             c.setFont('Helvetica-Oblique', 8)
             c.setFillColor(colors.HexColor('#6b7280'))
-            c.drawString(margin_x, y - 40*mm, "Scan QR code to verify certificate authenticity")
-            c.drawString(margin_x, y - 47*mm, f"Verify at: {verification_url[:50]}...")
+            c.drawString(margin_x, y - 45*mm, "QR code contains complete certificate information in JSON format")
+            c.drawString(margin_x, y - 51*mm, f"Online verification: {verification_url[:50]}...")
 
             # Footer
             y = 20*mm

@@ -11,6 +11,7 @@ interface Message {
 
 const ChatBot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -32,6 +33,42 @@ const ChatBot: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Welcome popup on mount
+  useEffect(() => {
+    // Show welcome popup after a short delay
+    const timer = setTimeout(() => {
+      setShowWelcomePopup(true);
+
+      // Play popup notification sound
+      const audio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+      audio.volume = 0.4;
+
+      // Create a more pleasant popup sound using Web Audio API
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.1);
+
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3);
+
+      // Hide popup after 10 seconds
+      setTimeout(() => {
+        setShowWelcomePopup(false);
+      }, 10000);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -139,9 +176,9 @@ const ChatBot: React.FC = () => {
           position: 'fixed',
           right: '24px',
           bottom: '24px',
-          width: '56px',
-          height: '56px',
-          borderRadius: '28px',
+          width: '64px',
+          height: '64px',
+          borderRadius: '32px',
           border: '1px solid var(--gray-200)',
           backgroundColor: 'white',
           boxShadow: '0 8px 24px rgba(2, 8, 23, 0.12)',
@@ -150,13 +187,71 @@ const ChatBot: React.FC = () => {
           justifyContent: 'center',
           cursor: 'pointer',
           zIndex: 1100,
-          transition: 'all 0.2s ease'
+          transition: 'all 0.2s ease',
+          animation: showWelcomePopup ? 'bounce 0.5s ease' : 'none'
         }}
         onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 12px 28px rgba(2, 8, 23, 0.18)'; }}
         onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 8px 24px rgba(2, 8, 23, 0.12)'; }}
       >
-        <Bot size={24} color={'var(--blue-700)'} />
+        <Bot size={28} color={'var(--blue-700)'} />
       </button>
+
+      {/* Welcome Popup */}
+      {showWelcomePopup && (
+        <div
+          style={{
+            position: 'fixed',
+            right: '100px',
+            bottom: '30px',
+            backgroundColor: 'white',
+            border: '1px solid var(--blue-200)',
+            borderRadius: '1rem',
+            padding: '1rem 1.25rem',
+            boxShadow: '0 8px 24px rgba(2, 8, 23, 0.15)',
+            maxWidth: '280px',
+            zIndex: 1099,
+            animation: 'slideInRight 0.4s ease-out'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'start', gap: '0.75rem' }}>
+            <div style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--blue-100)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <Bot size={20} color={'var(--blue-700)'} />
+            </div>
+            <div>
+              <div style={{ fontWeight: '600', color: 'var(--gray-900)', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
+                I'm AshaAssist Copilot!
+              </div>
+              <div style={{ color: 'var(--gray-600)', fontSize: '0.85rem', lineHeight: '1.4' }}>
+                Do you need any help?
+              </div>
+            </div>
+            <button
+              onClick={() => setShowWelcomePopup(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '0.25rem',
+                color: 'var(--gray-400)',
+                marginLeft: 'auto',
+                flexShrink: 0
+              }}
+              aria-label="Close welcome message"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Chat Window */}
       {isOpen && (
@@ -324,8 +419,28 @@ const ChatBot: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* CSS Animations */}
+      <style>{`
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
     </>
   );
 };
+
 
 export default ChatBot;
