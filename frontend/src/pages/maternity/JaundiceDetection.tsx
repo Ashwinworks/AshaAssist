@@ -14,6 +14,7 @@ import {
     ChevronRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { api } from '../../services/api';
 
 interface AnalysisResult {
     id: string;
@@ -32,6 +33,7 @@ const JaundiceDetection: React.FC = () => {
     const [currentResult, setCurrentResult] = useState<AnalysisResult | null>(null);
     const [history, setHistory] = useState<AnalysisResult[]>([]);
     const [showGuidance, setShowGuidance] = useState(true);
+    const [imageType, setImageType] = useState<'eye' | 'skin'>('eye');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -62,35 +64,57 @@ const JaundiceDetection: React.FC = () => {
 
         setAnalyzing(true);
 
-        // Simulate analysis (replace with actual API call later)
-        setTimeout(() => {
-            const mockResult: AnalysisResult = {
+        try {
+            // Create FormData to send image to backend
+            const formData = new FormData();
+            formData.append('image', selectedImage);
+            formData.append('imageType', imageType);
+
+            // Call backend API
+            const response = await api.post('/jaundice/predict', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            const data = response.data;
+
+            // Map prediction to risk level
+            let riskLevel: 'low' | 'medium' | 'high' = 'low';
+            if (data.prediction === 'Severe Jaundice') {
+                riskLevel = 'high';
+            } else if (data.prediction === 'Mild Jaundice') {
+                riskLevel = 'medium';
+            } else {
+                riskLevel = 'low';
+            }
+
+            // Build result object
+            const result: AnalysisResult = {
                 id: Date.now().toString(),
                 date: new Date().toISOString(),
                 imageUrl: previewUrl!,
-                riskLevel: Math.random() > 0.7 ? 'high' : Math.random() > 0.4 ? 'medium' : 'low',
-                confidence: Math.floor(Math.random() * 20) + 80,
-                bilirubinEstimate: '8-12 mg/dL',
+                riskLevel,
+                confidence: Math.round(data.confidence * 100),
+                bilirubinEstimate: riskLevel === 'high' ? '12-15 mg/dL' : riskLevel === 'medium' ? '8-12 mg/dL' : '5-8 mg/dL',
                 recommendations: []
             };
 
             // Add recommendations based on risk level
-            if (mockResult.riskLevel === 'high') {
-                mockResult.recommendations = [
+            if (result.riskLevel === 'high') {
+                result.recommendations = [
                     '⚠️ Seek immediate medical attention',
                     'Visit a healthcare facility within 24 hours',
                     'Keep baby well-hydrated and feeding frequently',
                     'Monitor for increased yellowing or behavioral changes'
                 ];
-            } else if (mockResult.riskLevel === 'medium') {
-                mockResult.recommendations = [
+            } else if (result.riskLevel === 'medium') {
+                result.recommendations = [
                     'Schedule a checkup with your healthcare provider',
                     'Monitor baby\'s color daily',
                     'Ensure adequate feeding (8-12 times per day)',
                     'Increase exposure to indirect natural light'
                 ];
             } else {
-                mockResult.recommendations = [
+                result.recommendations = [
                     'Continue regular feeding schedule',
                     'Monitor baby\'s condition daily',
                     'Maintain good hydration',
@@ -98,11 +122,20 @@ const JaundiceDetection: React.FC = () => {
                 ];
             }
 
-            setCurrentResult(mockResult);
-            setHistory(prev => [mockResult, ...prev]);
+            setCurrentResult(result);
+            setHistory(prev => [result, ...prev]);
+
+            if (data.isMockPrediction) {
+                toast.success('Analysis complete! (Using mock model)');
+            } else {
+                toast.success('Analysis complete!');
+            }
+        } catch (error: any) {
+            console.error('Analysis error:', error);
+            toast.error(error.response?.data?.error || 'Failed to analyze image');
+        } finally {
             setAnalyzing(false);
-            toast.success('Analysis complete!');
-        }, 3000);
+        }
     };
 
     const resetAnalysis = () => {
@@ -339,6 +372,78 @@ const JaundiceDetection: React.FC = () => {
                                     <span style={{ fontWeight: 600 }}>Upload Image</span>
                                 </button>
                             </div>
+
+                            {/* Image Type Selection */}
+                            {previewUrl && !currentResult && (
+                                <div style={{
+                                    backgroundColor: '#f0f9ff',
+                                    border: '1px solid #3b82f6',
+                                    borderRadius: '0.75rem',
+                                    padding: '1rem',
+                                    marginBottom: '1rem'
+                                }}>
+                                    <h4 style={{
+                                        margin: '0 0 0.75rem',
+                                        color: '#1e40af',
+                                        fontSize: '0.9rem',
+                                        fontWeight: 600
+                                    }}>
+                                        Select Image Type:
+                                    </h4>
+                                    <div style={{ display: 'flex', gap: '1rem' }}>
+                                        <label style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.5rem',
+                                            cursor: 'pointer',
+                                            padding: '0.75rem 1rem',
+                                            borderRadius: '0.5rem',
+                                            backgroundColor: imageType === 'eye' ? '#3b82f6' : 'white',
+                                            color: imageType === 'eye' ? 'white' : '#1e40af',
+                                            border: `2px solid ${imageType === 'eye' ? '#3b82f6' : '#bfdbfe'}`,
+                                            flex: 1,
+                                            justifyContent: 'center',
+                                            fontWeight: 500,
+                                            transition: 'all 0.2s'
+                                        }}>
+                                            <input
+                                                type="radio"
+                                                name="imageType"
+                                                value="eye"
+                                                checked={imageType === 'eye'}
+                                                onChange={(e) => setImageType(e.target.value as 'eye' | 'skin')}
+                                                style={{ margin: 0 }}
+                                            />
+                                            👁️ Eyes
+                                        </label>
+                                        <label style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.5rem',
+                                            cursor: 'pointer',
+                                            padding: '0.75rem 1rem',
+                                            borderRadius: '0.5rem',
+                                            backgroundColor: imageType === 'skin' ? '#3b82f6' : 'white',
+                                            color: imageType === 'skin' ? 'white' : '#1e40af',
+                                            border: `2px solid ${imageType === 'skin' ? '#3b82f6' : '#bfdbfe'}`,
+                                            flex: 1,
+                                            justifyContent: 'center',
+                                            fontWeight: 500,
+                                            transition: 'all 0.2s'
+                                        }}>
+                                            <input
+                                                type="radio"
+                                                name="imageType"
+                                                value="skin"
+                                                checked={imageType === 'skin'}
+                                                onChange={(e) => setImageType(e.target.value as 'eye' | 'skin')}
+                                                style={{ margin: 0 }}
+                                            />
+                                            🤚 Skin
+                                        </label>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Analyze Button */}
                             {previewUrl && !currentResult && (

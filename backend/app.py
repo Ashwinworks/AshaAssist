@@ -116,6 +116,10 @@ def create_app(config_name='default'):
     init_anganvaadi_routes(app, collections)
     init_milestone_routes(app, collections)
     
+    # Initialize jaundice detection routes (AI model)
+    from routes.jaundice import init_jaundice_routes
+    init_jaundice_routes(app, collections)
+    
     # Initialize chatbot routes (Mistral AI)
     from routes.chatbot import init_chatbot_routes
     init_chatbot_routes(app)
