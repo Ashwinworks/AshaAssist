@@ -16,9 +16,13 @@ def init_auth_routes(app, collections):
     """Initialize authentication routes with dependencies"""
     auth_service = AuthService(collections['users'])
     
-    @auth_bp.route('/api/register', methods=['POST'])
+    @auth_bp.route('/api/register', methods=['POST', 'OPTIONS'])
     def register():
         """Register a new user"""
+        # Handle OPTIONS preflight request
+        if request.method == 'OPTIONS':
+            return '', 204
+        
         try:
             data = request.get_json()
             result, status_code = auth_service.register_user(data)
@@ -40,9 +44,13 @@ def init_auth_routes(app, collections):
         except Exception as e:
             return jsonify({'error': f'Login failed: {str(e)}'}), 500
 
-    @auth_bp.route('/api/auth/google', methods=['POST'])
+    @auth_bp.route('/api/auth/google', methods=['POST', 'OPTIONS'])
     def google_login():
         """Google OAuth authentication"""
+        # Handle OPTIONS preflight request
+        if request.method == 'OPTIONS':
+            return '', 204
+        
         try:
             data = request.get_json()
             
