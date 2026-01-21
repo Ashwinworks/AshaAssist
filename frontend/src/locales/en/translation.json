@@ -29,6 +29,7 @@
         "dashboard": "Dashboard",
         "profile": "Profile",
         "vaccinations": "Vaccination Booking",
+        "vaccinationMilestones": "Vaccination Milestones",
         "healthBlogs": "Health Blogs",
         "appointments": "Appointments",
         "calendar": "Integrated Calendar",

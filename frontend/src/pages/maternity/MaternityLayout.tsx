@@ -47,9 +47,11 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
     { id: 'visits', labelKey: 'nav.visits', icon: UserCheck, path: '/maternity/visits' },
     { id: 'visit-requests', labelKey: 'nav.visitRequests', icon: UserCheck, path: '/maternity/visit-requests' },
     { id: 'vaccinations', labelKey: 'nav.vaccinations', icon: Syringe, path: '/maternity/vaccinations' },
+    { id: 'vaccination-milestones', labelKey: 'nav.vaccinationMilestones', icon: Syringe, path: '/maternity/vaccination-milestones' },
     { id: 'mcp-card', labelKey: 'nav.mcpCard', icon: CreditCard, path: '/maternity/mcp-card' },
     { id: 'feedback', labelKey: 'nav.feedback', icon: MessageSquare, path: '/maternity/feedback' },
   ];
+
 
   const handleLogout = () => {
     logout();

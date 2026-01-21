@@ -52,12 +52,14 @@ import Services from './pages/Services';
 import MaternityProfileSetup from './pages/maternity/ProfileSetup';
 import MaternitySupplyRequests from './pages/maternity/SupplyRequests';
 import VaccinationBooking from './pages/maternity/VaccinationBooking';
+import VaccinationMilestones from './pages/maternity/VaccinationMilestones';
 import MCPCard from './pages/maternity/MCPCard';
 import MaternityFeedback from './pages/maternity/Feedback';
 import AntenatalVisits from './pages/maternity/AntenatalVisits';
 import MonthlyRation from './pages/maternity/MonthlyRation';
 import Milestones from './pages/maternity/Milestones';
 import JaundiceDetection from './pages/maternity/JaundiceDetection';
+
 
 // Import palliative pages
 import PalliativeProfileSetup from './pages/palliative/ProfileSetup';
@@ -538,6 +540,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <VaccinationBooking />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/maternity/vaccination-milestones"
+        element={
+          <ProtectedRoute>
+            <VaccinationMilestones />
           </ProtectedRoute>
         }
       />

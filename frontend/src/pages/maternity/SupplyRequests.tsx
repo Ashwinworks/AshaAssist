@@ -3,7 +3,7 @@ import MaternityLayout from './MaternityLayout';
 import { useAuth } from '../../context/AuthContext';
 import { supplyAPI } from '../../services/api';
 import toast from 'react-hot-toast';
-import { Eye, Package, RefreshCw, Heart, Baby, Pill, CheckCircle, Clock, XCircle, Calendar, MapPin, Phone, FileText } from 'lucide-react';
+import { Eye, Package, RefreshCw, Heart, Baby, Pill, CheckCircle, Clock, XCircle, Calendar, MapPin, Phone, FileText, History } from 'lucide-react';
 
 interface Supply {
   name: string;
@@ -37,6 +37,7 @@ interface SupplyRequest {
 
 const SupplyRequests: React.FC = () => {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'browse' | 'myRequests'>('browse');
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedSupply, setSelectedSupply] = useState<Supply | null>(null);
   const [description, setDescription] = useState('');
@@ -53,6 +54,16 @@ const SupplyRequests: React.FC = () => {
     setRequestsLoading(true);
     try {
       const response = await supplyAPI.getUserRequests();
+      console.log('📦 User supply requests:', response.requests);
+      // Log each request details for debugging
+      response.requests?.forEach((req: any) => {
+        console.log(`Request ${req.supplyName}:`, {
+          status: req.status,
+          expectedDeliveryDate: req.expectedDeliveryDate,
+          deliveryLocation: req.deliveryLocation,
+          anganwadiLocation: req.anganwadiLocation
+        });
+      });
       setRequests(response.requests || []);
     } catch (error: any) {
       toast.error('Failed to fetch requests');
@@ -341,6 +352,54 @@ const SupplyRequests: React.FC = () => {
           </div>
         </div>
         <div className="card-content">
+          {/* Tab Navigation */}
+          <div style={{ display: 'flex', borderBottom: '2px solid #e2e8f0', marginBottom: '2rem' }}>
+            <button
+              onClick={() => setActiveTab('browse')}
+              style={{
+                flex: 1,
+                padding: '1rem 1.5rem',
+                border: 'none',
+                background: activeTab === 'browse' ? categoryColors.bg : 'transparent',
+                color: activeTab === 'browse' ? categoryColors.text : '#64748b',
+                borderBottom: activeTab === 'browse' ? `3px solid ${categoryColors.border}` : '3px solid transparent',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Package size={18} />
+              Browse Supplies
+            </button>
+            <button
+              onClick={() => setActiveTab('myRequests')}
+              style={{
+                flex: 1,
+                padding: '1rem 1.5rem',
+                border: 'none',
+                background: activeTab === 'myRequests' ? categoryColors.bg : 'transparent',
+                color: activeTab === 'myRequests' ? categoryColors.text : '#64748b',
+                borderBottom: activeTab === 'myRequests' ? `3px solid ${categoryColors.border}` : '3px solid transparent',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <History size={18} />
+              My Requests ({requests.length})
+            </button>
+          </div>
+
           {requestsLoading ? (
             <div style={{
               textAlign: 'center',
@@ -359,256 +418,99 @@ const SupplyRequests: React.FC = () => {
               Loading your supply requests...
             </div>
           ) : (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-              gap: '1.75rem',
-              marginTop: '1rem'
-            }}>
-              {supplies.map((supply, index) => {
-                const existingRequest = getRequestForSupply(supply.name);
-                return (
-                  <div
-                    key={index}
-                    className="card"
-                    style={{
-                      padding: '0',
-                      border: '1px solid #e2e8f0',
-                      textDecoration: 'none',
-                      transition: 'all 0.3s ease',
-                      cursor: existingRequest ? 'default' : 'pointer',
-                      borderRadius: '0.75rem',
-                      overflow: 'hidden',
-                      backgroundColor: 'white',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column'
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-8px)';
-                      (e.currentTarget as HTMLDivElement).style.boxShadow = '0 15px 30px rgba(0,0,0,0.12)';
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
-                      (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
-                    }}
-                  >
-                    {/* Header with Gradient */}
-                    <div style={{
-                      padding: '1rem 1.25rem',
-                      background: categoryColors.bg,
-                      borderBottom: `2px solid ${categoryColors.border}`,
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ color: categoryColors.icon }}>
-                          {getSupplyIcon(supply.name)}
-                        </div>
-                        <span style={{
-                          fontWeight: 700,
-                          color: categoryColors.text,
-                          fontSize: '0.875rem'
-                        }}>
-                          {supply.name}
-                        </span>
-                      </div>
-                      {existingRequest && (
-                        <span
-                          style={{
-                            padding: '0.25rem 0.5rem',
-                            borderRadius: '12px',
-                            fontSize: '0.7rem',
-                            fontWeight: 700,
-                            color: getStatusColor(existingRequest.status),
-                            backgroundColor: getStatusBgColor(existingRequest.status),
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px'
-                          }}
-                        >
-                          {existingRequest.status}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div style={{
-                      padding: '1.5rem',
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'column'
-                    }}>
-                      <p style={{
-                        margin: '0 0 1rem',
-                        color: '#64748b',
-                        fontSize: '0.95rem',
-                        lineHeight: 1.6,
-                        flex: 1
-                      }}>
-                        {supply.description}
-                      </p>
-
+            <>
+              {/* Browse Supplies Tab */}
+              {activeTab === 'browse' && (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                  gap: '1.75rem',
+                  marginTop: '1rem'
+                }}>
+                  {supplies.map((supply, index) => (
+                    <div
+                      key={index}
+                      className="card"
+                      style={{
+                        padding: '0',
+                        border: '1px solid #e2e8f0',
+                        textDecoration: 'none',
+                        transition: 'all 0.3s ease',
+                        cursor: 'pointer',
+                        borderRadius: '0.75rem',
+                        overflow: 'hidden',
+                        backgroundColor: 'white',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column'
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-8px)';
+                        (e.currentTarget as HTMLDivElement).style.boxShadow = '0 15px 30px rgba(0,0,0,0.12)';
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+                        (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+                      }}
+                    >
+                      {/* Header with Gradient */}
                       <div style={{
-                        padding: '0.75rem',
-                        background: '#f8fafc',
-                        borderRadius: '0.5rem',
-                        marginBottom: '1rem',
-                        border: '1px dashed #cbd5e1'
+                        padding: '1rem 1.25rem',
+                        background: categoryColors.bg,
+                        borderBottom: `2px solid ${categoryColors.border}`,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <div style={{ color: categoryColors.icon }}>
+                            {getSupplyIcon(supply.name)}
+                          </div>
+                          <span style={{
+                            fontWeight: 700,
+                            color: categoryColors.text,
+                            fontSize: '0.875rem'
+                          }}>
+                            {supply.name}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div style={{
+                        padding: '1.5rem',
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column'
                       }}>
                         <p style={{
-                          fontSize: '0.8rem',
-                          color: '#475569',
-                          margin: 0,
-                          lineHeight: 1.5
+                          margin: '0 0 1rem',
+                          color: '#64748b',
+                          fontSize: '0.95rem',
+                          lineHeight: 1.6,
+                          flex: 1
                         }}>
-                          <strong style={{ color: categoryColors.text }}>Eligibility:</strong> {supply.eligibility}
+                          {supply.description}
                         </p>
-                      </div>
 
-                      {existingRequest ? (
-                        <div>
-                          {/* Request Date */}
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            color: '#94a3b8',
+                        <div style={{
+                          padding: '0.75rem',
+                          background: '#f8fafc',
+                          borderRadius: '0.5rem',
+                          marginBottom: '1rem',
+                          border: '1px dashed #cbd5e1'
+                        }}>
+                          <p style={{
                             fontSize: '0.8rem',
-                            marginBottom: '0.75rem'
+                            color: '#475569',
+                            margin: 0,
+                            lineHeight: 1.5
                           }}>
-                            <Calendar size={14} />
-                            <span>Requested: {new Date(existingRequest.createdAt).toLocaleDateString()}</span>
-                          </div>
-
-                          {/* Delivery Info */}
-                          {(existingRequest.status === 'approved' || existingRequest.status === 'scheduled') && existingRequest.expectedDeliveryDate && (
-                            <div style={{
-                              margin: '0.75rem 0',
-                              padding: '1rem',
-                              background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-                              borderRadius: '0.5rem',
-                              border: '1px solid #86efac'
-                            }}>
-                              <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                fontSize: '0.875rem',
-                                color: '#15803d',
-                                fontWeight: 600,
-                                marginBottom: '0.5rem'
-                              }}>
-                                <CheckCircle size={16} />
-                                <span>Expected: {new Date(existingRequest.expectedDeliveryDate).toLocaleDateString()}</span>
-                              </div>
-                              <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                fontSize: '0.875rem',
-                                color: '#0369a1',
-                                fontWeight: 600
-                              }}>
-                                <MapPin size={16} />
-                                <span>
-                                  {existingRequest.deliveryLocation === 'home' ? 'Home Delivery' :
-                                    existingRequest.deliveryLocation === 'ward' ? 'Ward Collection' : 'TBD'}
-                                </span>
-                              </div>
-                              {existingRequest.deliveryLocation === 'ward' && (existingRequest as any).anganwadiLocation && (
-                                <div style={{
-                                  marginTop: '0.5rem',
-                                  padding: '0.5rem',
-                                  backgroundColor: 'white',
-                                  borderRadius: '0.375rem',
-                                  fontSize: '0.8rem',
-                                  color: '#475569'
-                                }}>
-                                  <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
-                                    📍 {(existingRequest as any).anganwadiLocation.name}
-                                  </div>
-                                  {(existingRequest as any).anganwadiLocation.address && (
-                                    <div>{(existingRequest as any).anganwadiLocation.address}</div>
-                                  )}
-                                  <div>Ward: {(existingRequest as any).anganwadiLocation.ward}</div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Rejection Info */}
-                          {existingRequest.status === 'rejected' && existingRequest.reviewNotes && (
-                            <div style={{
-                              padding: '0.75rem',
-                              background: '#fef2f2',
-                              borderRadius: '0.5rem',
-                              border: '1px solid #fecaca',
-                              marginBottom: '0.75rem'
-                            }}>
-                              <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                color: '#dc2626',
-                                fontSize: '0.8rem',
-                                fontWeight: 600
-                              }}>
-                                <XCircle size={14} />
-                                <span>{existingRequest.reviewNotes}</span>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Delivered Info */}
-                          {existingRequest.status === 'delivered' && existingRequest.deliveryCompletedAt && (
-                            <div style={{
-                              padding: '0.75rem',
-                              background: '#f0fdf4',
-                              borderRadius: '0.5rem',
-                              border: '1px solid #86efac',
-                              marginBottom: '0.75rem'
-                            }}>
-                              <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                color: '#15803d',
-                                fontSize: '0.8rem',
-                                fontWeight: 600
-                              }}>
-                                <CheckCircle size={14} />
-                                <span>Delivered: {new Date(existingRequest.deliveryCompletedAt).toLocaleDateString()}</span>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* View Details Button */}
-                          <button
-                            className="btn"
-                            onClick={() => openViewModal(existingRequest)}
-                            style={{
-                              width: '100%',
-                              marginTop: '0.5rem',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: '0.5rem',
-                              background: 'white',
-                              border: '1px solid #e2e8f0',
-                              borderRadius: '0.5rem',
-                              padding: '0.75rem',
-                              color: '#475569',
-                              fontWeight: 600,
-                              transition: 'all 0.2s ease'
-                            }}
-                          >
-                            <Eye size={16} />
-                            View Full Details
-                          </button>
+                            <strong style={{ color: categoryColors.text }}>Eligibility:</strong> {supply.eligibility}
+                          </p>
                         </div>
-                      ) : (
+
                         <button
                           className="btn"
                           onClick={() => handleRequestClick(supply)}
@@ -631,12 +533,213 @@ const SupplyRequests: React.FC = () => {
                           <Package size={18} />
                           Request Supply
                         </button>
-                      )}
+                      </div>
                     </div>
+                  ))}
+                </div>
+              )}
+
+              {/* My Requests Tab */}
+              {activeTab === 'myRequests' && (
+                requests.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
+                    <Package size={48} color="#cbd5e1" style={{ margin: '0 auto 1rem' }} />
+                    <p style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>No supply requests yet</p>
+                    <p style={{ fontSize: '0.875rem' }}>Switch to "Browse Supplies" to make your first request</p>
                   </div>
-                );
-              })}
-            </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    {requests.map((request) => (
+                      <div
+                        key={request._id}
+                        className="card"
+                        style={{
+                          padding: '1.5rem',
+                          border: '1px solid #e2e8f0',
+                          borderLeft: `4px solid ${getStatusColor(request.status)}`
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+                              <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>
+                                {request.supplyName}
+                              </h3>
+                              <span style={{
+                                padding: '0.25rem 0.5rem',
+                                borderRadius: '12px',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                color: getStatusColor(request.status),
+                                backgroundColor: getStatusBgColor(request.status),
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px'
+                              }}>
+                                {request.status}
+                              </span>
+                            </div>
+
+                            <p style={{ margin: '0.5rem 0', color: '#64748b', fontSize: '0.875rem' }}>
+                              <strong>Requested:</strong> {new Date(request.createdAt).toLocaleDateString()}
+                            </p>
+
+                            {request.description && (
+                              <p style={{ margin: '0.5rem 0', color: '#475569', fontSize: '0.875rem' }}>
+                                {request.description}
+                              </p>
+                            )}
+
+                            {/* Delivery info */}
+                            {request.expectedDeliveryDate && (
+                              <div style={{
+                                margin: '0.75rem 0',
+                                padding: '1rem',
+                                background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                                borderRadius: '0.5rem',
+                                border: '1px solid #86efac'
+                              }}>
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem',
+                                  fontSize: '0.875rem',
+                                  color: '#15803d',
+                                  fontWeight: 600,
+                                  marginBottom: '0.5rem'
+                                }}>
+                                  <CheckCircle size={16} />
+                                  <span>Expected: {new Date(request.expectedDeliveryDate).toLocaleDateString()}</span>
+                                </div>
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem',
+                                  fontSize: '0.875rem',
+                                  color: '#0369a1',
+                                  fontWeight: 600
+                                }}>
+                                  <MapPin size={16} />
+                                  <span>
+                                    {request.deliveryLocation === 'home' ? 'Home Delivery' :
+                                      request.deliveryLocation === 'ward' ? 'Ward Collection' : 'TBD'}
+                                  </span>
+                                </div>
+                                {request.deliveryLocation === 'ward' && (request as any).anganwadiLocation && (
+                                  <div style={{
+                                    marginTop: '0.5rem',
+                                    padding: '0.5rem',
+                                    backgroundColor: 'white',
+                                    borderRadius: '0.375rem',
+                                    fontSize: '0.8rem',
+                                    color: '#475569'
+                                  }}>
+                                    <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
+                                      📍 {(request as any).anganwadiLocation.name}
+                                    </div>
+                                    {(request as any).anganwadiLocation.address && (
+                                      <div>{(request as any).anganwadiLocation.address}</div>
+                                    )}
+                                    <div>Ward: {(request as any).anganwadiLocation.ward}</div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Approved but not yet scheduled message */}
+                            {request.status === 'approved' && !request.expectedDeliveryDate && (
+                              <div style={{
+                                padding: '0.75rem',
+                                background: '#eff6ff',
+                                borderRadius: '0.5rem',
+                                border: '1px solid #bfdbfe',
+                                marginTop: '0.75rem'
+                              }}>
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem',
+                                  color: '#1e40af',
+                                  fontSize: '0.8rem',
+                                  fontWeight: 600
+                                }}>
+                                  <Clock size={14} />
+                                  <span>Approved - Waiting for ASHA worker to schedule delivery</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Rejection info */}
+                            {request.status === 'rejected' && request.reviewNotes && (
+                              <div style={{
+                                padding: '0.75rem',
+                                background: '#fef2f2',
+                                borderRadius: '0.5rem',
+                                border: '1px solid #fecaca',
+                                marginTop: '0.75rem'
+                              }}>
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem',
+                                  color: '#dc2626',
+                                  fontSize: '0.8rem',
+                                  fontWeight: 600
+                                }}>
+                                  <XCircle size={14} />
+                                  <span>{request.reviewNotes}</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Delivered info */}
+                            {request.status === 'delivered' && request.deliveryCompletedAt && (
+                              <div style={{
+                                padding: '0.75rem',
+                                background: '#f0fdf4',
+                                borderRadius: '0.5rem',
+                                border: '1px solid #86efac',
+                                marginTop: '0.75rem'
+                              }}>
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem',
+                                  color: '#15803d',
+                                  fontSize: '0.8rem',
+                                  fontWeight: 600
+                                }}>
+                                  <CheckCircle size={14} />
+                                  <span>Delivered: {new Date(request.deliveryCompletedAt).toLocaleDateString()}</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* View button */}
+                          <button
+                            className="btn"
+                            onClick={() => openViewModal(request)}
+                            style={{
+                              padding: '0.5rem 1rem',
+                              background: 'white',
+                              border: '1px solid #e2e8f0',
+                              borderRadius: '0.5rem',
+                              color: '#475569',
+                              fontWeight: 600,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem'
+                            }}
+                          >
+                            <Eye size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              )}
+            </>
           )}
         </div>
       </div>
