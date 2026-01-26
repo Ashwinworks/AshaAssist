@@ -40,6 +40,7 @@ import CommunityClassesManagement from './pages/admin/content/CommunityClassesMa
 import LocalCampsManagement from './pages/admin/content/LocalCampsManagement';
 import Feedbacks from './pages/admin/Feedbacks';
 import SupplyRequestsManagement from './pages/admin/SupplyRequestsManagement';
+import WardAnalytics from './pages/admin/WardAnalytics';
 
 import CategorySelection from './components/CategorySelection';
 
@@ -720,6 +721,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <VisitMonitoring />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/ward-analytics"
+        element={
+          <ProtectedRoute>
+            <WardAnalytics />
           </ProtectedRoute>
         }
       />

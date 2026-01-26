@@ -113,6 +113,19 @@ def init_community_routes(app, collections):
                 })
             except Exception:
                 pass
+            
+            # Create notification for all users
+            try:
+                from routes.notifications import notify_all_users
+                notify_all_users(
+                    collections,
+                    title=f"New Community Class: {title}",
+                    message=f"A new community class has been scheduled on {date} at {time}" + (f" at {location}" if location else ""),
+                    notification_type='event',
+                    related_entity={'type': 'community_class', 'id': doc['id']}
+                )
+            except Exception as e:
+                print(f"Warning: Could not create notification: {str(e)}")
 
             return jsonify({'message': 'Class created', 'class': doc}), 201
         except Exception as e:
@@ -214,6 +227,19 @@ def init_community_routes(app, collections):
                 })
             except Exception:
                 pass
+            
+            # Create notification for all users
+            try:
+                from routes.notifications import notify_all_users
+                notify_all_users(
+                    collections,
+                    title=f"New Local Camp: {title}",
+                    message=f"A new local camp has been announced on {date} at {time}" + (f" at {location}" if location else ""),
+                    notification_type='event',
+                    related_entity={'type': 'local_camp', 'id': doc['id']}
+                )
+            except Exception as e:
+                print(f"Warning: Could not create notification: {str(e)}")
 
             return jsonify({'message': 'Camp announced', 'camp': doc}), 201
         except Exception as e:
@@ -253,6 +279,10 @@ def init_community_routes(app, collections):
                 return jsonify({'error': 'No updates provided'}), 400
 
             updates['lastUpdated'] = _now_iso()
+            
+            # Get the class details for notification
+            class_doc = collections['community_classes'].find_one({'_id': ObjectId(item_id)})
+            
             collections['community_classes'].update_one({'_id': ObjectId(item_id)}, {'$set': updates})
 
             # Update mirrored calendar event
@@ -271,6 +301,21 @@ def init_community_routes(app, collections):
                     'sourceType': 'community_class',
                     'sourceId': ObjectId(item_id)
                 }, { '$set': cal_updates })
+            
+            # Create notification for all users about the update
+            try:
+                from routes.notifications import notify_all_users
+                if class_doc:
+                    class_title = updates.get('title', class_doc.get('title', 'Community Class'))
+                    notify_all_users(
+                        collections,
+                        title=f"Class Updated: {class_title}",
+                        message=f"The community class '{class_title}' has been updated. Please check for details.",
+                        notification_type='event',
+                        related_entity={'type': 'community_class', 'id': item_id}
+                    )
+            except Exception as e:
+                print(f"Warning: Could not create notification: {str(e)}")
 
             return jsonify({ 'message': 'Class updated' }), 200
         except Exception as e:
@@ -310,6 +355,10 @@ def init_community_routes(app, collections):
                 return jsonify({'error': 'No updates provided'}), 400
 
             updates['lastUpdated'] = _now_iso()
+            
+            # Get the camp details for notification
+            camp_doc = collections['local_camps'].find_one({'_id': ObjectId(item_id)})
+            
             collections['local_camps'].update_one({'_id': ObjectId(item_id)}, {'$set': updates})
 
             # Update mirrored calendar event
@@ -328,6 +377,21 @@ def init_community_routes(app, collections):
                     'sourceType': 'local_camp',
                     'sourceId': ObjectId(item_id)
                 }, { '$set': cal_updates })
+            
+            # Create notification for all users about the update
+            try:
+                from routes.notifications import notify_all_users
+                if camp_doc:
+                    camp_title = updates.get('title', camp_doc.get('title', 'Local Camp'))
+                    notify_all_users(
+                        collections,
+                        title=f"Camp Updated: {camp_title}",
+                        message=f"The local camp '{camp_title}' has been updated. Please check for details.",
+                        notification_type='event',
+                        related_entity={'type': 'local_camp', 'id': item_id}
+                    )
+            except Exception as e:
+                print(f"Warning: Could not create notification: {str(e)}")
 
             return jsonify({ 'message': 'Camp updated' }), 200
         except Exception as e:

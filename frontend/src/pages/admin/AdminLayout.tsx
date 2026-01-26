@@ -13,7 +13,8 @@ import {
   Heart,
   ChevronDown,
   ChevronRight,
-  MapPin
+  MapPin,
+  BarChart3
 } from 'lucide-react';
 import LanguageToggle from '../../components/LanguageToggle';
 
@@ -79,6 +80,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
       icon: MapPin,
       label: t('admin.visitMonitoring'),
       color: 'var(--green-600)'
+    },
+    {
+      path: '/admin/ward-analytics',
+      icon: BarChart3,
+      label: 'Ward Analytics',
+      color: 'var(--pink-600)'
     },
   ];
 

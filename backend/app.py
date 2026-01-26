@@ -116,6 +116,14 @@ def create_app(config_name='default'):
     init_anganvaadi_routes(app, collections)
     init_milestone_routes(app, collections)
     
+    # Initialize ward analytics routes
+    from routes.ward_analytics import init_ward_analytics_routes
+    init_ward_analytics_routes(app, collections)
+    
+    # Initialize notification routes
+    from routes.notifications import init_notification_routes
+    init_notification_routes(app, collections)
+    
     # Initialize jaundice detection routes (AI model)
     from routes.jaundice import init_jaundice_routes
     init_jaundice_routes(app, collections)

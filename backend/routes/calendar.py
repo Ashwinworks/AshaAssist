@@ -113,6 +113,20 @@ def init_calendar_routes(app, collections):
             }
             
             res = collections['calendar_events'].insert_one(doc)
+            
+            # Create notification for all users
+            try:
+                from routes.notifications import notify_all_users
+                notify_all_users(
+                    collections,
+                    title=f"New Event: {title}",
+                    message=f"A new event has been scheduled on {event_date}" + (f" at {doc.get('place')}" if doc.get('place') else ""),
+                    notification_type='event',
+                    related_entity={'type': 'calendar_event', 'id': str(res.inserted_id)}
+                )
+            except Exception as e:
+                print(f"Warning: Could not create notification: {str(e)}")
+            
             return jsonify({'id': str(res.inserted_id), 'message': 'Event created'}), 201
         except Exception as e:
             return jsonify({'error': f'Failed to create event: {str(e)}'}), 500
@@ -159,7 +173,27 @@ def init_calendar_routes(app, collections):
                 return jsonify({'error': 'No updates provided'}), 400
             
             updates['updatedAt'] = datetime.now(timezone.utc)
+            
+            # Get the event details for notification
+            event = collections['calendar_events'].find_one({'_id': ObjectId(event_id)})
+            
             collections['calendar_events'].update_one({'_id': ObjectId(event_id)}, {'$set': updates})
+            
+            # Create notification for all users about the update
+            try:
+                from routes.notifications import notify_all_users
+                if event:
+                    event_title = updates.get('title', event.get('title', 'Event'))
+                    notify_all_users(
+                        collections,
+                        title=f"Event Updated: {event_title}",
+                        message=f"The event '{event_title}' has been updated. Please check the calendar for details.",
+                        notification_type='event',
+                        related_entity={'type': 'calendar_event', 'id': event_id}
+                    )
+            except Exception as e:
+                print(f"Warning: Could not create notification: {str(e)}")
+            
             return jsonify({'message': 'Event updated'}), 200
         except Exception as e:
             return jsonify({'error': f'Failed to update event: {str(e)}'}), 500

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
 import {
   Heart,
   LogOut,
@@ -22,6 +23,7 @@ import {
 import ChatBot from '../../components/ChatBot';
 import LanguageToggle from '../../components/LanguageToggle';
 import NotificationPanel from '../../components/NotificationPanel';
+import ToastNotification from '../../components/ToastNotification';
 
 interface MaternityLayoutProps {
   children: React.ReactNode;
@@ -35,6 +37,43 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
   const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showToast, setShowToast] = useState(false);
+  const [latestNotification, setLatestNotification] = useState<{ title: string, message: string } | null>(null);
+
+  // Fetch unread count on component mount
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+        const response = await axios.get(`${apiUrl}/notifications`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const newCount = response.data.unreadCount || 0;
+
+        // Show toast only if count increased (new notification arrived)
+        if (newCount > unreadCount && response.data.notifications?.length > 0) {
+          const latest = response.data.notifications[0];
+          setLatestNotification({
+            title: latest.title,
+            message: latest.message
+          });
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 5000); // Auto-dismiss after 5 seconds
+        }
+
+        setUnreadCount(newCount);
+      } catch (error) {
+        console.error('Error fetching unread count:', error);
+      }
+    };
+
+    fetchUnreadCount();
+    // Poll every 30 seconds for new notifications
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Navigation items with translation keys
   const navigationItems = [
@@ -66,6 +105,21 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
   const getNavLabel = (item: typeof navigationItems[0]) => {
     return t(item.labelKey);
   };
+
+  // CSS for notification effects (glow, no movement)
+  const bellShakeStyle = `
+    @keyframes badgeGlow {
+      0%, 100% { 
+        box-shadow: 0 0 8px rgba(236, 72, 153, 0.4), 0 0 12px rgba(236, 72, 153, 0.2);
+      }
+      50% { 
+        box-shadow: 0 0 12px rgba(236, 72, 153, 0.6), 0 0 16px rgba(236, 72, 153, 0.3);
+      }
+    }
+    .badge-glow {
+      animation: badgeGlow 2s ease-in-out infinite;
+    }
+  `;
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', display: 'flex' }}>
@@ -289,6 +343,7 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
               </p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <style>{bellShakeStyle}</style>
               {/* Notification Button */}
               <button
                 onClick={() => setNotificationOpen(!notificationOpen)}
@@ -303,7 +358,7 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
                   alignItems: 'center',
                   justifyContent: 'center',
                   transition: 'all 0.2s ease',
-                  color: '#64748b'
+                  color: unreadCount > 0 ? '#ec4899' : '#64748b'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = '#f8fafc';
@@ -313,30 +368,32 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'white';
                   e.currentTarget.style.borderColor = '#e2e8f0';
-                  e.currentTarget.style.color = '#64748b';
+                  e.currentTarget.style.color = unreadCount > 0 ? '#ec4899' : '#64748b';
                 }}
                 title="Notifications"
               >
                 <Bell size={20} />
                 {/* Notification Badge */}
-                <span style={{
-                  position: 'absolute',
-                  top: '-4px',
-                  right: '-4px',
-                  background: '#ec4899',
-                  color: 'white',
-                  fontSize: '0.65rem',
-                  fontWeight: '700',
-                  borderRadius: '50%',
-                  width: '20px',
-                  height: '20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: '2px solid white',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                }}>
-                  0
+                <span
+                  className={unreadCount > 0 ? 'badge-glow' : ''}
+                  style={{
+                    position: 'absolute',
+                    top: '-4px',
+                    right: '-4px',
+                    background: '#ec4899',
+                    color: 'white',
+                    fontSize: '0.65rem',
+                    fontWeight: '700',
+                    borderRadius: '50%',
+                    width: '20px',
+                    height: '20px',
+                    display: unreadCount > 0 ? 'flex' : 'none',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '2px solid white',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                  }}>
+                  {unreadCount}
                 </span>
               </button>
               <div style={{
@@ -367,7 +424,18 @@ const MaternityLayout: React.FC<MaternityLayoutProps> = ({ children, title }) =>
           isOpen={notificationOpen}
           onClose={() => setNotificationOpen(false)}
           categoryColor="#ec4899"
+          onUnreadCountChange={setUnreadCount}
         />
+
+        {/* Toast Notification */}
+        {showToast && latestNotification && (
+          <ToastNotification
+            title={latestNotification.title}
+            message={latestNotification.message}
+            color="#ec4899"
+            onClose={() => setShowToast(false)}
+          />
+        )}
       </div>
     </div>
   );

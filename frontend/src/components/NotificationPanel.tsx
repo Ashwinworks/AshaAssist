@@ -1,20 +1,129 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, X } from 'lucide-react';
+import axios from 'axios';
+
+interface Notification {
+    id: string;
+    title: string;
+    message: string;
+    type: 'info' | 'success' | 'warning' | 'event';
+    isRead: boolean;
+    createdAt: string;
+    relatedEntity?: {
+        type: string;
+        id: string;
+    };
+}
 
 interface NotificationPanelProps {
     isOpen: boolean;
     onClose: () => void;
     categoryColor: string;
+    onUnreadCountChange?: (count: number) => void;
 }
 
-const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, onClose, categoryColor }) => {
+const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, onClose, categoryColor, onUnreadCountChange }) => {
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    // Fetch notifications when panel opens
+    useEffect(() => {
+        if (isOpen) {
+            fetchNotifications();
+        }
+    }, [isOpen]);
+
+    const fetchNotifications = async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+            const response = await axios.get(`${apiUrl}/notifications`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            setNotifications(response.data.notifications || []);
+            setUnreadCount(response.data.unreadCount || 0);
+
+            // Notify parent component of unread count
+            if (onUnreadCountChange) {
+                onUnreadCountChange(response.data.unreadCount || 0);
+            }
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const markAsRead = async (notificationId: string) => {
+        try {
+            const token = localStorage.getItem('token');
+            const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+            await axios.put(
+                `${apiUrl}/notifications/${notificationId}/read`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            // Update local state
+            setNotifications(prev =>
+                prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n)
+            );
+
+            // Update unread count
+            const newUnreadCount = Math.max(0, unreadCount - 1);
+            setUnreadCount(newUnreadCount);
+            if (onUnreadCountChange) {
+                onUnreadCountChange(newUnreadCount);
+            }
+        } catch (error) {
+            console.error('Error marking notification as read:', error);
+        }
+    };
+
+    const markAllAsRead = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+            await axios.put(
+                `${apiUrl}/notifications/mark-all-read`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            // Update local state
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+            setUnreadCount(0);
+            if (onUnreadCountChange) {
+                onUnreadCountChange(0);
+            }
+        } catch (error) {
+            console.error('Error marking all notifications as read:', error);
+        }
+    };
+
+    const formatTime = (timestamp: string) => {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        if (diffDays < 7) return `${diffDays}d ago`;
+
+        return date.toLocaleDateString();
+    };
+
     // Check if device is mobile
     const isMobile = () => {
         return window.innerWidth <= 768;
     };
-
-    // Empty notifications for now
-    const notifications: any[] = [];
 
     if (!isOpen) return null;
 
@@ -57,6 +166,18 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, onClose, 
                 }}>
                     <Bell size={18} />
                     Notifications
+                    {unreadCount > 0 && (
+                        <span style={{
+                            backgroundColor: categoryColor,
+                            color: 'white',
+                            borderRadius: '12px',
+                            padding: '2px 8px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600
+                        }}>
+                            {unreadCount}
+                        </span>
+                    )}
                 </div>
                 <button
                     onClick={onClose}
@@ -90,7 +211,17 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, onClose, 
                 overflowY: 'auto',
                 padding: '1rem'
             }}>
-                {notifications.length === 0 ? (
+                {loading ? (
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        padding: '3rem 1rem',
+                        color: '#64748b'
+                    }}>
+                        Loading notifications...
+                    </div>
+                ) : notifications.length === 0 ? (
                     <div style={{
                         display: 'flex',
                         flexDirection: 'column',
@@ -134,31 +265,45 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, onClose, 
                         flexDirection: 'column',
                         gap: '0.75rem'
                     }}>
-                        {notifications.map((notification, index) => (
+                        {notifications.map((notification) => (
                             <div
-                                key={index}
+                                key={notification.id}
+                                onClick={() => !notification.isRead && markAsRead(notification.id)}
                                 style={{
                                     padding: '0.875rem',
                                     borderRadius: '0.5rem',
                                     border: '1px solid #e2e8f0',
-                                    backgroundColor: notification.read ? 'white' : `${categoryColor}05`,
+                                    backgroundColor: notification.isRead ? 'white' : `${categoryColor}05`,
                                     transition: 'all 0.2s ease',
-                                    cursor: 'pointer'
+                                    cursor: notification.isRead ? 'default' : 'pointer',
+                                    position: 'relative'
                                 }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.backgroundColor = '#f8fafc';
                                     e.currentTarget.style.borderColor = categoryColor;
                                 }}
                                 onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = notification.read ? 'white' : `${categoryColor}05`;
+                                    e.currentTarget.style.backgroundColor = notification.isRead ? 'white' : `${categoryColor}05`;
                                     e.currentTarget.style.borderColor = '#e2e8f0';
                                 }}
                             >
+                                {!notification.isRead && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '12px',
+                                        right: '12px',
+                                        width: '8px',
+                                        height: '8px',
+                                        borderRadius: '50%',
+                                        backgroundColor: categoryColor
+                                    }} />
+                                )}
                                 <div style={{
                                     fontWeight: 600,
                                     fontSize: '0.875rem',
                                     color: '#0f172a',
-                                    marginBottom: '0.25rem'
+                                    marginBottom: '0.25rem',
+                                    paddingRight: '16px'
                                 }}>
                                     {notification.title}
                                 </div>
@@ -174,7 +319,7 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, onClose, 
                                     fontSize: '0.7rem',
                                     color: '#94a3b8'
                                 }}>
-                                    {notification.time}
+                                    {formatTime(notification.createdAt)}
                                 </div>
                             </div>
                         ))}
@@ -192,6 +337,7 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, onClose, 
                     justifyContent: 'center'
                 }}>
                     <button
+                        onClick={markAllAsRead}
                         style={{
                             background: 'none',
                             border: 'none',

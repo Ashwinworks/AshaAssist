@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import MaternityLayout from './MaternityLayout';
-import { Baby, Camera, Calendar, CheckCircle, Clock } from 'lucide-react';
+import { Baby, Camera, Calendar, CheckCircle, Clock, BookOpen } from 'lucide-react';
 import { milestonesAPI } from '../../services/api';
 import MilestoneModal from '../../components/MilestoneModal';
+import MilestoneGuidelinesModal from '../../components/MilestoneGuidelinesModal';
 
 interface Milestone {
   id: string;
@@ -12,6 +13,12 @@ interface Milestone {
   maxMonths: number;
   order: number;
   icon: string;
+  checklistItems?: string[];
+  videoUrl?: string;
+  tips?: string[];
+  safetyWarnings?: string[];
+  whatToExpect?: string;
+  redFlags?: string[];
   achieved: boolean;
   achievedDate: string | null;
   childAgeInMonths: number | null;
@@ -39,6 +46,10 @@ const Milestones: React.FC = () => {
   });
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [guidelinesModal, setGuidelinesModal] = useState<{ isOpen: boolean; milestone: Milestone | null }>({
+    isOpen: false,
+    milestone: null
+  });
 
   const fetchMilestones = async () => {
     try {
@@ -62,7 +73,7 @@ const Milestones: React.FC = () => {
     setSelectedMilestone(milestone);
     setModalMode(mode);
     setShowModal(true);
-    
+
     if (mode === 'edit' || mode === 'view') {
       setFormData({
         achievedDate: milestone.achievedDate || '',
@@ -154,7 +165,7 @@ const Milestones: React.FC = () => {
 
   const handleDelete = async () => {
     if (!selectedMilestone?.recordId) return;
-    
+
     if (!window.confirm('Are you sure you want to delete this milestone record?')) return;
 
     try {
@@ -245,7 +256,7 @@ const Milestones: React.FC = () => {
           }}>
             {milestones.map((milestone) => {
               const statusStyle = getStatusBadgeStyle(milestone.statusColor);
-              
+
               return (
                 <div
                   key={milestone.id}
@@ -322,7 +333,7 @@ const Milestones: React.FC = () => {
                     }}>
                       {milestone.milestoneName}
                     </h3>
-                    
+
                     <p style={{
                       fontSize: '0.875rem',
                       color: 'var(--gray-600)',
@@ -374,7 +385,7 @@ const Milestones: React.FC = () => {
                             </div>
                           )}
                         </div>
-                        
+
                         {/* Action Buttons */}
                         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
                           <button
@@ -430,39 +441,114 @@ const Milestones: React.FC = () => {
                             Edit
                           </button>
                         </div>
+
+                        {/* View Guidelines Button for achieved milestones */}
+                        <button
+                          style={{
+                            width: '100%',
+                            marginTop: '0.75rem',
+                            padding: '0.625rem',
+                            backgroundColor: 'var(--purple-600)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '0.5rem',
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem',
+                            transition: 'all 0.2s'
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setGuidelinesModal({ isOpen: true, milestone });
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'var(--purple-700)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'var(--purple-600)';
+                          }}
+                        >
+                          <BookOpen size={14} />
+                          Guidelines
+                        </button>
                       </>
                     )}
 
                     {!milestone.achieved && (
-                      <button
-                        className="btn"
-                        style={{
-                          width: '100%',
-                          marginTop: '1rem',
-                          backgroundColor: '#7c3aed',
-                          color: 'white',
-                          border: 'none',
-                          padding: '0.75rem',
-                          fontSize: '0.875rem',
-                          fontWeight: '600',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.5rem',
-                          borderRadius: '0.5rem',
-                          cursor: 'pointer',
-                          transition: 'background-color 0.2s'
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openModal(milestone, 'add');
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6d28d9'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#7c3aed'}
-                      >
-                        <Camera size={16} />
-                        Record Milestone
-                      </button>
+                      <>
+                        {/* View Guidelines Button */}
+                        <button
+                          style={{
+                            width: '100%',
+                            marginTop: '1rem',
+                            padding: '0.75rem',
+                            backgroundColor: 'var(--purple-600)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '0.5rem',
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem',
+                            transition: 'all 0.2s',
+                            boxShadow: '0 2px 4px rgba(124, 58, 237, 0.2)'
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setGuidelinesModal({ isOpen: true, milestone });
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'var(--purple-700)';
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(124, 58, 237, 0.3)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'var(--purple-600)';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(124, 58, 237, 0.2)';
+                          }}
+                        >
+                          <BookOpen size={16} />
+                          View Guidelines & Tips
+                        </button>
+
+                        <button
+                          className="btn"
+                          style={{
+                            width: '100%',
+                            marginTop: '1rem',
+                            backgroundColor: '#7c3aed',
+                            color: 'white',
+                            border: 'none',
+                            padding: '0.75rem',
+                            fontSize: '0.875rem',
+                            fontWeight: '600',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem',
+                            borderRadius: '0.5rem',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s'
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openModal(milestone, 'add');
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6d28d9'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#7c3aed'}
+                        >
+                          <Camera size={16} />
+                          Record Milestone
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -471,7 +557,7 @@ const Milestones: React.FC = () => {
           </div>
         )}
 
-        {/* Modal */}
+        {/* Milestone Modal */}
         <MilestoneModal
           show={showModal}
           mode={modalMode}
@@ -493,6 +579,13 @@ const Milestones: React.FC = () => {
           }}
           onModeChange={setModalMode}
           fileInputRef={fileInputRef}
+        />
+
+        {/* Guidelines Modal */}
+        <MilestoneGuidelinesModal
+          isOpen={guidelinesModal.isOpen}
+          milestone={guidelinesModal.milestone}
+          onClose={() => setGuidelinesModal({ isOpen: false, milestone: null })}
         />
       </div>
     </MaternityLayout>

@@ -165,6 +165,11 @@ export const adminAPI = {
   updateSupplyRequest: async (id: string, payload: { status: 'approved' | 'rejected'; reviewNotes?: string }) => {
     const response = await api.put(`/supply-requests/${id}`, payload);
     return response.data as { message: string };
+  },
+  // Ward Analytics
+  getWardAnalytics: async () => {
+    const response = await api.get('/admin/ward-analytics');
+    return response.data;
   }
 };
 

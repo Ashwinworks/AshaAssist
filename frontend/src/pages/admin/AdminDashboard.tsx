@@ -81,7 +81,7 @@ const AdminDashboard: React.FC = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch all data in parallel
         const [
           maternalUsers,
@@ -193,11 +193,11 @@ const AdminDashboard: React.FC = () => {
         const newStats = {
           totalUsers: { maternal: maternalCount, palliative: palliativeCount, total: totalUsers },
           ashaWorkers: { active: ashaActive, inactive: ashaInactive, total: 1 },
-          contentStats: { 
-            healthBlogs: blogsCount, 
-            vaccinationSchedules: schedulesCount, 
-            communityClasses: classesCount, 
-            localCamps: campsCount 
+          contentStats: {
+            healthBlogs: blogsCount,
+            vaccinationSchedules: schedulesCount,
+            communityClasses: classesCount,
+            localCamps: campsCount
           },
           supplyStats: {
             totalRequests: totalSupplyRequests,
@@ -206,17 +206,17 @@ const AdminDashboard: React.FC = () => {
             deliveredSupplies: deliveredSupplies
           },
           recentActivity,
-          pendingApprovals: { 
-            healthBlogs: pendingBlogs, 
-            vaccinationSchedules: pendingSchedules, 
-            communityClasses: pendingClasses, 
-            localCamps: pendingCamps 
+          pendingApprovals: {
+            healthBlogs: pendingBlogs,
+            vaccinationSchedules: pendingSchedules,
+            communityClasses: pendingClasses,
+            localCamps: pendingCamps
           },
-          systemHealth: { 
-            activeUsers: totalUsers, 
-            systemUptime: '99.9%', 
-            responseTime: '1.2s', 
-            errorRate: '0.1%' 
+          systemHealth: {
+            activeUsers: totalUsers,
+            systemUptime: '99.9%',
+            responseTime: '1.2s',
+            errorRate: '0.1%'
           }
         };
 
@@ -264,16 +264,16 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Main Stats Grid */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-          gap: '1.5rem', 
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '1.5rem',
           marginBottom: '2rem',
           minHeight: '200px'
         }}>
           {/* Total Users */}
-          <div className="card" style={{ 
-            padding: '1.5rem', 
+          <div className="card" style={{
+            padding: '1.5rem',
             background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
             borderRadius: '0.5rem',
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
@@ -295,8 +295,8 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* ASHA Workers */}
-          <div className="card" style={{ 
-            padding: '1.5rem', 
+          <div className="card" style={{
+            padding: '1.5rem',
             background: 'linear-gradient(135deg, #10b981, #059669)',
             borderRadius: '0.5rem',
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
@@ -317,8 +317,8 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Content Published */}
-          <div className="card" style={{ 
-            padding: '1.5rem', 
+          <div className="card" style={{
+            padding: '1.5rem',
             background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
             borderRadius: '0.5rem',
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
@@ -339,8 +339,8 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Pending Approvals */}
-          <div className="card" style={{ 
-            padding: '1.5rem', 
+          <div className="card" style={{
+            padding: '1.5rem',
             background: 'linear-gradient(135deg, #f59e0b, #d97706)',
             borderRadius: '0.5rem',
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
@@ -361,8 +361,8 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Supply Statistics */}
-          <div className="card" style={{ 
-            padding: '1.5rem', 
+          <div className="card" style={{
+            padding: '1.5rem',
             background: 'linear-gradient(135deg, #ef4444, #dc2626)',
             borderRadius: '0.5rem',
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
@@ -436,11 +436,11 @@ const AdminDashboard: React.FC = () => {
             <div className="card-content">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {dashboardStats.recentActivity.map((activity) => (
-                  <div 
+                  <div
                     key={activity.id}
-                    style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
                       gap: '0.75rem',
                       padding: '1rem',
                       backgroundColor: 'var(--gray-50)',
@@ -448,9 +448,9 @@ const AdminDashboard: React.FC = () => {
                       border: '1px solid var(--gray-200)'
                     }}
                   >
-                    <div style={{ 
-                      padding: '0.5rem', 
-                      borderRadius: '0.375rem', 
+                    <div style={{
+                      padding: '0.5rem',
+                      borderRadius: '0.375rem',
                       backgroundColor: `${activity.color}20`,
                       display: 'flex',
                       alignItems: 'center',
@@ -518,12 +518,12 @@ const AdminDashboard: React.FC = () => {
           </div>
           <div className="card-content">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-              <button 
+              <button
                 className="btn"
                 onClick={() => navigate('/admin/asha-management')}
-                style={{ 
+                style={{
                   background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-                  color: 'white', 
+                  color: 'white',
                   border: 'none',
                   padding: '1.5rem',
                   display: 'flex',
@@ -550,12 +550,12 @@ const AdminDashboard: React.FC = () => {
                 <Users size={24} />
                 Manage ASHA Workers
               </button>
-              <button 
+              <button
                 className="btn"
                 onClick={() => navigate('/admin/content/health-blogs')}
-                style={{ 
+                style={{
                   background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                  color: 'white', 
+                  color: 'white',
                   border: 'none',
                   padding: '1.5rem',
                   display: 'flex',
@@ -582,12 +582,12 @@ const AdminDashboard: React.FC = () => {
                 <FileText size={24} />
                 Review Content
               </button>
-              <button 
+              <button
                 className="btn"
                 onClick={() => navigate('/admin/feedbacks')}
-                style={{ 
+                style={{
                   background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                  color: 'white', 
+                  color: 'white',
                   border: 'none',
                   padding: '1.5rem',
                   display: 'flex',
@@ -614,12 +614,12 @@ const AdminDashboard: React.FC = () => {
                 <MessageSquare size={24} />
                 View Feedbacks
               </button>
-              <button 
+              <button
                 className="btn"
                 onClick={() => navigate('/admin/supply-requests')}
-                style={{ 
+                style={{
                   background: 'linear-gradient(135deg, #10b981, #059669)',
-                  color: 'white', 
+                  color: 'white',
                   border: 'none',
                   padding: '1.5rem',
                   display: 'flex',
@@ -645,6 +645,38 @@ const AdminDashboard: React.FC = () => {
               >
                 <CheckCircle size={24} />
                 Supply Requests
+              </button>
+              <button
+                className="btn"
+                onClick={() => navigate('/admin/ward-analytics')}
+                style={{
+                  background: 'linear-gradient(135deg, #ec4899, #db2777)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  borderRadius: '0.5rem',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                  minHeight: '120px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 15px -3px rgba(0, 0, 0, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+                }}
+              >
+                <BarChart3 size={24} />
+                Ward Analytics
               </button>
             </div>
           </div>
