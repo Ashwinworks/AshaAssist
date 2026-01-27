@@ -79,13 +79,8 @@ const AshaLayout: React.FC<AshaLayoutProps> = ({ children, title }) => {
         { id: 'community-classes', label: t('asha.communityClasses'), path: '/asha/community-classes' },
         { id: 'local-camps', label: t('asha.localCamps'), path: '/asha/local-camps' }
       ]
-    },
-    {
-      id: 'supply-distribution',
-      label: t('asha.supplyDistribution'),
-      icon: Package,
-      path: '/asha/supply-distribution'
     }
+    // Removed 'supply-distribution' navigation item - contains only dummy data
   ];
 
   const handleLogout = () => {

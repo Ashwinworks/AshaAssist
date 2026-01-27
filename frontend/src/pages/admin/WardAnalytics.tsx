@@ -141,21 +141,21 @@ const WardAnalytics: React.FC = () => {
         );
     }
 
-    // Prepare chart data
+    // Prepare chart data with professional colors
     const userDistributionData = {
         labels: ['Maternal Care', 'Palliative Care'],
         datasets: [{
             label: 'User Distribution',
             data: [analytics.userStats.maternal, analytics.userStats.palliative],
             backgroundColor: [
-                'rgba(59, 130, 246, 0.8)',
-                'rgba(139, 92, 246, 0.8)',
+                'rgba(37, 99, 235, 0.85)',
+                'rgba(124, 58, 237, 0.85)',
             ],
             borderColor: [
-                'rgb(59, 130, 246)',
-                'rgb(139, 92, 246)',
+                'rgb(37, 99, 235)',
+                'rgb(124, 58, 237)',
             ],
-            borderWidth: 2,
+            borderWidth: 1,
         }],
     };
 
@@ -170,18 +170,18 @@ const WardAnalytics: React.FC = () => {
                 analytics.supplyStats.rejected,
             ],
             backgroundColor: [
-                'rgba(251, 191, 36, 0.7)',
-                'rgba(16, 185, 129, 0.7)',
-                'rgba(59, 130, 246, 0.7)',
-                'rgba(239, 68, 68, 0.7)',
+                'rgba(217, 119, 6, 0.85)',
+                'rgba(5, 150, 105, 0.85)',
+                'rgba(37, 99, 235, 0.85)',
+                'rgba(220, 38, 38, 0.85)',
             ],
             borderColor: [
-                'rgb(251, 191, 36)',
-                'rgb(16, 185, 129)',
-                'rgb(59, 130, 246)',
-                'rgb(239, 68, 68)',
+                'rgb(217, 119, 6)',
+                'rgb(5, 150, 105)',
+                'rgb(37, 99, 235)',
+                'rgb(220, 38, 38)',
             ],
-            borderWidth: 2,
+            borderWidth: 1,
         }],
     };
 
@@ -190,13 +190,13 @@ const WardAnalytics: React.FC = () => {
         datasets: [{
             label: 'Requests by Category',
             data: analytics.supplyStats.byCategory.map(item => item.count),
-            backgroundColor: 'rgba(59, 130, 246, 0.7)',
-            borderColor: 'rgb(59, 130, 246)',
-            borderWidth: 2,
+            backgroundColor: 'rgba(37, 99, 235, 0.75)',
+            borderColor: 'rgb(37, 99, 235)',
+            borderWidth: 1,
         }],
     };
 
-    // Activity timeline
+    // Activity timeline with professional colors
     const months = analytics.activityTimeline.supplyRequests.map(item => item.month);
     const activityTimelineData = {
         labels: months,
@@ -204,23 +204,26 @@ const WardAnalytics: React.FC = () => {
             {
                 label: 'Supply Requests',
                 data: analytics.activityTimeline.supplyRequests.map(item => item.count),
-                borderColor: 'rgb(59, 130, 246)',
-                backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                tension: 0.3,
+                borderColor: 'rgb(37, 99, 235)',
+                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                tension: 0.4,
+                borderWidth: 2,
             },
             {
                 label: 'Home Visits',
                 data: analytics.activityTimeline.homeVisits.map(item => item.count),
-                borderColor: 'rgb(16, 185, 129)',
-                backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                tension: 0.3,
+                borderColor: 'rgb(5, 150, 105)',
+                backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                tension: 0.4,
+                borderWidth: 2,
             },
             {
                 label: 'New Users',
                 data: analytics.activityTimeline.userRegistrations.map(item => item.count),
-                borderColor: 'rgb(139, 92, 246)',
-                backgroundColor: 'rgba(139, 92, 246, 0.2)',
-                tension: 0.3,
+                borderColor: 'rgb(124, 58, 237)',
+                backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                tension: 0.4,
+                borderWidth: 2,
             },
         ],
     };
@@ -248,11 +251,11 @@ const WardAnalytics: React.FC = () => {
         <AdminLayout title="Ward Analytics">
             <div>
                 {/* Header */}
-                <div style={{ marginBottom: '2rem' }}>
-                    <h2 style={{ fontSize: '1.875rem', fontWeight: '700', color: 'var(--gray-900)', marginBottom: '0.5rem' }}>
-                        {analytics.ward} - Comprehensive Analytics
+                <div style={{ marginBottom: '2rem', borderBottom: '1px solid #e5e7eb', paddingBottom: '1rem' }}>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#111827', marginBottom: '0.25rem' }}>
+                        {analytics.ward} Analytics Dashboard
                     </h2>
-                    <p style={{ color: 'var(--gray-600)', fontSize: '1rem' }}>
+                    <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
                         Last updated: {new Date(analytics.lastUpdated).toLocaleString()}
                     </p>
                 </div>
@@ -260,142 +263,167 @@ const WardAnalytics: React.FC = () => {
                 {/* Key Metrics Cards */}
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
                     gap: '1.5rem',
                     marginBottom: '2rem'
                 }}>
                     {/* Total Users */}
                     <div className="card" style={{
                         padding: '1.5rem',
-                        background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-                        borderRadius: '0.75rem',
-                        color: 'white'
+                        backgroundColor: 'white',
+                        borderLeft: '4px solid #2563eb',
+                        borderRadius: '0.5rem',
+                        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
                     }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                            <Users size={28} />
-                            <div>
-                                <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Total Users</div>
-                                <div style={{ fontSize: '2rem', fontWeight: '700' }}>{analytics.userStats.total}</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500', marginBottom: '0.5rem' }}>Total Users</div>
+                                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#111827' }}>{analytics.userStats.total}</div>
+                            </div>
+                            <div style={{ padding: '0.75rem', backgroundColor: '#eff6ff', borderRadius: '0.5rem' }}>
+                                <Users size={24} color="#2563eb" />
                             </div>
                         </div>
-                        <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>
-                            {analytics.userStats.active} active users
+                        <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                            <span style={{ color: '#059669', fontWeight: '600' }}>{analytics.userStats.active}</span> active users
                         </div>
                     </div>
 
                     {/* Supply Requests */}
                     <div className="card" style={{
                         padding: '1.5rem',
-                        background: 'linear-gradient(135deg, #10b981, #059669)',
-                        borderRadius: '0.75rem',
-                        color: 'white'
+                        backgroundColor: 'white',
+                        borderLeft: '4px solid #059669',
+                        borderRadius: '0.5rem',
+                        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
                     }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                            <Package size={28} />
-                            <div>
-                                <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Supply Requests</div>
-                                <div style={{ fontSize: '2rem', fontWeight: '700' }}>{analytics.supplyStats.total}</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500', marginBottom: '0.5rem' }}>Supply Requests</div>
+                                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#111827' }}>{analytics.supplyStats.total}</div>
+                            </div>
+                            <div style={{ padding: '0.75rem', backgroundColor: '#ecfdf5', borderRadius: '0.5rem' }}>
+                                <Package size={24} color="#059669" />
                             </div>
                         </div>
-                        <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>
-                            {analytics.supplyStats.delivered} delivered
+                        <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                            <span style={{ color: '#059669', fontWeight: '600' }}>{analytics.supplyStats.delivered}</span> delivered
                         </div>
                     </div>
 
                     {/* Vaccinations */}
                     <div className="card" style={{
                         padding: '1.5rem',
-                        background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                        borderRadius: '0.75rem',
-                        color: 'white'
+                        backgroundColor: 'white',
+                        borderLeft: '4px solid #7c3aed',
+                        borderRadius: '0.5rem',
+                        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
                     }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                            <Syringe size={28} />
-                            <div>
-                                <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Vaccinations</div>
-                                <div style={{ fontSize: '2rem', fontWeight: '700' }}>{analytics.vaccinationStats.bookings}</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500', marginBottom: '0.5rem' }}>Vaccinations</div>
+                                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#111827' }}>{analytics.vaccinationStats.bookings}</div>
+                            </div>
+                            <div style={{ padding: '0.75rem', backgroundColor: '#f5f3ff', borderRadius: '0.5rem' }}>
+                                <Syringe size={24} color="#7c3aed" />
                             </div>
                         </div>
-                        <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>
-                            {analytics.vaccinationStats.completed} completed
+                        <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                            <span style={{ color: '#059669', fontWeight: '600' }}>{analytics.vaccinationStats.completed}</span> completed
                         </div>
                     </div>
 
                     {/* Home Visits */}
                     <div className="card" style={{
                         padding: '1.5rem',
-                        background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                        borderRadius: '0.75rem',
-                        color: 'white'
+                        backgroundColor: 'white',
+                        borderLeft: '4px solid #d97706',
+                        borderRadius: '0.5rem',
+                        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
                     }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                            <Home size={28} />
-                            <div>
-                                <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Home Visits</div>
-                                <div style={{ fontSize: '2rem', fontWeight: '700' }}>{analytics.homeVisitStats.total}</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500', marginBottom: '0.5rem' }}>Home Visits</div>
+                                <div style={{ fontSize: '2rem', fontWeight: '700', color: '#111827' }}>{analytics.homeVisitStats.total}</div>
+                            </div>
+                            <div style={{ padding: '0.75rem', backgroundColor: '#fffbeb', borderRadius: '0.5rem' }}>
+                                <Home size={24} color="#d97706" />
                             </div>
                         </div>
-                        <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>
-                            {analytics.homeVisitStats.verified} verified
+                        <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                            <span style={{ color: '#059669', fontWeight: '600' }}>{analytics.homeVisitStats.verified}</span> verified
                         </div>
                     </div>
                 </div>
-
-                {/* Heat Map Section */}
+                {/* Performance Metrics Section */}
                 <div className="card" style={{ marginBottom: '2rem' }}>
                     <div className="card-header">
-                        <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Activity size={20} color="var(--blue-600)" />
-                            Activity Heat Map
+                        <h3 className="card-title" style={{ fontSize: '1.125rem', fontWeight: '600', color: '#111827' }}>
+                            Performance Metrics
                         </h3>
+                        <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '0.25rem 0 0 0' }}>Key performance indicators across all services</p>
                     </div>
                     <div className="card-content">
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
-                            {Object.entries(analytics.heatMapData).map(([key, value]) => (
-                                <div
-                                    key={key}
-                                    style={{
-                                        padding: '1.5rem',
-                                        borderRadius: '0.5rem',
-                                        backgroundColor: getHeatColor(value),
-                                        color: 'white',
-                                        textAlign: 'center',
-                                        transition: 'transform 0.2s ease',
-                                        cursor: 'pointer'
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                                >
-                                    <div style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem' }}>
-                                        {value}%
+                        <div style={{ display: 'grid', gap: '1.5rem' }}>
+                            {Object.entries(analytics.heatMapData).map(([key, value]) => {
+                                const getProgressColor = (val: number) => {
+                                    if (val >= 80) return '#059669';
+                                    if (val >= 60) return '#2563eb';
+                                    if (val >= 40) return '#d97706';
+                                    return '#dc2626';
+                                };
+
+                                return (
+                                    <div key={key} style={{ padding: '1rem', backgroundColor: '#f9fafb', borderRadius: '0.5rem' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                                            <span style={{ fontSize: '0.9375rem', fontWeight: '500', color: '#374151', textTransform: 'capitalize' }}>
+                                                {key.replace(/([A-Z])/g, ' $1').trim()}
+                                            </span>
+                                            <span style={{ fontSize: '1rem', fontWeight: '700', color: '#111827' }}>{value}%</span>
+                                        </div>
+                                        <div style={{
+                                            width: '100%',
+                                            height: '8px',
+                                            backgroundColor: '#e5e7eb',
+                                            borderRadius: '4px',
+                                            overflow: 'hidden'
+                                        }}>
+                                            <div style={{
+                                                width: `${value}%`,
+                                                height: '100%',
+                                                backgroundColor: getProgressColor(value),
+                                                borderRadius: '4px',
+                                                transition: 'width 0.5s ease'
+                                            }} />
+                                        </div>
                                     </div>
-                                    <div style={{ fontSize: '0.875rem', textTransform: 'capitalize', opacity: 0.95 }}>
-                                        {key.replace(/([A-Z])/g, ' $1').trim()}
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
-                        <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: 'var(--gray-50)', borderRadius: '0.5rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap', fontSize: '0.875rem' }}>
+                        <div style={{
+                            marginTop: '1.5rem',
+                            padding: '1rem',
+                            backgroundColor: '#f3f4f6',
+                            borderRadius: '0.5rem',
+                            border: '1px solid #e5e7eb'
+                        }}>
+                            <div style={{ fontSize: '0.8125rem', color: '#6b7280', marginBottom: '0.5rem', fontWeight: '500' }}>Performance Scale</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap', fontSize: '0.8125rem', color: '#4b5563' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <div style={{ width: '20px', height: '20px', backgroundColor: '#10b981', borderRadius: '4px' }} />
-                                    <span>Excellent (80-100%)</span>
+                                    <div style={{ width: '16px', height: '16px', backgroundColor: '#059669', borderRadius: '2px' }} />
+                                    <span>Excellent (≥80%)</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <div style={{ width: '20px', height: '20px', backgroundColor: '#3b82f6', borderRadius: '4px' }} />
+                                    <div style={{ width: '16px', height: '16px', backgroundColor: '#2563eb', borderRadius: '2px' }} />
                                     <span>Good (60-79%)</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <div style={{ width: '20px', height: '20px', backgroundColor: '#f59e0b', borderRadius: '4px' }} />
-                                    <span>Fair (40-59%)</span>
+                                    <div style={{ width: '16px', height: '16px', backgroundColor: '#d97706', borderRadius: '2px' }} />
+                                    <span>Needs Improvement (40-59%)</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <div style={{ width: '20px', height: '20px', backgroundColor: '#f97316', borderRadius: '4px' }} />
-                                    <span>Low (20-39%)</span>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <div style={{ width: '20px', height: '20px', backgroundColor: '#ef4444', borderRadius: '4px' }} />
-                                    <span>Critical (\u003c20%)</span>
+                                    <div style={{ width: '16px', height: '16px', backgroundColor: '#dc2626', borderRadius: '2px' }} />
+                                    <span>Critical (&lt;40%)</span>
                                 </div>
                             </div>
                         </div>
