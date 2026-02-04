@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Heart, LogOut, Calendar, Home, Package,
-  MessageSquare, Menu, X, ChevronDown, ChevronRight, Clipboard, MapPin, Baby
+  MessageSquare, Menu, X, ChevronDown, ChevronRight, Clipboard, MapPin, Baby, Syringe
 } from 'lucide-react';
 import LanguageToggle from '../../components/LanguageToggle';
 
@@ -55,6 +55,12 @@ const AshaLayout: React.FC<AshaLayoutProps> = ({ children, title }) => {
       label: t('asha.milestoneMonitoring'),
       icon: Baby,
       path: '/asha/milestone-monitoring'
+    },
+    {
+      id: 'child-vaccination-details',
+      label: 'Child Vaccination Details',
+      icon: Syringe,
+      path: '/asha/child-vaccination-details'
     },
     {
       id: 'home-visits',

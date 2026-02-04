@@ -843,6 +843,111 @@ def init_vaccination_routes(app, collections):
         except Exception as e:
             return jsonify({'error': f'Failed to get records: {str(e)}'}), 500
 
+    @vaccination_bp.route('/api/vaccination/children-details', methods=['GET'])
+    @jwt_required()
+    def get_children_vaccination_details():
+        """Get all children with vaccination details for ASHA workers"""
+        try:
+            # Get user info to check if they're an ASHA worker
+            user_id = get_jwt_identity()
+            user = collections['users'].find_one({'_id': ObjectId(user_id)})
+            
+            if not user or user.get('userType') != 'asha_worker':
+                return jsonify({'error': 'Access denied. ASHA workers only.'}), 403
+
+            # Import vaccination utilities
+            from utils.vaccination_utils import calculate_vaccination_milestones, get_vaccination_status
+            
+            # Find all delivered mothers (they have children)
+            query = {
+                'beneficiaryCategory': 'maternity',
+                'maternalHealth.pregnancyStatus': 'delivered',
+                'maternalHealth.children': {'$exists': True, '$ne': []}
+            }
+            
+            mothers = collections['users'].find(query)
+            
+            children_data = []
+            
+            for mother in mothers:
+                maternal_health = mother.get('maternalHealth', {})
+                children = maternal_health.get('children', [])
+                
+                for idx, child in enumerate(children):
+                    # Get or calculate vaccination milestones
+                    if 'vaccinationMilestones' in child:
+                        milestones = child['vaccinationMilestones']
+                        # Update status based on current date
+                        for milestone in milestones:
+                            milestone['status'] = get_vaccination_status(milestone['dueDate'])
+                    else:
+                        # Calculate milestones if not present
+                        dob = child.get('dateOfBirth')
+                        if dob:
+                            milestones = calculate_vaccination_milestones(dob)
+                        else:
+                            milestones = []
+                    
+                    # Filter only pending/due/overdue vaccinations
+                    due_vaccinations = [
+                        m for m in milestones 
+                        if m.get('status') in ['pending', 'due', 'overdue', 'upcoming']
+                        and not m.get('completedAt')
+                    ]
+                    
+                    # Calculate child age
+                    dob = child.get('dateOfBirth')
+                    age = ''
+                    if dob:
+                        # Convert to naive datetime for calculation
+                        if isinstance(dob, str):
+                            dob_dt = datetime.fromisoformat(dob.replace('Z', '+00:00'))
+                            if dob_dt.tzinfo is not None:
+                                dob_dt = dob_dt.replace(tzinfo=None)
+                        else:
+                            dob_dt = dob
+                            if dob_dt.tzinfo is not None:
+                                dob_dt = dob_dt.replace(tzinfo=None)
+                        
+                        today = datetime.now()
+                        days_old = (today - dob_dt).days
+                        
+                        if days_old < 7:
+                            age = f'{days_old} days'
+                        elif days_old < 30:
+                            weeks = days_old // 7
+                            age = f'{weeks} week{"s" if weeks != 1 else ""}'
+                        elif days_old < 365:
+                            months = days_old // 30
+                            age = f'{months} month{"s" if months != 1 else ""}'
+                        else:
+                            years = days_old // 365
+                            age = f'{years} year{"s" if years != 1 else ""}'
+                    
+                    child_info = {
+                        'id': f"{str(mother['_id'])}_{idx}",
+                        'childName': child.get('name', 'Unknown'),
+                        'dateOfBirth': child.get('dateOfBirth').isoformat() if isinstance(child.get('dateOfBirth'), datetime) else child.get('dateOfBirth'),
+                        'age': age,
+                        'gender': child.get('gender', 'unknown'),
+                        'weight': child.get('weight'),
+                        'height': child.get('height'),
+                        'motherName': mother.get('name', 'Unknown'),
+                        'motherPhone': mother.get('phone', ''),
+                        'motherEmail': mother.get('email', ''),
+                        'motherId': str(mother['_id']),
+                        'dueVaccinations': due_vaccinations
+                    }
+                    
+                    children_data.append(child_info)
+            
+            return jsonify({'children': children_data}), 200
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return jsonify({'error': f'Failed to get children details: {str(e)}'}), 500
+
     # Register blueprint with app
     app.register_blueprint(vaccination_bp)
 

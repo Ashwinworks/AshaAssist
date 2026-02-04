@@ -30,6 +30,7 @@ import AshaSupplyDistribution from './pages/asha/SupplyDistribution';
 import AshaHomeVisits from './pages/asha/HomeVisits';
 import AshaMilestoneMonitoring from './pages/asha/MilestoneMonitoring';
 import AshaMilestoneUserDetail from './pages/asha/MilestoneUserDetail';
+import AshaChildVaccinationDetails from './pages/asha/ChildVaccinationDetails';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import VisitMonitoring from './pages/admin/VisitMonitoring';
 import AshaManagement from './pages/admin/AshaManagement';
@@ -459,6 +460,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <AshaMilestoneUserDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/asha/child-vaccination-details"
+        element={
+          <ProtectedRoute>
+            <AshaChildVaccinationDetails />
           </ProtectedRoute>
         }
       />
