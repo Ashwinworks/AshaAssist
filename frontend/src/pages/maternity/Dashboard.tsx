@@ -17,6 +17,7 @@ import {
   Eye
 } from 'lucide-react';
 import BirthRecordingModal from '../../components/BirthRecordingModal';
+import PMSMABanner from '../../components/PMSMABanner';
 
 interface DashboardStats {
   upcomingAppointments: number;
@@ -194,6 +195,9 @@ const Dashboard: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* PMSMA Government Benefits Banner */}
+        <PMSMABanner />
 
         {/* Quick Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>

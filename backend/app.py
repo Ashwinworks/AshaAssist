@@ -37,6 +37,7 @@ from routes.locations import init_locations_routes
 from routes.home_visits import init_home_visits_routes
 from routes.anganvaadi import init_anganvaadi_routes
 from routes.milestones import init_milestone_routes
+from routes.government_benefits import init_government_benefits_routes
 
 # Import utilities
 from utils.helpers import JSONEncoder
@@ -115,6 +116,14 @@ def create_app(config_name='default'):
     init_home_visits_routes(app, collections)
     init_anganvaadi_routes(app, collections)
     init_milestone_routes(app, collections)
+    try:
+        print("[DEBUG] Initializing government benefits routes...")
+        init_government_benefits_routes(app, collections)
+        print("[DEBUG] Government benefits routes initialized successfully!")
+    except Exception as e:
+        print(f"[ERROR] Failed to initialize government benefits routes: {e}")
+        import traceback
+        traceback.print_exc()
     
     # Initialize ward analytics routes
     from routes.ward_analytics import init_ward_analytics_routes

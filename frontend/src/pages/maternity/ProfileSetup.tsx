@@ -85,12 +85,18 @@ const ProfileSetup: React.FC = () => {
     }
   }, [pregnancyDetails.lmpDate]);
 
-  const sections: ProfileSection[] = [
+  // Check if user has delivered - hide pregnancy section if so
+  const hasDelivered = user?.maternalHealth?.pregnancyStatus === 'delivered';
+
+  const allSections: ProfileSection[] = [
     { id: 'personal', title: 'Personal Information', description: 'Basic details and contact info', icon: <User size={20} />, color: '#2563eb', bgColor: '#dbeafe' },
     { id: 'medical', title: 'Medical History', description: 'Health conditions and allergies', icon: <Heart size={20} />, color: '#db2777', bgColor: '#fce7f3' },
     { id: 'pregnancy', title: 'Pregnancy Details', description: 'Current pregnancy information', icon: <Baby size={20} />, color: '#d97706', bgColor: '#fef3c7' },
     { id: 'emergency', title: 'Emergency Contacts', description: 'Contact person for emergencies', icon: <Phone size={20} />, color: '#16a34a', bgColor: '#dcfce7' }
   ];
+
+  // Filter out pregnancy section if already delivered
+  const sections = hasDelivered ? allSections.filter(s => s.id !== 'pregnancy') : allSections;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -234,6 +240,28 @@ const ProfileSetup: React.FC = () => {
         <div className="card-header"><h2 className="card-title">Complete Your Profile</h2></div>
         <div className="card-content">
           <p style={{ marginBottom: '1.5rem', color: '#6b7280' }}>Complete all sections to access full maternity care features.</p>
+
+          {/* Info for delivered mothers */}
+          {hasDelivered && (
+            <div style={{
+              padding: '1rem',
+              backgroundColor: '#e0f2fe',
+              borderRadius: '0.5rem',
+              marginBottom: '1.5rem',
+              border: '1px solid #7dd3fc',
+              display: 'flex',
+              alignItems: 'start',
+              gap: '0.75rem'
+            }}>
+              <Baby size={20} color="#0369a1" style={{ marginTop: '2px', flexShrink: 0 }} />
+              <div>
+                <strong style={{ color: '#0c4a6e', display: 'block', marginBottom: '4px' }}>Pregnancy Completed</strong>
+                <p style={{ margin: 0, fontSize: '0.875rem', color: '#075985' }}>
+                  Your pregnancy details are now locked since you have recorded your birth. You can still update your personal information, medical history, and emergency contacts.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Profile Picture */}
           <div style={{ padding: '1.5rem', backgroundColor: '#fdf2f8', borderRadius: '0.75rem', marginBottom: '2rem', border: '1px solid #fbcfe8' }}>

@@ -252,6 +252,40 @@ export const maternityAPI = {
   }
 };
 
+// Government Benefits API (PMSMA)
+export const governmentBenefitsAPI = {
+  // Get PMSMA benefit summary for current user
+  getPMSMASummary: async () => {
+    const response = await api.get('/benefits/pmsma/summary');
+    return response.data as { hasBenefits: boolean; benefits?: any; message?: string };
+  },
+  // Initialize PMSMA benefits
+  initializePMSMA: async (data: { confirmationDate?: string; lmp?: string }) => {
+    const response = await api.post('/benefits/pmsma/initialize', data);
+    return response.data;
+  },
+  // Mark installment as paid (ASHA worker/admin only)
+  markInstallmentPaid: async (userId: string, installmentNumber: number, transactionId?: string) => {
+    const response = await api.post('/benefits/pmsma/mark-paid', {
+      userId,
+      installmentNumber,
+      transactionId
+    });
+    return response.data as { message: string };
+  },
+  // Get user's PMSMA summary (for ASHA workers viewing other users)
+  getUserPMSMASummary: async (userId: string) => {
+    const response = await api.get(`/benefits/pmsma/user/${userId}`);
+    return response.data as { hasBenefits: boolean; benefits?: any; message?: string };
+  },
+  // Get all maternity users (for ASHA worker PMSMA page)
+  getAllMaternityUsers: async () => {
+    const response = await api.get('/benefits/pmsma/mothers');
+    return response.data as { mothers: any[] };
+  }
+};
+
+
 // Vaccination schedules & bookings
 export const vaccinationAPI = {
   // ASHA/Admin creation

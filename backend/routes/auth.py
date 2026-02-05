@@ -400,6 +400,23 @@ def init_auth_routes(app, collections):
             if result.matched_count == 0:
                 return jsonify({'error': 'User not found'}), 404
             
+            # Initialize PMSMA benefits if LMP is being set
+            if 'lmpDate' in data and data['lmpDate']:
+                from services.government_benefits_service import GovernmentBenefitsService
+                
+                # Check if benefits are already initialized
+                user = collections['users'].find_one({'_id': ObjectId(user_id)})
+                if user and user.get('beneficiaryCategory') == 'maternity':
+                    if not user.get('governmentBenefits', {}).get('pmsma'):
+                        # Initialize PMSMA benefits
+                        benefits_service = GovernmentBenefitsService(collections['users'], collections.get('visits'))
+                        confirmation_date = datetime.now(timezone.utc).date().isoformat()
+                        benefits_service.initialize_pmsma(
+                            user_id,
+                            confirmation_date=confirmation_date,
+                            lmp=data['lmpDate']
+                        )
+            
             # Return updated user data
             updated_user = collections['users'].find_one({'_id': ObjectId(user_id)})
             if updated_user:

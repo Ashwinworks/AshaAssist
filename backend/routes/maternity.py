@@ -4,6 +4,7 @@ Maternity-specific routes for pregnancy tracking and management
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from services.maternity_service import MaternityService
+from services.government_benefits_service import GovernmentBenefitsService
 from bson import ObjectId
 from datetime import datetime, timezone
 
@@ -13,6 +14,7 @@ maternity_bp = Blueprint('maternity', __name__)
 def init_maternity_routes(app, collections):
     """Initialize maternity routes with dependencies"""
     maternity_service = MaternityService(collections['users'], collections['visits'])
+    benefits_service = GovernmentBenefitsService(collections['users'], collections['visits'])
     
     @maternity_bp.route('/api/maternity/profile', methods=['PUT'])
     @jwt_required()
@@ -22,6 +24,20 @@ def init_maternity_routes(app, collections):
             user_id = get_jwt_identity()
             data = request.get_json() or {}
             result, status_code = maternity_service.set_maternity_profile(user_id, data)
+            
+            # If successful and LMP is set, initialize PMSMA benefits
+            if status_code == 200 and data.get('lmpDate'):
+                # Check if benefits are already initialized
+                user = collections['users'].find_one({'_id': ObjectId(user_id)})
+                if user and not user.get('governmentBenefits', {}).get('pmsma'):
+                    # Initialize PMSMA benefits with confirmation date as today
+                    confirmation_date = datetime.now(timezone.utc).date().isoformat()
+                    benefits_service.initialize_pmsma(
+                        user_id,
+                        confirmation_date=confirmation_date,
+                        lmp=data.get('lmpDate')
+                    )
+            
             return jsonify(result), status_code
         except Exception as e:
             return jsonify({'error': f'Failed to update maternity profile: {str(e)}'}), 500
@@ -45,6 +61,11 @@ def init_maternity_routes(app, collections):
             user_id = get_jwt_identity()
             data = request.get_json() or {}
             result, status_code = maternity_service.add_maternity_visit(user_id, data)
+            
+            # If successful, check and unlock installment 2
+            if status_code == 201:
+                benefits_service.check_and_unlock_installment2(user_id)
+            
             return jsonify(result), status_code
         except Exception as e:
             return jsonify({'error': f'Failed to add visit: {str(e)}'}), 500
@@ -230,6 +251,9 @@ def init_maternity_routes(app, collections):
             
             if result.matched_count == 0:
                 return jsonify({'error': 'Failed to update user'}), 500
+            
+            # Unlock installment 3 (birth recorded)
+            benefits_service.check_and_unlock_installment3(user_id)
             
             # Get updated user to return
             updated_user = collections['users'].find_one({'_id': ObjectId(user_id)})

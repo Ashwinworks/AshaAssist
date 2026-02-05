@@ -46,6 +46,7 @@ const AshaLayout: React.FC<AshaLayoutProps> = ({ children, title }) => {
       isDropdown: true,
       children: [
         { id: 'maternal-records', label: t('asha.maternalRecords'), path: '/asha/maternal-records' },
+        { id: 'pmsma-benefits', label: 'PMSMA Benefits', path: '/asha/pmsma-benefits' },
         { id: 'palliative-records', label: t('asha.palliativeRecords'), path: '/asha/palliative-records' },
         { id: 'vaccination-records', label: t('asha.vaccinationRecords'), path: '/asha/vaccination-records' }
       ]

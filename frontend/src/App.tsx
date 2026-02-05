@@ -21,6 +21,7 @@ import VaccinationSchedules from './pages/asha/VaccinationSchedules';
 import AshaVisitRequests from './pages/asha/VisitRequests';
 import AshaSupplyRequests from './pages/asha/SupplyRequests';
 import AshaMaternalRecords from './pages/asha/MaternalRecords';
+import AshaPMSMABenefits from './pages/asha/PMSMABenefits';
 import AshaPalliativeRecords from './pages/asha/PalliativeRecords';
 import AshaVaccinationRecords from './pages/asha/VaccinationRecords';
 import AshaHealthBlogs from './pages/asha/HealthBlogs';
@@ -396,6 +397,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <AshaMaternalRecords />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/asha/pmsma-benefits"
+        element={
+          <ProtectedRoute>
+            <AshaPMSMABenefits />
           </ProtectedRoute>
         }
       />
