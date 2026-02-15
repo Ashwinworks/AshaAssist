@@ -77,6 +77,34 @@ def init_government_benefits_routes(app, collections):
         except Exception as e:
             return jsonify({'error': f'Failed to mark installment as paid: {str(e)}'}), 500
 
+    @benefits_bp.route('/api/benefits/pmsma/apply/<int:installment_number>', methods=['POST'])
+    @jwt_required()
+    def apply_for_installment(installment_number):
+        """Submit application for PMSMA installment (mother action)"""
+        try:
+            user_id = get_jwt_identity()
+            data = request.get_json() or {}
+            
+            # For installment 1, application_data contains payment details
+            # For installments 2 & 3, no data needed (reuses installment 1 data)
+            application_data = None
+            if installment_number == 1:
+                application_data = {
+                    'accountNumber': data.get('accountNumber'),
+                    'accountHolderName': data.get('accountHolderName'),
+                    'ifscCode': data.get('ifscCode'),
+                    'bankName': data.get('bankName')
+                }
+            
+            response, status = benefits_service.submit_application(
+                user_id,
+                installment_number,
+                application_data
+            )
+            return jsonify(response), status
+        except Exception as e:
+            return jsonify({'error': f'Failed to submit application: {str(e)}'}), 500
+
     @benefits_bp.route('/api/benefits/pmsma/user/<user_id>', methods=['GET'])
     @jwt_required()
     def get_user_pmsma_summary(user_id):

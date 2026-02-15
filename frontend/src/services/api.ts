@@ -278,6 +278,16 @@ export const governmentBenefitsAPI = {
     const response = await api.get(`/benefits/pmsma/user/${userId}`);
     return response.data as { hasBenefits: boolean; benefits?: any; message?: string };
   },
+  // Apply for installment (mother submits application)
+  applyForInstallment: async (installmentNumber: number, applicationData?: {
+    accountNumber: string;
+    accountHolderName: string;
+    ifscCode: string;
+    bankName: string;
+  }) => {
+    const response = await api.post(`/benefits/pmsma/apply/${installmentNumber}`, applicationData || {});
+    return response.data as { message: string; installmentNumber: number; status: string };
+  },
   // Get all maternity users (for ASHA worker PMSMA page)
   getAllMaternityUsers: async () => {
     const response = await api.get('/benefits/pmsma/mothers');

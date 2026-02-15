@@ -52,7 +52,7 @@ class GovernmentBenefitsService:
                         'installmentNumber': 1,
                         'amount': 1000,
                         'eligibilityDate': confirmation_date if installment1_eligible else None,
-                        'status': 'eligible' if installment1_eligible else 'locked',
+                        'status': 'eligible_to_apply' if installment1_eligible else 'locked',
                         'paidDate': None,
                         'transactionId': None,
                         'eligibilityCriteria': 'pregnancy_registration_within_3_months',
@@ -145,7 +145,7 @@ class GovernmentBenefitsService:
                 {'_id': ObjectId(user_id)},
                 {
                     '$set': {
-                        'governmentBenefits.pmsma.installments.1.status': 'eligible',
+                        'governmentBenefits.pmsma.installments.1.status': 'eligible_to_apply',
                         'governmentBenefits.pmsma.installments.1.eligibilityDate': now.isoformat(),
                         'governmentBenefits.pmsma.totalEligible': self._calculate_total_eligible(user_id),
                         'governmentBenefits.pmsma.progress': self._calculate_progress(user_id),
@@ -201,7 +201,7 @@ class GovernmentBenefitsService:
                 {'_id': ObjectId(user_id)},
                 {
                     '$set': {
-                        'governmentBenefits.pmsma.installments.2.status': 'eligible',
+                        'governmentBenefits.pmsma.installments.2.status': 'eligible_to_apply',
                         'governmentBenefits.pmsma.installments.2.eligibilityDate': now.isoformat(),
                         'governmentBenefits.pmsma.totalEligible': self._calculate_total_eligible(user_id),
                         'governmentBenefits.pmsma.progress': self._calculate_progress(user_id),
@@ -316,6 +316,115 @@ class GovernmentBenefitsService:
 
         except Exception as e:
             return {'error': f'Failed to mark installment as paid: {str(e)}'}, 500
+
+    def submit_application(self, user_id: str, installment_number: int, application_data: Dict[str, Any] = None) -> Tuple[Dict[str, Any], int]:
+        """
+        Submit application for a PMSMA installment.
+        
+        For installment 1: Stores bank account + payment details
+        For installments 2 & 3: Simple confirmation (reuses installment 1 data)
+        
+        Args:
+            user_id: User ID
+            installment_number: 1, 2, or 3
+            application_data: Dict containing payment details (required for installment 1 only)
+                - accountNumber
+                - accountHolderName  
+                - ifscCode
+                - bankName
+        
+        Returns:
+            Tuple of (response_dict, status_code)
+        """
+        try:
+            # Get user's current benefit status
+            user = self.users.find_one({'_id': ObjectId(user_id)})
+            if not user:
+                return {'error': 'User not found'}, 404
+
+            pmsma = user.get('governmentBenefits', {}).get('pmsma')
+            if not pmsma:
+                return {'error': 'PMSMA benefits not initialized'}, 400
+
+            # Validate installment number
+            if installment_number not in [1, 2, 3]:
+                return {'error': 'Invalid installment number. Must be 1, 2, or 3'}, 400
+
+            # Get the specific installment
+            installment_index = installment_number - 1
+            installment = pmsma['installments'][installment_index]
+
+            # Check if installment is eligible to apply
+            if installment['status'] != 'eligible_to_apply':
+                current_status = installment['status']
+                return {
+                    'error': f'Installment {installment_number} is not eligible for application. Current status: {current_status}'
+                }, 400
+
+            # For installment 1: Validate and store payment details
+            if installment_number == 1:
+                if not application_data:
+                    return {'error': 'Payment details are required for installment 1'}, 400
+                
+                # Validate required fields
+                required_fields = ['accountNumber', 'accountHolderName', 'ifscCode', 'bankName']
+                missing_fields = [field for field in required_fields if not application_data.get(field)]
+                
+                if missing_fields:
+                    return {
+                        'error': f'Missing required fields: {", ".join(missing_fields)}'
+                    }, 400
+
+                # Store payment details in pmsma object
+                payment_details = {
+                    'accountNumber': application_data['accountNumber'],
+                    'accountHolderName': application_data['accountHolderName'],
+                    'ifscCode': application_data['ifscCode'].upper(),
+                    'bankName': application_data['bankName'],
+                    'submittedDate': datetime.now(timezone.utc).isoformat()
+                }
+
+            # For installments 2 & 3: Verify payment details exist from installment 1
+            else:
+                payment_details_exist = pmsma.get('paymentDetails')
+                if not payment_details_exist:
+                    return {
+                        'error': 'Payment details not found. Please complete installment 1 application first.'
+                    }, 400
+
+            # Prepare update
+            now = datetime.now(timezone.utc)
+            update_fields = {
+                f'governmentBenefits.pmsma.installments.{installment_index}.status': 'application_submitted',
+                f'governmentBenefits.pmsma.installments.{installment_index}.application': {
+                    'submittedDate': now.isoformat(),
+                    'status': 'submitted'
+                },
+                'updatedAt': now
+            }
+
+            # Add payment details only for installment 1
+            if installment_number == 1:
+                update_fields['governmentBenefits.pmsma.paymentDetails'] = payment_details
+
+            # Update user document
+            result = self.users.update_one(
+                {'_id': ObjectId(user_id)},
+                {'$set': update_fields}
+            )
+
+            if result.matched_count == 0:
+                return {'error': 'Failed to submit application'}, 500
+
+            return {
+                'message': f'Application for installment {installment_number} submitted successfully',
+                'installmentNumber': installment_number,
+                'status': 'application_submitted',
+                'submittedDate': now.isoformat()
+            }, 200
+
+        except Exception as e:
+            return {'error': f'Failed to submit application: {str(e)}'}, 500
 
     def _calculate_total_eligible(self, user_id: str) -> int:
         """Calculate total eligible amount"""

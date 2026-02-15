@@ -299,10 +299,21 @@
     border-color: #f59e0b;
 }
 
+.pmsma-installment-card.status-eligible-apply {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border-color: #3b82f6;
+}
+
+.pmsma-installment-card.status-submitted {
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    border-color: #6366f1;
+}
+
 .pmsma-installment-card.status-locked {
     background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
     border-color: #d1d5db;
 }
+
 
 .installment-header {
     display: flex;
@@ -364,6 +375,16 @@
     color: white;
 }
 
+.status-badge.status-eligible-apply {
+    background: #3b82f6;
+    color: white;
+}
+
+.status-badge.status-submitted {
+    background: #6366f1;
+    color: white;
+}
+
 .status-badge.status-locked {
     background: #9ca3af;
     color: white;
@@ -390,11 +411,42 @@
 }
 
 .installment-action {
+    margin: 16px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.btn-apply {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-apply:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.installment-pending {
     margin: 12px 0;
     padding: 12px;
-    background: rgba(245, 158, 11, 0.1);
+    background: rgba(99, 102, 241, 0.1);
     border-radius: 8px;
-    border-left: 4px solid #f59e0b;
+    border-left: 4px solid #6366f1;
+}
+
+.pending-note {
+    margin: 0;
+    color: #4338ca;
+    font-size: 14px;
+    font-weight: 500;
 }
 
 .action-note {
@@ -403,6 +455,7 @@
     font-size: 14px;
     font-weight: 500;
 }
+
 
 .installment-details {
     margin: 12px 0;

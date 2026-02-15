@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { governmentBenefitsAPI } from '../services/api';
+import PMSMAApplicationForm from './PMSMAApplicationForm';
 import './PMSMABanner.css';
+import toast from 'react-hot-toast';
 
 interface Installment {
     installmentNumber: number;
     amount: number;
     eligibilityDate: string | null;
-    status: 'locked' | 'eligible' | 'paid';
+    status: 'locked' | 'eligible' | 'eligible_to_apply' | 'application_submitted' | 'paid';
     paidDate: string | null;
     transactionId: string | null;
     eligibilityCriteria: string;
@@ -23,18 +25,26 @@ interface PMSMABenefits {
     programName: string;
     programShortName: string;
     createdAt: string;
+    paymentDetails?: {
+        accountHolderName: string;
+        accountNumber: string;
+        ifscCode: string;
+        bankName: string;
+    } | null;
 }
 
 const PMSMABanner: React.FC = () => {
     const { t } = useTranslation();
     const [benefits, setBenefits] = useState<PMSMABenefits | null>(null);
     const [showDetails, setShowDetails] = useState(false);
+    const [showApplicationForm, setShowApplicationForm] = useState(false);
+    const [selectedInstallment, setSelectedInstallment] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchBenefits();
 
-        // Refresh when window/tab becomes visible again (e.g., after saving profile in another component)
+        // Refresh when window/tab becomes visible again
         const handleVisibilityChange = () => {
             if (!document.hidden) {
                 fetchBenefits();
@@ -63,6 +73,17 @@ const PMSMABanner: React.FC = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleApplyClick = (installmentNumber: number) => {
+        setSelectedInstallment(installmentNumber);
+        setShowDetails(false); // Close details modal first
+        setShowApplicationForm(true);
+    };
+
+    const handleApplicationSuccess = () => {
+        toast.success(t('pmsma.applicationSubmitted'));
+        fetchBenefits(); // Refresh to show updated status
     };
 
     if (loading) {
@@ -97,13 +118,15 @@ const PMSMABanner: React.FC = () => {
         );
     }
 
-
     const getStatusIcon = (status: string) => {
         switch (status) {
             case 'paid':
                 return '✅';
             case 'eligible':
+            case 'eligible_to_apply':
                 return '⭐';
+            case 'application_submitted':
+                return '📝';
             case 'locked':
                 return '🔒';
             default:
@@ -116,7 +139,10 @@ const PMSMABanner: React.FC = () => {
             case 'paid':
                 return t('pmsma.statusPaid');
             case 'eligible':
-                return t('pmsma.statusEligible');
+            case 'eligible_to_apply':
+                return t('pmsma.statusEligibleToApply');
+            case 'application_submitted':
+                return t('pmsma.statusApplicationSubmitted');
             case 'locked':
                 return t('pmsma.statusLocked');
             default:
@@ -129,7 +155,10 @@ const PMSMABanner: React.FC = () => {
             case 'paid':
                 return 'status-paid';
             case 'eligible':
-                return 'status-eligible';
+            case 'eligible_to_apply':
+                return 'status-eligible-apply';
+            case 'application_submitted':
+                return 'status-submitted';
             case 'locked':
                 return 'status-locked';
             default:
@@ -150,7 +179,7 @@ const PMSMABanner: React.FC = () => {
         }
     };
 
-    const completedCount = benefits.installments.filter(i => i.status === 'eligible' || i.status === 'paid').length;
+    const completedCount = benefits.installments.filter(i => i.status !== 'locked').length;
 
     return (
         <>
@@ -161,7 +190,7 @@ const PMSMABanner: React.FC = () => {
                     <p className="pmsma-banner-subtitle">{t('pmsma.programShort')}</p>
                     <div className="pmsma-progress-bar">
                         <div className="pmsma-progress-indicators">
-                            {benefits.installments.map((inst, idx) => (
+                            {benefits.installments.map((inst) => (
                                 <div
                                     key={inst.installmentNumber}
                                     className={`pmsma-progress-dot ${inst.status !== 'locked' ? 'completed' : ''}`}
@@ -237,13 +266,32 @@ const PMSMABanner: React.FC = () => {
                                             <strong>{t('pmsma.eligibilityCriteria')}</strong>
                                             <p>{getCriteriaText(inst.eligibilityCriteria)}</p>
                                         </div>
-                                        {inst.status === 'eligible' && !inst.paidDate && (
+
+                                        {/* Apply Button for eligible_to_apply status (or legacy eligible status) */}
+                                        {(inst.status === 'eligible_to_apply' || inst.status === 'eligible') && (
                                             <div className="installment-action">
-                                                <p className="action-note">
-                                                    ✓ {t('pmsma.eligibleMessage')}
+                                                <button
+                                                    className="btn-apply"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleApplyClick(inst.installmentNumber);
+                                                    }}
+                                                >
+                                                    {t('pmsma.applyNow')}
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* Under Review status */}
+                                        {inst.status === 'application_submitted' && (
+                                            <div className="installment-pending">
+                                                <p className="pending-note">
+                                                    📝 {t('pmsma.underReview')}
                                                 </p>
                                             </div>
                                         )}
+
+                                        {/* Paid status */}
                                         {inst.paidDate && (
                                             <div className="installment-details">
                                                 <p>
@@ -256,6 +304,8 @@ const PMSMABanner: React.FC = () => {
                                                 )}
                                             </div>
                                         )}
+
+                                        {/* Locked status */}
                                         {inst.status === 'locked' && (
                                             <div className="installment-locked">
                                                 <p className="locked-note">
@@ -276,6 +326,19 @@ const PMSMABanner: React.FC = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Application Form Modal */}
+            {showApplicationForm && selectedInstallment && (
+                <PMSMAApplicationForm
+                    installmentNumber={selectedInstallment}
+                    onClose={() => {
+                        setShowApplicationForm(false);
+                        setSelectedInstallment(null);
+                    }}
+                    onSuccess={handleApplicationSuccess}
+                    paymentDetails={benefits.paymentDetails || null}
+                />
             )}
         </>
     );
