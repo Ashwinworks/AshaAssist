@@ -82,11 +82,11 @@
     color: #4b5563;
 }
 
-.form-group {
+.pmsma-form-modal .form-group {
     margin-bottom: 20px;
 }
 
-.form-group label {
+.pmsma-form-modal .form-group label {
     display: block;
     margin-bottom: 8px;
     font-weight: 500;
@@ -94,12 +94,12 @@
     font-size: 14px;
 }
 
-.form-group label .required {
+.pmsma-form-modal .form-group label .required {
     color: #ef4444;
     margin-left: 4px;
 }
 
-.form-group input {
+.pmsma-form-modal .form-group input {
     width: 100%;
     padding: 12px 16px;
     border: 2px solid #e5e7eb;
@@ -109,7 +109,7 @@
     box-sizing: border-box;
 }
 
-.form-group input:focus {
+.pmsma-form-modal .form-group input:focus {
     outline: none;
     border-color: #ec4899;
     box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
@@ -142,27 +142,27 @@
     border: none;
 }
 
-.btn-primary {
+.pmsma-form-modal .btn-primary {
     background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
     color: white;
 }
 
-.btn-primary:hover:not(:disabled) {
+.pmsma-form-modal .btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 10px 20px rgba(236, 72, 153, 0.3);
 }
 
-.btn-primary:disabled {
+.pmsma-form-modal .btn-primary:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
 
-.btn-secondary {
+.pmsma-form-modal .btn-secondary {
     background: #f3f4f6;
     color: #4b5563;
 }
 
-.btn-secondary:hover {
+.pmsma-form-modal .btn-secondary:hover {
     background: #e5e7eb;
 }
 

@@ -291,7 +291,7 @@ class GovernmentBenefitsService:
             result = self.users.update_one(
                 {
                     '_id': ObjectId(user_id),
-                    f'governmentBenefits.pmsma.installments.{index}.status': 'eligible'
+                    f'governmentBenefits.pmsma.installments.{index}.status': {'$in': ['eligible', 'approved', 'eligible_to_apply']}
                 },
                 {
                     '$set': {
@@ -355,7 +355,7 @@ class GovernmentBenefitsService:
             installment = pmsma['installments'][installment_index]
 
             # Check if installment is eligible to apply
-            if installment['status'] != 'eligible_to_apply':
+            if installment['status'] not in ['eligible', 'eligible_to_apply']:
                 current_status = installment['status']
                 return {
                     'error': f'Installment {installment_number} is not eligible for application. Current status: {current_status}'
@@ -464,3 +464,82 @@ class GovernmentBenefitsService:
             if inst['status'] in ['eligible', 'paid']:
                 count += 1
         return f'{count}/3'
+    
+    def get_pending_applications(self) -> Tuple[Dict[str, Any], int]:
+        """Get all PMSMA applications pending approval for Anganwadi workers."""
+        try:
+            users = self.users.find({
+                'governmentBenefits.pmsma.installments': {
+                    '$elemMatch': {'status': 'application_submitted'}
+                }
+            })
+            
+            pending_applications = []
+            for user in users:
+                pmsma = user.get('governmentBenefits', {}).get('pmsma', {})
+                payment_details = pmsma.get('paymentDetails', {})
+                
+                for installment in pmsma.get('installments', []):
+                    if installment['status'] == 'application_submitted':
+                        pending_applications.append({
+                            'userId': str(user['_id']),
+                            'motherName': user.get('name', 'N/A'),
+                            'email': user.get('email', 'N/A'),
+                            'phone': user.get('phone', 'N/A'),
+                            'installmentNumber': installment['installmentNumber'],
+                            'amount': installment['amount'],
+                            'submittedDate': installment.get('application', {}).get('submittedDate'),
+                            'paymentDetails': {
+                                'accountHolderName': payment_details.get('accountHolderName', 'N/A'),
+                                'accountNumber': payment_details.get('accountNumber', 'N/A'),
+                                'ifscCode': payment_details.get('ifscCode', 'N/A'),
+                                'bankName': payment_details.get('bankName', 'N/A')
+                            }
+                        })
+            
+            return {'applications': pending_applications, 'total': len(pending_applications)}, 200
+            
+        except Exception as e:
+            print(f"Error getting pending applications: {str(e)}")
+            return {'error': 'Failed to get pending applications'}, 500
+    
+    def approve_application(self, user_id: str, installment_number: int) -> Tuple[Dict[str, Any], int]:
+        """Approve a PMSMA application (Anganwadi action)."""
+        try:
+            user = self.users.find_one({'_id': ObjectId(user_id)})
+            if not user:
+                return {'error': 'User not found'}, 404
+            
+            pmsma = user.get('governmentBenefits', {}).get('pmsma')
+            if not pmsma:
+                return {'error': 'PMSMA benefits not found'}, 404
+            
+            installment_index = installment_number - 1
+            installment = pmsma['installments'][installment_index]
+            
+            if installment['status'] != 'application_submitted':
+                return {'error': f'Installment {installment_number} is not pending approval'}, 400
+            
+            now = datetime.now(timezone.utc)
+            result = self.users.update_one(
+                {'_id': ObjectId(user_id)},
+                {'$set': {
+                    f'governmentBenefits.pmsma.installments.{installment_index}.status': 'approved',
+                    f'governmentBenefits.pmsma.installments.{installment_index}.application.status': 'approved',
+                    f'governmentBenefits.pmsma.installments.{installment_index}.application.approvedDate': now.isoformat(),
+                    'updatedAt': now
+                }}
+            )
+            
+            if result.matched_count == 0:
+                return {'error': 'Failed to approve application'}, 500
+            
+            return {
+                'message': f'Application approved successfully',
+                'installmentNumber': installment_number,
+                'status': 'approved'
+            }, 200
+            
+        except Exception as e:
+            print(f"Error approving application: {str(e)}")
+            return {'error': 'Failed to approve application'}, 500

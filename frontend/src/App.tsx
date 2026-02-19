@@ -16,6 +16,7 @@ import AnganvaadiLocalCamps from './pages/anganvaadi/LocalCamps';
 import AnganvaadiRation from './pages/anganvaadi/Ration';
 import AnganvaadiRationHistory from './pages/anganvaadi/RationHistory';
 import AnganvaadiVaccinationSchedules from './pages/anganvaadi/VaccinationSchedules';
+import AnganvaadiPMSMAApprovals from './pages/anganvaadi/PMSMAApprovals';
 import AshaCalendarManagement from './pages/asha/CalendarManagement';
 import VaccinationSchedules from './pages/asha/VaccinationSchedules';
 import AshaVisitRequests from './pages/asha/VisitRequests';
@@ -341,6 +342,14 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <AnganvaadiVaccinationSchedules />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/anganvaadi/pmsma-approvals"
+        element={
+          <ProtectedRoute>
+            <AnganvaadiPMSMAApprovals />
           </ProtectedRoute>
         }
       />

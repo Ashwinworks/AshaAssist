@@ -105,6 +105,34 @@ def init_government_benefits_routes(app, collections):
         except Exception as e:
             return jsonify({'error': f'Failed to submit application: {str(e)}'}), 500
 
+    # Anganwadi routes for approval workflow
+    @benefits_bp.route('/api/benefits/pmsma/pending-applications', methods=['GET'])
+    @jwt_required()
+    def get_pending_pmsma_applications():
+        """Get all pending PMSMA applications for Anganwadi approval"""
+        try:
+            response, status = benefits_service.get_pending_applications()
+            return jsonify(response), status
+        except Exception as e:
+            return jsonify({'error': f'Failed to get pending applications: {str(e)}'}), 500
+    
+    @benefits_bp.route('/api/benefits/pmsma/approve', methods=['POST'])
+    @jwt_required()
+    def approve_pmsma_application():
+        """Approve a PMSMA application (Anganwadi action)"""
+        try:
+            data = request.get_json()
+            user_id = data.get('userId')
+            installment_number = data.get('installmentNumber')
+            
+            if not user_id or not installment_number:
+                return jsonify({'error': 'Missing required fields'}), 400
+            
+            response, status = benefits_service.approve_application(user_id, installment_number)
+            return jsonify(response), status
+        except Exception as e:
+            return jsonify({'error': f'Failed to approve application: {str(e)}'}), 500
+
     @benefits_bp.route('/api/benefits/pmsma/user/<user_id>', methods=['GET'])
     @jwt_required()
     def get_user_pmsma_summary(user_id):

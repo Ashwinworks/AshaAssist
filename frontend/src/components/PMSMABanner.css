@@ -385,6 +385,11 @@
     color: white;
 }
 
+.status-badge.status-approved {
+    background: #10b981;
+    color: white;
+}
+
 .status-badge.status-locked {
     background: #9ca3af;
     color: white;

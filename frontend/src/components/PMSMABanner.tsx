@@ -9,7 +9,7 @@ interface Installment {
     installmentNumber: number;
     amount: number;
     eligibilityDate: string | null;
-    status: 'locked' | 'eligible' | 'eligible_to_apply' | 'application_submitted' | 'paid';
+    status: 'locked' | 'eligible' | 'eligible_to_apply' | 'application_submitted' | 'approved' | 'paid';
     paidDate: string | null;
     transactionId: string | null;
     eligibilityCriteria: string;
@@ -127,6 +127,8 @@ const PMSMABanner: React.FC = () => {
                 return '⭐';
             case 'application_submitted':
                 return '📝';
+            case 'approved':
+                return '✓';
             case 'locked':
                 return '🔒';
             default:
@@ -143,6 +145,8 @@ const PMSMABanner: React.FC = () => {
                 return t('pmsma.statusEligibleToApply');
             case 'application_submitted':
                 return t('pmsma.statusApplicationSubmitted');
+            case 'approved':
+                return 'Approved - Pending Payment';
             case 'locked':
                 return t('pmsma.statusLocked');
             default:
@@ -159,6 +163,8 @@ const PMSMABanner: React.FC = () => {
                 return 'status-eligible-apply';
             case 'application_submitted':
                 return 'status-submitted';
+            case 'approved':
+                return 'status-approved';
             case 'locked':
                 return 'status-locked';
             default:

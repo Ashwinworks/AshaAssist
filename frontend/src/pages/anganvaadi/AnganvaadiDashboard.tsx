@@ -136,13 +136,13 @@ const AnganvaadiDashboard: React.FC = () => {
           <div className="card-content">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {updates.map((update, index) => (
-                <div 
+                <div
                   key={index}
-                  style={{ 
-                    padding: '1rem', 
-                    backgroundColor: `var(--${update.color}-50)`, 
-                    borderRadius: '0.5rem', 
-                    borderLeft: `3px solid var(--${update.color}-400)` 
+                  style={{
+                    padding: '1rem',
+                    backgroundColor: `var(--${update.color}-50)`,
+                    borderRadius: '0.5rem',
+                    borderLeft: `3px solid var(--${update.color}-400)`
                   }}
                 >
                   <div style={{ fontWeight: '600', color: `var(--${update.color}-800)`, marginBottom: '0.25rem' }}>
@@ -240,6 +240,25 @@ const AnganvaadiDashboard: React.FC = () => {
                   fontWeight: '600'
                 }} onClick={() => navigate('/anganvaadi/vaccination-schedules')}>
                   View Schedules
+                </button>
+              </div>
+
+              <div className="card" style={{ padding: '1.5rem', border: '2px solid var(--pink-100)', backgroundColor: 'var(--pink-25)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                  <Users style={{ width: '1.5rem', height: '1.5rem', color: 'var(--pink-600)' }} />
+                  <h3 style={{ margin: '0', color: 'var(--pink-800)', fontSize: '1.125rem', fontWeight: '600' }}>PMSMA Approvals</h3>
+                </div>
+                <p style={{ margin: '0 0 1.25rem', color: 'var(--pink-700)', fontSize: '0.875rem', lineHeight: '1.4' }}>
+                  Review and approve PMSMA installment applications submitted by mothers.
+                </p>
+                <button className="btn" style={{
+                  backgroundColor: '#ec4899',
+                  color: 'white',
+                  border: 'none',
+                  fontSize: '0.875rem',
+                  fontWeight: '600'
+                }} onClick={() => navigate('/anganvaadi/pmsma-approvals')}>
+                  Review Applications
                 </button>
               </div>
             </div>

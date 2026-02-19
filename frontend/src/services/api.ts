@@ -292,6 +292,16 @@ export const governmentBenefitsAPI = {
   getAllMaternityUsers: async () => {
     const response = await api.get('/benefits/pmsma/mothers');
     return response.data as { mothers: any[] };
+  },
+  // Anganwadi: Get pending applications
+  getPendingApplications: async () => {
+    const response = await api.get('/benefits/pmsma/pending-applications');
+    return response.data as { applications: any[]; total: number };
+  },
+  // Anganwadi: Approve application
+  approveApplication: async (userId: string, installmentNumber: number) => {
+    const response = await api.post('/benefits/pmsma/approve', { userId, installmentNumber });
+    return response.data as { message: string; installmentNumber: number; status: string };
   }
 };
 

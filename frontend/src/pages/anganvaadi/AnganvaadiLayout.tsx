@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Heart, LogOut, Calendar, Package,
-  Menu, X, BookOpen, MapPin, History
+  Menu, X, BookOpen, MapPin, History, FileText
 } from 'lucide-react';
 
 // Navigation items for Anganvaadi workers
@@ -37,6 +37,12 @@ const navigationItems = [
     label: 'Vaccination Schedules',
     icon: Calendar,
     path: '/anganvaadi/vaccination-schedules'
+  },
+  {
+    id: 'pmsma-approvals',
+    label: 'PMSMA Approvals',
+    icon: FileText,
+    path: '/anganvaadi/pmsma-approvals'
   }
 ];
 

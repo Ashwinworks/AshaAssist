@@ -202,7 +202,7 @@
 
 .checkbox-label {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
   cursor: pointer;
   font-size: 0.875rem;
@@ -212,10 +212,13 @@
   width: 1rem;
   height: 1rem;
   accent-color: var(--primary-600);
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .checkbox-text {
   color: var(--gray-700);
+  line-height: 1.4;
 }
 
 .forgot-password-link {
@@ -263,7 +266,7 @@
   background-color: white;
 }
 
-.user-type-option input[type="radio"]:checked + .user-type-card {
+.user-type-option input[type="radio"]:checked+.user-type-card {
   border-color: var(--primary-600);
   background-color: var(--primary-50);
 }
@@ -306,7 +309,7 @@
   background-color: white;
 }
 
-.beneficiary-option input[type="radio"]:checked + .beneficiary-card {
+.beneficiary-option input[type="radio"]:checked+.beneficiary-card {
   border-color: var(--secondary-600);
   background-color: var(--secondary-50);
 }
@@ -477,14 +480,14 @@
   .auth-container {
     display: block;
   }
-  
+
   .auth-branding {
     position: relative;
     width: 100%;
     height: auto;
     min-height: 200px;
   }
-  
+
   .auth-form-container {
     margin-left: 0;
     width: 100%;
@@ -496,23 +499,23 @@
   .auth-form-container {
     padding: 1rem;
   }
-  
+
   .auth-form-content {
     max-width: 100%;
   }
-  
+
   .auth-branding-title {
     font-size: 2rem;
   }
-  
+
   .auth-title {
     font-size: 1.75rem;
   }
-  
+
   .user-type-selector {
     gap: 0.5rem;
   }
-  
+
   .user-type-card,
   .beneficiary-card {
     padding: 0.75rem;
@@ -523,17 +526,17 @@
   .auth-form {
     gap: 1rem;
   }
-  
+
   .form-options {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-  
+
   .auth-branding-title {
     font-size: 1.75rem;
   }
-  
+
   .auth-title {
     font-size: 1.5rem;
   }
@@ -600,8 +603,13 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .input-success {
@@ -656,6 +664,3 @@
 .password-requirement:last-child {
   margin-bottom: 0;
 }
-
-
-
