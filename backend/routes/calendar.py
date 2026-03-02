@@ -114,7 +114,7 @@ def init_calendar_routes(app, collections):
             
             res = collections['calendar_events'].insert_one(doc)
             
-            # Create notification for all users
+            # Create in-app notification for all users
             try:
                 from routes.notifications import notify_all_users
                 notify_all_users(
@@ -126,6 +126,33 @@ def init_calendar_routes(app, collections):
                 )
             except Exception as e:
                 print(f"Warning: Could not create notification: {str(e)}")
+            
+            # Send email notification — respects notifyUsers from request
+            # notifyUsers: 'all' | list of user _id strings | 'none'
+            notify_users_param = data.get('notifyUsers', 'all')
+            try:
+                from services.email_service import send_calendar_event_notification
+                if notify_users_param == 'none':
+                    email_count = 0
+                elif notify_users_param == 'all' or not isinstance(notify_users_param, list):
+                    all_users = list(collections['users'].find({'email': {'$exists': True, '$ne': ''}}))
+                    email_count = send_calendar_event_notification(all_users, doc)
+                else:
+                    # notify_users_param is a list of user ID strings
+                    from bson import ObjectId as _ObjId
+                    selected_ids = []
+                    for uid in notify_users_param:
+                        try:
+                            selected_ids.append(_ObjId(uid))
+                        except Exception:
+                            pass
+                    selected_users = list(collections['users'].find(
+                        {'_id': {'$in': selected_ids}, 'email': {'$exists': True, '$ne': ''}}
+                    )) if selected_ids else []
+                    email_count = send_calendar_event_notification(selected_users, doc)
+                print(f"[EMAIL] Calendar event email sent to {email_count} users")
+            except Exception as e:
+                print(f"[EMAIL] Warning: Could not send event email: {str(e)}")
             
             return jsonify({'id': str(res.inserted_id), 'message': 'Event created'}), 201
         except Exception as e:
@@ -211,6 +238,42 @@ def init_calendar_routes(app, collections):
             return jsonify({'message': 'Event deleted'}), 200
         except Exception as e:
             return jsonify({'error': f'Failed to delete event: {str(e)}'}), 500
+
+    @calendar_bp.route('/api/users/list', methods=['GET'])
+    @jwt_required()
+    def list_users_for_notification():
+        """List all registered users for ASHA worker notification targeting (ASHA/Admin only)"""
+        try:
+            claims = get_jwt() or {}
+            if claims.get('userType') not in ['asha_worker', 'admin']:
+                return jsonify({'error': 'Access denied'}), 403
+
+            current_user_id = get_jwt_identity()
+            user_type_filter = request.args.get('userType')  # optional filter
+
+            # Broad query — include ALL users so ASHA can see everyone
+            query = {'_id': {'$ne': ObjectId(current_user_id)}}  # exclude self
+            if user_type_filter:
+                query['userType'] = user_type_filter
+
+            cursor = collections['users'].find(
+                query,
+                {'name': 1, 'email': 1, 'userType': 1}
+            ).sort('name', 1)
+
+            users = [
+                {
+                    'id': str(u['_id']),
+                    'name': u.get('name') or 'Unknown',
+                    'email': u.get('email') or '(no email)',
+                    'userType': u.get('userType', ''),
+                    'hasEmail': bool(u.get('email')),
+                }
+                for u in cursor
+            ]
+            return jsonify({'users': users, 'total': len(users)}), 200
+        except Exception as e:
+            return jsonify({'error': f'Failed to list users: {str(e)}'}), 500
 
     # Register blueprint with app
     app.register_blueprint(calendar_bp)

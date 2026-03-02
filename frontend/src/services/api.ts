@@ -187,6 +187,7 @@ export const calendarAPI = {
     date: string; // YYYY-MM-DD
     allDay?: boolean;
     category?: string;
+    notifyUsers?: 'all' | string[] | 'none'; // NEW: notification targeting
   }) => {
     const response = await api.post('/calendar-events', payload);
     return response.data;
@@ -198,7 +199,12 @@ export const calendarAPI = {
   delete: async (id: string) => {
     const response = await api.delete(`/calendar-events/${id}`);
     return response.data;
-  }
+  },
+  listUsersForNotification: async (userType?: string) => {
+    const params = userType ? { userType } : undefined;
+    const response = await api.get('/users/list', { params });
+    return response.data as { users: Array<{ id: string; name: string; email: string; userType: string; hasEmail: boolean }>; total: number };
+  },
 };
 
 // Maternity API

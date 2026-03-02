@@ -212,6 +212,16 @@ def init_vaccination_routes(app, collections):
             }
             
             res = collections['vaccination_bookings'].insert_one(booking)
+            
+            # Send booking confirmation email to the user
+            try:
+                from services.email_service import send_vaccination_booking_confirmation
+                user = collections['users'].find_one({'_id': ObjectId(user_id)})
+                if user:
+                    send_vaccination_booking_confirmation(user, booking, schedule)
+            except Exception as e:
+                print(f"[EMAIL] Warning: Could not send booking confirmation email: {str(e)}")
+            
             return jsonify({'id': str(res.inserted_id), 'message': 'Booking created'}), 201
         except Exception as e:
             return jsonify({'error': f'Failed to create booking: {str(e)}'}), 500
@@ -391,6 +401,20 @@ def init_vaccination_routes(app, collections):
             )
             if res.matched_count == 0:
                 return jsonify({'error': 'Booking not found'}), 404
+            
+            # Send completion email when ASHA marks a booking as Completed
+            if new_status == 'Completed':
+                try:
+                    from services.email_service import send_vaccination_completed_notification
+                    booking_doc = collections['vaccination_bookings'].find_one({'_id': _id})
+                    if booking_doc:
+                        user_doc = collections['users'].find_one({'_id': booking_doc.get('userId')})
+                        schedule_doc = collections['vaccination_schedules'].find_one({'_id': booking_doc.get('scheduleId')})
+                        if user_doc and schedule_doc:
+                            send_vaccination_completed_notification(user_doc, booking_doc, schedule_doc)
+                except Exception as e:
+                    print(f"[EMAIL] Warning: Could not send completion email: {str(e)}")
+            
             return jsonify({'message': 'Booking status updated'}), 200
         except Exception as e:
             return jsonify({'error': f'Failed to update booking status: {str(e)}'}), 500

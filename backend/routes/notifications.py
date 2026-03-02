@@ -141,6 +141,44 @@ def init_notification_routes(app, collections):
         except Exception as e:
             return jsonify({'error': f'Failed to delete notification: {str(e)}'}), 500
     
+    @notifications_bp.route('/api/notifications/send-email', methods=['POST'])
+    @jwt_required()
+    def send_broadcast_email():
+        """Send a broadcast email to users (ASHA workers and admins only)"""
+        try:
+            claims = get_jwt() or {}
+            if claims.get('userType') not in ['asha_worker', 'admin']:
+                return jsonify({'error': 'Only ASHA workers or admins can send emails'}), 403
+
+            data = request.get_json() or {}
+            subject = (data.get('subject') or '').strip()
+            message = (data.get('message') or '').strip()
+            recipient_type = data.get('recipientType', 'all')  # 'all' or a userType string
+
+            if not subject or not message:
+                return jsonify({'error': 'subject and message are required'}), 400
+
+            # Build user query
+            query = {'email': {'$exists': True, '$ne': ''}}
+            if recipient_type != 'all':
+                query['userType'] = recipient_type
+
+            users = list(collections['users'].find(query, {'email': 1}))
+            recipients = [u.get('email') for u in users if u.get('email')]
+
+            if not recipients:
+                return jsonify({'message': 'No recipients found', 'count': 0}), 200
+
+            try:
+                from services.email_service import send_custom_email
+                count = send_custom_email(recipients, subject, message)
+                return jsonify({'message': f'Email sent to {count} recipients', 'count': count}), 200
+            except Exception as e:
+                return jsonify({'error': f'Failed to send email: {str(e)}'}), 500
+
+        except Exception as e:
+            return jsonify({'error': f'Failed to process request: {str(e)}'}), 500
+
     # Register blueprint with app
     app.register_blueprint(notifications_bp)
 

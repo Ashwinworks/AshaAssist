@@ -20,6 +20,7 @@ from middleware.auth import init_jwt_middleware
 # Import services
 from services.auth_service import AuthService
 from services.seed_service import SeedService
+from services.email_service import init_mail
 
 # Import routes
 from routes.auth import init_auth_routes
@@ -81,6 +82,9 @@ def create_app(config_name='default'):
     
     # Initialize Firebase
     initialize_firebase()
+    
+    # Initialize email (Flask-Mail)
+    init_mail(app)
     
     # Initialize services
     auth_service = AuthService(collections['users'])
