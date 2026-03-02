@@ -8,7 +8,7 @@ interface Installment {
     installmentNumber: number;
     amount: number;
     eligibilityDate: string | null;
-    status: 'locked' | 'eligible' | 'paid';
+    status: 'locked' | 'eligible' | 'eligible_to_apply' | 'application_submitted' | 'approved' | 'paid';
     paidDate: string | null;
     transactionId: string | null;
     eligibilityCriteria: string;
@@ -129,7 +129,10 @@ const PMSMABenefits: React.FC = () => {
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'paid': return { bg: '#dcfce7', text: '#047857', icon: CheckCircle };
-            case 'eligible': return { bg: '#fef3c7', text: '#92400e', icon: Clock };
+            case 'approved': return { bg: '#d1fae5', text: '#065f46', icon: CheckCircle };
+            case 'application_submitted': return { bg: '#ede9fe', text: '#5b21b6', icon: Clock };
+            case 'eligible':
+            case 'eligible_to_apply': return { bg: '#fef3c7', text: '#92400e', icon: Clock };
             case 'locked': return { bg: '#f3f4f6', text: '#6b7280', icon: Lock };
             default: return { bg: '#f3f4f6', text: '#6b7280', icon: Lock };
         }
@@ -290,10 +293,10 @@ const PMSMABenefits: React.FC = () => {
                                                                         </p>
                                                                     )}
                                                                 </div>
-                                                                {inst.status === 'eligible' && !inst.paidDate && (
+                                                                {inst.status === 'approved' && (
                                                                     <button
                                                                         className="btn btn-primary"
-                                                                        style={{ margin: 0 }}
+                                                                        style={{ margin: 0, backgroundColor: '#059669', borderColor: '#059669' }}
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
                                                                             setSelectedInstallment(inst.installmentNumber);
@@ -302,6 +305,11 @@ const PMSMABenefits: React.FC = () => {
                                                                     >
                                                                         Mark as Paid
                                                                     </button>
+                                                                )}
+                                                                {inst.status === 'application_submitted' && (
+                                                                    <span style={{ fontSize: '0.75rem', color: '#5b21b6', fontWeight: '600', padding: '0.25rem 0.75rem', background: '#ede9fe', borderRadius: '1rem' }}>
+                                                                        Pending Anganwadi Approval
+                                                                    </span>
                                                                 )}
                                                             </div>
                                                         </div>
