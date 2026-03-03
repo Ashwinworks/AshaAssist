@@ -972,6 +972,40 @@ def init_vaccination_routes(app, collections):
             traceback.print_exc()
             return jsonify({'error': f'Failed to get children details: {str(e)}'}), 500
 
+    @vaccination_bp.route('/api/vaccination/send-reminder', methods=['POST'])
+    @jwt_required()
+    def send_vaccination_reminder_email():
+        """Send a vaccination due-date reminder email to a mother (ASHA/Admin only)."""
+        try:
+            claims = get_jwt() or {}
+            if claims.get('userType') not in ['asha_worker', 'admin']:
+                return jsonify({'error': 'Only ASHA workers or admins can send reminders'}), 403
+
+            data = request.get_json() or {}
+            mother_email = (data.get('motherEmail') or '').strip()
+            mother_name = data.get('motherName', 'Parent')
+            child_name = data.get('childName', 'your child')
+            vaccinations = data.get('vaccinations', [])
+
+            if not mother_email or '@' not in mother_email:
+                return jsonify({'error': 'Valid mother email is required'}), 400
+            if not vaccinations:
+                return jsonify({'error': 'At least one vaccination is required'}), 400
+
+            from services.email_service import send_vaccination_reminder
+            result = send_vaccination_reminder(
+                mother_email=mother_email,
+                mother_name=mother_name,
+                child_name=child_name,
+                vaccinations=vaccinations
+            )
+            if result:
+                return jsonify({'message': f'Vaccination reminder sent to {mother_email}'}), 200
+            else:
+                return jsonify({'error': 'Failed to send email — check server email credentials'}), 500
+        except Exception as e:
+            return jsonify({'error': f'Failed to send reminder: {str(e)}'}), 500
+
     # Register blueprint with app
     app.register_blueprint(vaccination_bp)
 

@@ -339,3 +339,85 @@ def send_custom_email(recipients: list, subject: str, message: str) -> int:
     html = _base_template(subject, content)
     send_email(subject=subject, recipients=recipients, html_body=html)
     return len([r for r in recipients if r and '@' in str(r)])
+
+
+# ---------------------------------------------------------------------------
+# Template: Vaccination Due-Date Reminder (ASHA → Mother)
+# ---------------------------------------------------------------------------
+
+def send_vaccination_reminder(mother_email: str, mother_name: str,
+                               child_name: str, vaccinations: list) -> bool:
+    """
+    Send a vaccination reminder email to a mother about due/overdue vaccines.
+    vaccinations: list of dicts with keys vaccineName, dueDate, status, ageLabel.
+    Returns True if dispatched.
+    """
+    # Colour map for status badges
+    STATUS_COLORS = {
+        'overdue':  ('#dc2626', '#fef2f2', '#991b1b'),
+        'due':      ('#f59e0b', '#fffbeb', '#92400e'),
+        'upcoming': ('#0369a1', '#f0f9ff', '#0c4a6e'),
+    }
+
+    rows = ""
+    for v in vaccinations:
+        border, bg, text = STATUS_COLORS.get(v.get('status', ''), ('#6b7280', '#f9fafb', '#374151'))
+        due = v.get('dueDate', 'TBD')
+        rows += f"""
+        <tr>
+          <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;">
+            <strong style="color:#1a202c;font-size:14px;">{v.get('vaccineName', '')}</strong>
+            <div style="font-size:12px;color:#6b7280;margin-top:2px;">{v.get('ageLabel', '')}</div>
+          </td>
+          <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">
+            {due}
+          </td>
+          <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;text-align:center;">
+            <span style="display:inline-block;padding:3px 10px;border-radius:20px;
+                         font-size:12px;font-weight:600;background:{bg};color:{text};
+                         border:1px solid {border};text-transform:capitalize;">
+              {v.get('status', '')}
+            </span>
+          </td>
+        </tr>"""
+
+    content = f"""
+      <h2 style="margin:0 0 6px;color:#1a6b4a;font-size:20px;">💉 Vaccination Reminder</h2>
+      <p style="margin:0 0 20px;color:#6b7280;font-size:14px;">
+        Dear <strong>{mother_name}</strong>, this is a reminder about upcoming vaccinations
+        for your child <strong>{child_name}</strong>.
+      </p>
+
+      <table width="100%" cellpadding="0" cellspacing="0"
+             style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:20px;">
+        <thead>
+          <tr style="background:#f0f9f4;">
+            <th style="text-align:left;padding:10px 14px;color:#1a6b4a;font-size:13px;font-weight:600;">Vaccine</th>
+            <th style="text-align:left;padding:10px 14px;color:#1a6b4a;font-size:13px;font-weight:600;">Due Date</th>
+            <th style="text-align:center;padding:10px 14px;color:#1a6b4a;font-size:13px;font-weight:600;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows}
+        </tbody>
+      </table>
+
+      <div style="background:#fff8e1;border-left:4px solid #f59e0b;padding:12px 16px;
+                  border-radius:0 8px 8px 0;margin-bottom:16px;">
+        <p style="margin:0;color:#78350f;font-size:13px;">
+          ⚠️ Please ensure your child receives vaccinations on time. Contact your
+          ASHA worker for scheduling an appointment.
+        </p>
+      </div>
+
+      <p style="color:#6b7280;font-size:13px;margin-top:16px;">
+        Open the AshaAssist app to view the full vaccination schedule and book a slot.
+      </p>
+    """
+
+    html = _base_template("Vaccination Reminder", content)
+    return send_email(
+        subject=f"💉 Vaccination Reminder for {child_name} — AshaAssist",
+        recipients=[mother_email],
+        html_body=html
+    )

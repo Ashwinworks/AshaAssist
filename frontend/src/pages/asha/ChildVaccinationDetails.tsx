@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AshaLayout from './AshaLayout';
 import { Syringe, Search, Filter, Send, CheckCircle, Clock, AlertCircle, Baby, User, Phone, Mail, Loader, ChevronRight } from 'lucide-react';
 import { api } from '../../services/api';
+import toast from 'react-hot-toast';
 
 interface Vaccination {
     vaccineName: string;
@@ -33,6 +34,7 @@ const ChildVaccinationDetails: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [expandedChildId, setExpandedChildId] = useState<string | null>(null);
+    const [sendingReminderId, setSendingReminderId] = useState<string | null>(null);
 
     // Fetch children data from API
     useEffect(() => {
@@ -58,6 +60,37 @@ const ChildVaccinationDetails: React.FC = () => {
             setError(err.response?.data?.error || 'Failed to load children data');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const sendReminder = async (child: Child) => {
+        if (!child.motherEmail || child.motherEmail === '(no email)') {
+            toast.error('This mother does not have a registered email address.');
+            return;
+        }
+        if (child.dueVaccinations.length === 0) {
+            toast.error('No due vaccinations to remind about.');
+            return;
+        }
+        try {
+            setSendingReminderId(child.id);
+            await api.post('/vaccination/send-reminder', {
+                motherEmail: child.motherEmail,
+                motherName: child.motherName,
+                childName: child.childName,
+                vaccinations: child.dueVaccinations.map(v => ({
+                    vaccineName: v.vaccineName,
+                    dueDate: v.dueDate,
+                    status: v.status,
+                    ageLabel: v.ageLabel,
+                })),
+            });
+            toast.success(`Vaccination reminder sent to ${child.motherName} (${child.motherEmail})`);
+        } catch (err: any) {
+            console.error('Send reminder error:', err);
+            toast.error(err.response?.data?.error || 'Failed to send reminder email');
+        } finally {
+            setSendingReminderId(null);
         }
     };
 
@@ -409,18 +442,26 @@ const ChildVaccinationDetails: React.FC = () => {
 
                                                     {/* Action Buttons */}
                                                     <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
-                                                        <button className="btn" style={{
-                                                            flex: 1,
-                                                            backgroundColor: '#3b82f6',
-                                                            color: 'white',
-                                                            fontWeight: 600,
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            gap: '0.5rem'
-                                                        }}>
-                                                            <Send size={18} />
-                                                            Send Reminder
+                                                        <button
+                                                            className="btn"
+                                                            disabled={sendingReminderId === child.id}
+                                                            onClick={(e) => { e.stopPropagation(); sendReminder(child); }}
+                                                            style={{
+                                                                flex: 1,
+                                                                backgroundColor: sendingReminderId === child.id ? '#93c5fd' : '#3b82f6',
+                                                                color: 'white',
+                                                                fontWeight: 600,
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                gap: '0.5rem',
+                                                                cursor: sendingReminderId === child.id ? 'wait' : 'pointer',
+                                                            }}>
+                                                            {sendingReminderId === child.id ? (
+                                                                <><Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> Sending...</>
+                                                            ) : (
+                                                                <><Send size={18} /> Send Reminder</>
+                                                            )}
                                                         </button>
                                                         <button className="btn" style={{
                                                             flex: 1,
