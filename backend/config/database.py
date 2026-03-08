@@ -38,6 +38,7 @@ def get_collections(db):
         'milestone_records': db.milestone_records,
         'maternity_profiles': db.maternity_profiles,
         'notifications': db.notifications,
+        'anganwadi_stock': db.anganwadi_stock,
     }
 
 def ensure_indexes(collections):
@@ -125,6 +126,10 @@ def ensure_indexes(collections):
         collections['notifications'].create_index([('recipientId', 1), ('createdAt', -1)])
         collections['notifications'].create_index([('recipientType', 1), ('createdAt', -1)])
         collections['notifications'].create_index([('recipientId', 1), ('isRead', 1), ('createdAt', -1)])
+
+        # Anganwadi stock: by itemName and category
+        collections['anganwadi_stock'].create_index([('itemName', 1)])
+        collections['anganwadi_stock'].create_index([('category', 1)])
 
         print("Indexes ensured: users(email unique, phone partial unique), asha_feedback(userId+createdAt), calendar_events(start,end,createdBy), health_blogs(createdBy+createdAt, category+status, status+createdAt), vaccination_schedules(date,createdBy+date), vaccination_bookings(scheduleId,userId+createdAt), palliative_records(userId+date, testType), visit_requests(userId+createdAt, status+createdAt, requestType+status), supply_requests(userId+createdAt, status+createdAt, category+status), community_classes(date,createdBy+date,status+date), local_camps(date,createdBy+date,status+date), monthly_rations(userId+monthStartDate, monthStartDate+status, status+monthStartDate), locations(ward+type, name), home_visits(userId+visitDate, ashaWorkerId+visitDate, visitDate, verified+visitDate), milestone_records(userId+achievedDate, userId+milestoneId, status), developmental_milestones(order, isActive)")
     except Exception as e:

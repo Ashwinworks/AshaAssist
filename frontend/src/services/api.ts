@@ -1081,6 +1081,46 @@ export const palliativeDashboardAPI = {
   }
 };
 
+// Stock Management API (Anganvaadi)
+export const stockAPI = {
+  getAllStock: async () => {
+    const response = await api.get('/stock');
+    return response.data as { items: any[] };
+  },
+  addStockItem: async (data: {
+    itemName: string;
+    category: string;
+    quantity: number;
+    unit: string;
+    minThreshold: number;
+  }) => {
+    const response = await api.post('/stock', data);
+    return response.data as { message: string; item: any };
+  },
+  updateStockItem: async (id: string, data: Partial<{
+    itemName: string;
+    category: string;
+    quantity: number;
+    unit: string;
+    minThreshold: number;
+  }>) => {
+    const response = await api.put(`/stock/${id}`, data);
+    return response.data as { message: string };
+  },
+  deleteStockItem: async (id: string) => {
+    const response = await api.delete(`/stock/${id}`);
+    return response.data as { message: string };
+  },
+  getLowStock: async () => {
+    const response = await api.get('/stock/low');
+    return response.data as { items: any[] };
+  },
+  recordUsage: async (id: string, data: { quantityUsed: number; reason: string }) => {
+    const response = await api.post(`/stock/${id}/usage`, data);
+    return response.data as { message: string; newQuantity: number; usageEntry: any };
+  },
+};
+
 // Chat API (Mistral AI Copilot)
 export const chatAPI = {
   sendMessage: async (message: string) => {

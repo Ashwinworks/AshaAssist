@@ -37,6 +37,7 @@ from routes.monthly_ration import init_monthly_ration_routes
 from routes.locations import init_locations_routes
 from routes.home_visits import init_home_visits_routes
 from routes.anganvaadi import init_anganvaadi_routes
+from routes.stock import init_stock_routes
 from routes.milestones import init_milestone_routes
 from routes.government_benefits import init_government_benefits_routes
 
@@ -119,6 +120,7 @@ def create_app(config_name='default'):
     init_locations_routes(app, collections)
     init_home_visits_routes(app, collections)
     init_anganvaadi_routes(app, collections)
+    init_stock_routes(app, collections)
     init_milestone_routes(app, collections)
     try:
         print("[DEBUG] Initializing government benefits routes...")

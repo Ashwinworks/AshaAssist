@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Heart, LogOut, Calendar, Package,
-  Menu, X, BookOpen, MapPin, History, FileText
+  Menu, X, BookOpen, MapPin, History, FileText, BarChart3
 } from 'lucide-react';
 
 // Navigation items for Anganvaadi workers
@@ -31,6 +31,12 @@ const navigationItems = [
     label: 'Ration History',
     icon: History,
     path: '/anganvaadi/ration-history'
+  },
+  {
+    id: 'stock',
+    label: 'Stock Management',
+    icon: BarChart3,
+    path: '/anganvaadi/stock'
   },
   {
     id: 'vaccination-schedules',
