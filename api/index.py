@@ -33,15 +33,8 @@ try:
         spec.loader.exec_module(app_module)
         app = app_module.app
         print("[SUCCESS] Main app loaded successfully")
-        
-        # Add global OPTIONS handler for CORS preflight
-        @app.after_request
-        def after_request(response):
-            response.headers.add('Access-Control-Allow-Origin', 'https://ashaassist.onrender.com')
-            response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-            response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-            response.headers.add('Access-Control-Allow-Credentials', 'true')
-            return response
+        # CORS is already handled by app.py's before_request/after_request handlers.
+        # Do NOT add another after_request here — duplicate headers break CORS.
     else:
         raise ImportError("Could not load app.py module")
 except Exception as e:
