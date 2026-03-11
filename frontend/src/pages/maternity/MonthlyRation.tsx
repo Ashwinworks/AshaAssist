@@ -1,13 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import MaternityLayout from './MaternityLayout';
-import { Package, Calendar, CheckCircle, AlertCircle, ShoppingBag } from 'lucide-react';
-import { monthlyRationAPI } from '../../services/api';
+import { Package, Calendar, CheckCircle, AlertCircle, ShoppingBag, AlertTriangle } from 'lucide-react';
+import { monthlyRationAPI, stockAPI } from '../../services/api';
+
+interface StockAvailItem {
+  itemName: string;
+  category: string;
+  quantity: number;
+  unit: string;
+  status: string;
+}
 
 const MonthlyRation: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [ration, setRation] = useState<any>(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [stockItems, setStockItems] = useState<StockAvailItem[]>([]);
+  const [stockLoading, setStockLoading] = useState(true);
 
   const fetchRationStatus = async () => {
     try {
@@ -22,14 +32,27 @@ const MonthlyRation: React.FC = () => {
     }
   };
 
+  const fetchStockAvailability = async () => {
+    try {
+      setStockLoading(true);
+      const data = await stockAPI.getStockAvailability();
+      setStockItems(data.items || []);
+    } catch (e: any) {
+      console.log('Could not load stock availability:', e);
+      setStockItems([]);
+    } finally {
+      setStockLoading(false);
+    }
+  };
+
   const handleMarkCollected = async () => {
     try {
       setError('');
       setSuccessMessage('');
       await monthlyRationAPI.markCollected();
       setSuccessMessage('Ration marked as collected successfully!');
-      // Refresh the status
       fetchRationStatus();
+      fetchStockAvailability(); // Refresh stock to reflect deductions
     } catch (e: any) {
       setError(e?.response?.data?.error || 'Failed to mark ration as collected');
     }
@@ -37,10 +60,24 @@ const MonthlyRation: React.FC = () => {
 
   useEffect(() => {
     fetchRationStatus();
+    fetchStockAvailability();
   }, []);
 
   const getMonthName = (monthStartDate: string) => {
     return new Date(monthStartDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
+
+  const getStatusInfo = (status: string) => {
+    switch (status) {
+      case 'ok':
+        return { label: 'Available', color: '#16a34a', bg: '#dcfce7', icon: '✓' };
+      case 'low':
+        return { label: 'Low Stock', color: '#ca8a04', bg: '#fef9c3', icon: '⚠' };
+      case 'out_of_stock':
+        return { label: 'Out of Stock', color: '#dc2626', bg: '#fee2e2', icon: '✕' };
+      default:
+        return { label: status, color: '#6b7280', bg: '#f3f4f6', icon: '?' };
+    }
   };
 
   return (
@@ -84,14 +121,14 @@ const MonthlyRation: React.FC = () => {
           </div>
         ) : ration ? (
           <div className="card">
-            <div className="card-header" style={{ 
+            <div className="card-header" style={{
               backgroundColor: ration.status === 'collected' ? 'var(--green-50)' : 'var(--yellow-50)',
               borderBottom: `2px solid ${ration.status === 'collected' ? 'var(--green-200)' : 'var(--yellow-200)'}`
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h2 className="card-title" style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
+                <h2 className="card-title" style={{
+                  display: 'flex',
+                  alignItems: 'center',
                   gap: '0.75rem',
                   color: ration.status === 'collected' ? 'var(--green-800)' : 'var(--yellow-800)'
                 }}>
@@ -116,10 +153,10 @@ const MonthlyRation: React.FC = () => {
             </div>
             <div className="card-content" style={{ padding: '2rem' }}>
               {/* Month Information */}
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '0.75rem', 
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
                 marginBottom: '1.5rem',
                 padding: '1rem',
                 backgroundColor: 'var(--blue-50)',
@@ -139,10 +176,10 @@ const MonthlyRation: React.FC = () => {
 
               {/* Ration Items */}
               <div style={{ marginBottom: '1.5rem' }}>
-                <h3 style={{ 
-                  fontSize: '1.125rem', 
-                  fontWeight: '600', 
-                  color: 'var(--gray-900)', 
+                <h3 style={{
+                  fontSize: '1.125rem',
+                  fontWeight: '600',
+                  color: 'var(--gray-900)',
                   marginBottom: '1rem',
                   display: 'flex',
                   alignItems: 'center',
@@ -151,10 +188,10 @@ const MonthlyRation: React.FC = () => {
                   <Package size={20} />
                   Ration Items
                 </h3>
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
-                  gap: '0.75rem' 
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                  gap: '0.75rem'
                 }}>
                   {ration.items?.map((item: string, index: number) => (
                     <div key={index} style={{
@@ -181,6 +218,105 @@ const MonthlyRation: React.FC = () => {
                 </div>
               </div>
 
+              {/* ===== STOCK AVAILABILITY (shown BEFORE collect button) ===== */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{
+                  fontSize: '1.125rem', fontWeight: '600', color: '#166534',
+                  marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem'
+                }}>
+                  <Package size={20} />
+                  Stock Availability at Anganwadi Centre
+                </h3>
+                {stockLoading ? (
+                  <div style={{ textAlign: 'center', padding: '1.5rem', color: '#6b7280', fontSize: '0.9rem' }}>
+                    Loading stock availability...
+                  </div>
+                ) : stockItems.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '1.5rem', color: '#6b7280', fontSize: '0.9rem' }}>
+                    Stock information is not available. Contact your Anganwadi worker.
+                  </div>
+                ) : (
+                  <>
+                    {/* Summary badges */}
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+                      {[
+                        { label: 'Available', count: stockItems.filter(i => i.status === 'ok').length, color: '#16a34a', bg: '#dcfce7' },
+                        { label: 'Low Stock', count: stockItems.filter(i => i.status === 'low').length, color: '#ca8a04', bg: '#fef9c3' },
+                        { label: 'Out of Stock', count: stockItems.filter(i => i.status === 'out_of_stock').length, color: '#dc2626', bg: '#fee2e2' },
+                      ].map((b, i) => (
+                        <div key={i} style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+                          padding: '0.3rem 0.7rem', borderRadius: '1rem',
+                          fontSize: '0.75rem', fontWeight: '600',
+                          backgroundColor: b.bg, color: b.color
+                        }}>
+                          {b.count} {b.label}
+                        </div>
+                      ))}
+                    </div>
+                    {/* Items grid */}
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                      gap: '0.625rem'
+                    }}>
+                      {stockItems.map((item, idx) => {
+                        const info = getStatusInfo(item.status);
+                        return (
+                          <div key={idx} style={{
+                            padding: '0.75rem',
+                            backgroundColor: 'white',
+                            border: `1px solid ${item.status === 'out_of_stock' ? '#fecaca' : item.status === 'low' ? '#fde68a' : '#e5e7eb'}`,
+                            borderRadius: '0.5rem',
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.375rem' }}>
+                              <div style={{ fontWeight: '600', color: '#111827', fontSize: '0.85rem' }}>
+                                {item.itemName}
+                              </div>
+                              <span style={{
+                                fontSize: '0.6rem', fontWeight: '600',
+                                padding: '0.125rem 0.4rem', borderRadius: '1rem',
+                                backgroundColor: info.bg, color: info.color,
+                                whiteSpace: 'nowrap'
+                              }}>
+                                {info.icon} {info.label}
+                              </span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{
+                                fontSize: '0.65rem', fontWeight: '500',
+                                padding: '0.1rem 0.35rem', borderRadius: '0.25rem',
+                                backgroundColor: '#f0f9ff', color: '#0369a1'
+                              }}>
+                                {item.category}
+                              </span>
+                              <span style={{
+                                fontSize: '0.8rem', fontWeight: '700',
+                                color: item.status === 'out_of_stock' ? '#dc2626' : item.status === 'low' ? '#ca8a04' : '#111827'
+                              }}>
+                                {item.quantity} {item.unit}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {/* Out of stock warning */}
+                    {stockItems.some(i => i.status === 'out_of_stock') && (
+                      <div style={{
+                        marginTop: '0.75rem', padding: '0.6rem 0.75rem', borderRadius: '0.5rem',
+                        backgroundColor: '#fef3c7', border: '1px solid #f59e0b',
+                        display: 'flex', alignItems: 'center', gap: '0.5rem',
+                        fontSize: '0.8rem', color: '#92400e'
+                      }}>
+                        <AlertTriangle size={14} style={{ flexShrink: 0 }} />
+                        Some items are out of stock. Check with your Anganwadi worker.
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
               {/* Collection Information */}
               {ration.collectionDate && (
                 <div style={{
@@ -201,27 +337,27 @@ const MonthlyRation: React.FC = () => {
 
               {/* Action Button */}
               {ration.status === 'pending' && (
-                <div style={{ 
-                  padding: '1.5rem', 
-                  backgroundColor: 'var(--yellow-50)', 
+                <div style={{
+                  padding: '1.5rem',
+                  backgroundColor: 'var(--yellow-50)',
                   borderRadius: '0.75rem',
                   border: '1px solid var(--yellow-200)'
                 }}>
                   <div style={{ marginBottom: '1rem' }}>
-                    <h4 style={{ 
-                      fontSize: '1rem', 
-                      fontWeight: '600', 
+                    <h4 style={{
+                      fontSize: '1rem',
+                      fontWeight: '600',
                       color: 'var(--yellow-800)',
                       marginBottom: '0.5rem'
                     }}>
                       Ready to Collect?
                     </h4>
-                    <p style={{ 
-                      fontSize: '0.875rem', 
+                    <p style={{
+                      fontSize: '0.875rem',
                       color: 'var(--yellow-700)',
                       margin: 0
                     }}>
-                      Visit your nearest Anganwadi center to collect this month's ration. Mark as collected once you've received your supplies.
+                      Visit your nearest Anganwadi center to collect this month's ration. Once you receive your supplies, mark as collected and the stock will be updated automatically.
                     </p>
                   </div>
                   <button
@@ -254,13 +390,13 @@ const MonthlyRation: React.FC = () => {
                 borderRadius: '0.5rem',
                 border: '1px solid var(--blue-200)'
               }}>
-                <p style={{ 
-                  fontSize: '0.875rem', 
+                <p style={{
+                  fontSize: '0.875rem',
                   color: 'var(--blue-700)',
                   margin: 0,
                   lineHeight: '1.5'
                 }}>
-                  <strong>Note:</strong> Monthly rations are distributed every month from the Anganwadi center. 
+                  <strong>Note:</strong> Monthly rations are distributed every month from the Anganwadi center.
                   Please collect your ration during the center's operating hours. For any queries, contact your local Anganwadi worker.
                 </p>
               </div>
@@ -268,10 +404,10 @@ const MonthlyRation: React.FC = () => {
           </div>
         ) : (
           <div className="card">
-            <div className="card-content" style={{ 
-              textAlign: 'center', 
+            <div className="card-content" style={{
+              textAlign: 'center',
               padding: '3rem',
-              color: 'var(--gray-600)' 
+              color: 'var(--gray-600)'
             }}>
               <Package size={48} style={{ color: 'var(--gray-400)', marginBottom: '1rem' }} />
               <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'var(--gray-900)', marginBottom: '0.5rem' }}>

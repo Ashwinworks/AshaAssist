@@ -7,11 +7,51 @@ from bson import ObjectId
 
 
 class StockService:
+    # Default ration items given to mothers — matches monthly_ration_service.py
+    DEFAULT_STOCK_ITEMS = [
+        {'itemName': 'Rice',                              'category': 'Grains',      'unit': 'kg',      'quantity': 0, 'minThreshold': 10},
+        {'itemName': 'Wheat',                             'category': 'Grains',      'unit': 'kg',      'quantity': 0, 'minThreshold': 5},
+        {'itemName': 'Lentils',                           'category': 'Pulses',      'unit': 'kg',      'quantity': 0, 'minThreshold': 3},
+        {'itemName': 'Oil',                               'category': 'Oils',        'unit': 'L',       'quantity': 0, 'minThreshold': 3},
+        {'itemName': 'Sugar',                             'category': 'Grains',      'unit': 'kg',      'quantity': 0, 'minThreshold': 3},
+        {'itemName': 'Child Oil',                         'category': 'Oils',        'unit': 'ml',      'quantity': 0, 'minThreshold': 500},
+        {'itemName': 'Iron and Folic Acid (IFA) tablets', 'category': 'Supplements', 'unit': 'tablets', 'quantity': 0, 'minThreshold': 50},
+        {'itemName': 'Calcium tablets',                   'category': 'Supplements', 'unit': 'tablets', 'quantity': 0, 'minThreshold': 50},
+        {'itemName': 'Vitamin A',                         'category': 'Supplements', 'unit': 'tablets', 'quantity': 0, 'minThreshold': 30},
+        {'itemName': 'Amrutham Nutrimix (Amrutham Podi)', 'category': 'Supplements', 'unit': 'packets', 'quantity': 0, 'minThreshold': 10},
+    ]
+
     def __init__(self, stock_collection):
         self.stock = stock_collection
 
+    def _seed_default_items(self):
+        """Seed stock collection with default ration items if collection is empty"""
+        if self.stock.count_documents({}) > 0:
+            return  # Already has data
+
+        now = datetime.now(timezone.utc)
+        docs = []
+        for item in self.DEFAULT_STOCK_ITEMS:
+            docs.append({
+                'itemName': item['itemName'],
+                'category': item['category'],
+                'quantity': item['quantity'],
+                'unit': item['unit'],
+                'minThreshold': item['minThreshold'],
+                'usageLog': [],
+                'lastUpdated': now,
+                'createdAt': now,
+                'updatedAt': now,
+            })
+        if docs:
+            self.stock.insert_many(docs)
+            print(f"[Stock] Seeded {len(docs)} default ration items into stock collection")
+
     def get_all_stock(self) -> Tuple[Dict[str, Any], int]:
         """Get all stock items sorted by category, with low-stock flags"""
+        # Auto-seed on first access if empty
+        self._seed_default_items()
+
         items = list(self.stock.find().sort([('category', 1), ('itemName', 1)]))
         result = []
         for item in items:

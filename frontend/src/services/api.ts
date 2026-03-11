@@ -1119,6 +1119,10 @@ export const stockAPI = {
     const response = await api.post(`/stock/${id}/usage`, data);
     return response.data as { message: string; newQuantity: number; usageEntry: any };
   },
+  getStockAvailability: async () => {
+    const response = await api.get('/stock/availability');
+    return response.data as { items: { itemName: string; category: string; quantity: number; unit: string; status: string }[] };
+  },
 };
 
 // Chat API (Mistral AI Copilot)

@@ -83,5 +83,24 @@ def init_stock_routes(app, collections):
         result, status = stock_service.record_stock_usage(item_id, data)
         return jsonify(result), status
 
+    @stock_bp.route('/api/stock/availability', methods=['GET'])
+    @jwt_required()
+    def get_stock_availability():
+        """Public endpoint: any authenticated user can see what's available"""
+        result, status = stock_service.get_all_stock()
+        if status != 200:
+            return jsonify(result), status
+        # Return simplified view for mothers — hide thresholds and usage logs
+        simplified = []
+        for item in result.get('items', []):
+            simplified.append({
+                'itemName': item['itemName'],
+                'category': item['category'],
+                'quantity': item['quantity'],
+                'unit': item['unit'],
+                'status': item['status'],  # ok, low, out_of_stock
+            })
+        return jsonify({'items': simplified}), 200
+
     app.register_blueprint(stock_bp)
     return stock_service

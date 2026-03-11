@@ -18,8 +18,22 @@ interface StockItem {
     usageLog: { date: string; quantityUsed: number; reason: string; balanceAfter: number }[];
 }
 
-const CATEGORIES = ['Grains', 'Oils', 'Supplements', 'Dairy', 'Pulses', 'Other'];
+const CATEGORIES = ['Grains', 'Oils', 'Supplements', 'Dairy', 'Pulses', 'Seasonal', 'Other'];
 const UNITS = ['kg', 'g', 'L', 'ml', 'packets', 'tablets', 'bottles', 'units'];
+
+// Default ration products given to mothers — matches backend seed data
+const DEFAULT_PRODUCTS = [
+    { itemName: 'Rice', category: 'Grains', unit: 'kg', minThreshold: 10, description: '8kg per mother/month' },
+    { itemName: 'Wheat', category: 'Grains', unit: 'kg', minThreshold: 5, description: '4kg per mother/month' },
+    { itemName: 'Lentils', category: 'Pulses', unit: 'kg', minThreshold: 3, description: '2kg per mother/month' },
+    { itemName: 'Oil', category: 'Oils', unit: 'L', minThreshold: 3, description: '2L per mother/month' },
+    { itemName: 'Sugar', category: 'Grains', unit: 'kg', minThreshold: 3, description: '2kg per mother/month' },
+    { itemName: 'Child Oil', category: 'Oils', unit: 'ml', minThreshold: 500, description: '400ml per mother/month' },
+    { itemName: 'Iron and Folic Acid (IFA) tablets', category: 'Supplements', unit: 'tablets', minThreshold: 50, description: 'Daily supplement' },
+    { itemName: 'Calcium tablets', category: 'Supplements', unit: 'tablets', minThreshold: 50, description: 'Daily supplement' },
+    { itemName: 'Vitamin A', category: 'Supplements', unit: 'tablets', minThreshold: 30, description: 'Postnatal supplement' },
+    { itemName: 'Amrutham Nutrimix (Amrutham Podi)', category: 'Supplements', unit: 'packets', minThreshold: 10, description: 'Kerala ICDS programme' },
+];
 
 const StockManagement: React.FC = () => {
     const [items, setItems] = useState<StockItem[]>([]);
@@ -34,6 +48,7 @@ const StockManagement: React.FC = () => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState<StockItem | null>(null);
     const [filterCategory, setFilterCategory] = useState('all');
     const [filterStatus, setFilterStatus] = useState('all');
+    const [addMode, setAddMode] = useState<'default' | 'custom'>('default');
 
     // Form state
     const [form, setForm] = useState({
@@ -142,9 +157,25 @@ const StockManagement: React.FC = () => {
 
     const openAddModal = () => {
         setEditItem(null);
+        setAddMode('default');
         setForm({ itemName: '', category: 'Grains', quantity: '', unit: 'kg', minThreshold: '' });
         setShowAddModal(true);
     };
+
+    const selectDefaultProduct = (product: typeof DEFAULT_PRODUCTS[0]) => {
+        setForm({
+            itemName: product.itemName,
+            category: product.category,
+            quantity: '',
+            unit: product.unit,
+            minThreshold: product.minThreshold.toString(),
+        });
+        setAddMode('custom'); // switch to form view with pre-filled data
+    };
+
+    // Check which default products are already in stock
+    const existingItemNames = items.map(i => i.itemName.toLowerCase());
+    const isAlreadyAdded = (name: string) => existingItemNames.includes(name.toLowerCase());
 
     // Filter items
     const filteredItems = items.filter(item => {
@@ -425,14 +456,17 @@ const StockManagement: React.FC = () => {
                 >
                     <div
                         style={{
-                            backgroundColor: 'white', borderRadius: '0.75rem', width: '100%', maxWidth: '480px',
+                            backgroundColor: 'white', borderRadius: '0.75rem', width: '100%',
+                            maxWidth: editItem ? '480px' : '560px',
+                            maxHeight: '90vh', display: 'flex', flexDirection: 'column',
                             boxShadow: '0 20px 60px rgba(0,0,0,0.3)', animation: 'fadeIn 0.25s ease'
                         }}
                         onClick={e => e.stopPropagation()}
                     >
+                        {/* Modal Header */}
                         <div style={{
                             padding: '1.25rem 1.5rem', borderBottom: '1px solid #e5e7eb',
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0
                         }}>
                             <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '700', color: '#111827' }}>
                                 {editItem ? 'Edit Stock Item' : 'Add Stock Item'}
@@ -442,89 +476,215 @@ const StockManagement: React.FC = () => {
                                 <X size={20} />
                             </button>
                         </div>
-                        <form onSubmit={handleAddOrEdit} style={{ padding: '1.5rem' }}>
-                            <div style={{ marginBottom: '1rem' }}>
-                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.375rem' }}>Item Name *</label>
-                                <input
-                                    type="text" required value={form.itemName}
-                                    onChange={e => setForm({ ...form, itemName: e.target.value })}
-                                    placeholder="e.g. Rice, Wheat, Iron tablets"
-                                    style={{
-                                        width: '100%', padding: '0.6rem 0.75rem', borderRadius: '0.5rem',
-                                        border: '1px solid #d1d5db', fontSize: '0.875rem', boxSizing: 'border-box'
-                                    }}
-                                />
-                            </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.375rem' }}>Category</label>
-                                    <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
-                                        style={{
-                                            width: '100%', padding: '0.6rem 0.75rem', borderRadius: '0.5rem',
-                                            border: '1px solid #d1d5db', fontSize: '0.875rem', backgroundColor: 'white', boxSizing: 'border-box'
-                                        }}>
-                                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.375rem' }}>Unit</label>
-                                    <select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}
-                                        style={{
-                                            width: '100%', padding: '0.6rem 0.75rem', borderRadius: '0.5rem',
-                                            border: '1px solid #d1d5db', fontSize: '0.875rem', backgroundColor: 'white', boxSizing: 'border-box'
-                                        }}>
-                                        {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.375rem' }}>Current Quantity *</label>
-                                    <input
-                                        type="number" min="0" step="0.1" required value={form.quantity}
-                                        onChange={e => setForm({ ...form, quantity: e.target.value })}
-                                        placeholder="0"
-                                        style={{
-                                            width: '100%', padding: '0.6rem 0.75rem', borderRadius: '0.5rem',
-                                            border: '1px solid #d1d5db', fontSize: '0.875rem', boxSizing: 'border-box'
+                        {/* Tabs (only when adding, not editing) */}
+                        {!editItem && (
+                            <div style={{
+                                display: 'flex', borderBottom: '1px solid #e5e7eb', flexShrink: 0
+                            }}>
+                                {[
+                                    { key: 'default' as const, label: '📦 Default Products' },
+                                    { key: 'custom' as const, label: '✨ Custom / Seasonal' },
+                                ].map(tab => (
+                                    <button key={tab.key}
+                                        onClick={() => {
+                                            setAddMode(tab.key);
+                                            if (tab.key === 'custom') {
+                                                setForm({ itemName: '', category: 'Seasonal', quantity: '', unit: 'kg', minThreshold: '' });
+                                            }
                                         }}
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.375rem' }}>Min Threshold</label>
-                                    <input
-                                        type="number" min="0" step="0.1" value={form.minThreshold}
-                                        onChange={e => setForm({ ...form, minThreshold: e.target.value })}
-                                        placeholder="Alert when below"
                                         style={{
-                                            width: '100%', padding: '0.6rem 0.75rem', borderRadius: '0.5rem',
-                                            border: '1px solid #d1d5db', fontSize: '0.875rem', boxSizing: 'border-box'
+                                            flex: 1, padding: '0.75rem 1rem', border: 'none',
+                                            background: addMode === tab.key ? 'white' : '#f9fafb',
+                                            borderBottom: addMode === tab.key ? '2px solid #16a34a' : '2px solid transparent',
+                                            color: addMode === tab.key ? '#16a34a' : '#6b7280',
+                                            fontWeight: addMode === tab.key ? '600' : '500',
+                                            fontSize: '0.875rem', cursor: 'pointer',
+                                            transition: 'all 0.2s ease'
                                         }}
-                                    />
-                                </div>
+                                    >
+                                        {tab.label}
+                                    </button>
+                                ))}
                             </div>
+                        )}
 
-                            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                                <button type="button" onClick={() => { setShowAddModal(false); setEditItem(null); }}
-                                    style={{
-                                        padding: '0.6rem 1.25rem', borderRadius: '0.5rem', border: '1px solid #d1d5db',
-                                        backgroundColor: 'white', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '500'
-                                    }}>
-                                    Cancel
-                                </button>
-                                <button type="submit" disabled={submitting}
-                                    style={{
-                                        padding: '0.6rem 1.25rem', borderRadius: '0.5rem', border: 'none',
-                                        background: 'linear-gradient(135deg, #16a34a, #15803d)', color: 'white',
-                                        cursor: submitting ? 'not-allowed' : 'pointer', fontSize: '0.875rem', fontWeight: '600',
-                                        opacity: submitting ? 0.7 : 1
-                                    }}>
-                                    {submitting ? 'Saving...' : editItem ? 'Update Item' : 'Add Item'}
-                                </button>
-                            </div>
-                        </form>
+                        {/* Modal Body */}
+                        <div style={{ overflowY: 'auto', flex: 1 }}>
+                            {/* DEFAULT PRODUCTS TAB */}
+                            {!editItem && addMode === 'default' && (
+                                <div style={{ padding: '1.25rem 1.5rem' }}>
+                                    <p style={{ margin: '0 0 1rem 0', fontSize: '0.85rem', color: '#6b7280' }}>
+                                        Select a product below to add it to your stock. Already added items are greyed out.
+                                    </p>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                        {DEFAULT_PRODUCTS.map((product) => {
+                                            const added = isAlreadyAdded(product.itemName);
+                                            return (
+                                                <button
+                                                    key={product.itemName}
+                                                    onClick={() => !added && selectDefaultProduct(product)}
+                                                    disabled={added}
+                                                    style={{
+                                                        padding: '0.875rem',
+                                                        borderRadius: '0.625rem',
+                                                        border: added ? '1px solid #e5e7eb' : '1px solid #bbf7d0',
+                                                        backgroundColor: added ? '#f9fafb' : 'white',
+                                                        cursor: added ? 'not-allowed' : 'pointer',
+                                                        textAlign: 'left',
+                                                        opacity: added ? 0.55 : 1,
+                                                        transition: 'all 0.15s ease',
+                                                        position: 'relative' as const,
+                                                    }}
+                                                    onMouseEnter={e => {
+                                                        if (!added) {
+                                                            e.currentTarget.style.borderColor = '#16a34a';
+                                                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(22,163,74,0.15)';
+                                                        }
+                                                    }}
+                                                    onMouseLeave={e => {
+                                                        if (!added) {
+                                                            e.currentTarget.style.borderColor = '#bbf7d0';
+                                                            e.currentTarget.style.boxShadow = 'none';
+                                                        }
+                                                    }}
+                                                >
+                                                    {added && (
+                                                        <span style={{
+                                                            position: 'absolute', top: '0.5rem', right: '0.5rem',
+                                                            fontSize: '0.65rem', fontWeight: '600',
+                                                            backgroundColor: '#e5e7eb', color: '#6b7280',
+                                                            padding: '0.125rem 0.4rem', borderRadius: '0.25rem'
+                                                        }}>ADDED</span>
+                                                    )}
+                                                    <div style={{ fontWeight: '600', color: '#111827', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
+                                                        {product.itemName}
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                                        <span style={{
+                                                            fontSize: '0.7rem', fontWeight: '500',
+                                                            padding: '0.1rem 0.4rem', borderRadius: '0.25rem',
+                                                            backgroundColor: '#f0f9ff', color: '#0369a1'
+                                                        }}>{product.category}</span>
+                                                        <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>{product.unit}</span>
+                                                    </div>
+                                                    <div style={{ fontSize: '0.7rem', color: '#9ca3af', marginTop: '0.25rem' }}>
+                                                        {product.description}
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* CUSTOM / SEASONAL TAB or EDIT MODE — shows the form */}
+                            {(editItem || addMode === 'custom') && (
+                                <form onSubmit={handleAddOrEdit} style={{ padding: '1.5rem' }}>
+                                    {!editItem && addMode === 'custom' && !form.itemName && (
+                                        <div style={{
+                                            padding: '0.75rem 1rem', borderRadius: '0.5rem',
+                                            backgroundColor: '#fef3c7', color: '#92400e',
+                                            marginBottom: '1rem', fontSize: '0.8rem'
+                                        }}>
+                                            💡 Use this to add seasonal or special items like <strong>Payasam mix for Onam</strong>, <strong>Special nutrition kit</strong>, etc.
+                                        </div>
+                                    )}
+                                    {!editItem && form.itemName && (
+                                        <div style={{
+                                            padding: '0.75rem 1rem', borderRadius: '0.5rem',
+                                            backgroundColor: '#dcfce7', color: '#166534',
+                                            marginBottom: '1rem', fontSize: '0.8rem',
+                                            display: 'flex', alignItems: 'center', gap: '0.5rem'
+                                        }}>
+                                            <CheckCircle size={14} /> Selected: <strong>{form.itemName}</strong> — enter the quantity in stock
+                                        </div>
+                                    )}
+
+                                    <div style={{ marginBottom: '1rem' }}>
+                                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.375rem' }}>Item Name *</label>
+                                        <input
+                                            type="text" required value={form.itemName}
+                                            onChange={e => setForm({ ...form, itemName: e.target.value })}
+                                            placeholder="e.g. Payasam mix, Special nutrition kit"
+                                            style={{
+                                                width: '100%', padding: '0.6rem 0.75rem', borderRadius: '0.5rem',
+                                                border: '1px solid #d1d5db', fontSize: '0.875rem', boxSizing: 'border-box'
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.375rem' }}>Category</label>
+                                            <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
+                                                style={{
+                                                    width: '100%', padding: '0.6rem 0.75rem', borderRadius: '0.5rem',
+                                                    border: '1px solid #d1d5db', fontSize: '0.875rem', backgroundColor: 'white', boxSizing: 'border-box'
+                                                }}>
+                                                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.375rem' }}>Unit</label>
+                                            <select value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}
+                                                style={{
+                                                    width: '100%', padding: '0.6rem 0.75rem', borderRadius: '0.5rem',
+                                                    border: '1px solid #d1d5db', fontSize: '0.875rem', backgroundColor: 'white', boxSizing: 'border-box'
+                                                }}>
+                                                {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.375rem' }}>Current Quantity *</label>
+                                            <input
+                                                type="number" min="0" step="0.1" required value={form.quantity}
+                                                onChange={e => setForm({ ...form, quantity: e.target.value })}
+                                                placeholder="0"
+                                                style={{
+                                                    width: '100%', padding: '0.6rem 0.75rem', borderRadius: '0.5rem',
+                                                    border: '1px solid #d1d5db', fontSize: '0.875rem', boxSizing: 'border-box'
+                                                }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#374151', marginBottom: '0.375rem' }}>Min Threshold</label>
+                                            <input
+                                                type="number" min="0" step="0.1" value={form.minThreshold}
+                                                onChange={e => setForm({ ...form, minThreshold: e.target.value })}
+                                                placeholder="Alert when below"
+                                                style={{
+                                                    width: '100%', padding: '0.6rem 0.75rem', borderRadius: '0.5rem',
+                                                    border: '1px solid #d1d5db', fontSize: '0.875rem', boxSizing: 'border-box'
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                                        <button type="button" onClick={() => { setShowAddModal(false); setEditItem(null); }}
+                                            style={{
+                                                padding: '0.6rem 1.25rem', borderRadius: '0.5rem', border: '1px solid #d1d5db',
+                                                backgroundColor: 'white', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '500'
+                                            }}>
+                                            Cancel
+                                        </button>
+                                        <button type="submit" disabled={submitting}
+                                            style={{
+                                                padding: '0.6rem 1.25rem', borderRadius: '0.5rem', border: 'none',
+                                                background: 'linear-gradient(135deg, #16a34a, #15803d)', color: 'white',
+                                                cursor: submitting ? 'not-allowed' : 'pointer', fontSize: '0.875rem', fontWeight: '600',
+                                                opacity: submitting ? 0.7 : 1
+                                            }}>
+                                            {submitting ? 'Saving...' : editItem ? 'Update Item' : 'Add Item'}
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
