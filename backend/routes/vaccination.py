@@ -7,11 +7,37 @@ from datetime import datetime, timezone
 from bson import ObjectId
 import json
 
+from utils.vaccination_utils import VACCINATION_SCHEDULE
+
 # Create blueprint
 vaccination_bp = Blueprint('vaccination', __name__)
 
 def init_vaccination_routes(app, collections):
     """Initialize vaccination routes with dependencies"""
+    
+    @vaccination_bp.route('/api/vaccination-vaccine-list', methods=['GET'])
+    @jwt_required()
+    def get_vaccination_vaccine_list():
+        """Return the list of available vaccines from the Indian Immunization Program schedule"""
+        try:
+            seen = set()
+            vaccines = []
+            for v in VACCINATION_SCHEDULE:
+                # Skip birth vaccines — they are given at delivery, not scheduled
+                if v.get('category') == 'birth':
+                    continue
+                name = v['vaccineName']
+                if name not in seen:
+                    seen.add(name)
+                    vaccines.append({
+                        'name': name,
+                        'category': v.get('category', ''),
+                        'ageLabel': v.get('ageLabel', ''),
+                        'description': v.get('description', '')
+                    })
+            return jsonify({'vaccines': vaccines}), 200
+        except Exception as e:
+            return jsonify({'error': f'Failed to get vaccine list: {str(e)}'}), 500
     
     @vaccination_bp.route('/api/vaccination-schedules', methods=['POST'])
     @jwt_required()
@@ -47,6 +73,10 @@ def init_vaccination_routes(app, collections):
                 date_dt = datetime.strptime(date_str, '%Y-%m-%d').date()
             except Exception:
                 return jsonify({'error': 'date must be in YYYY-MM-DD format'}), 400
+            
+            # Vaccination schedules can only be on Wednesdays
+            if date_dt.weekday() != 2:
+                return jsonify({'error': 'Vaccination schedules can only be created on Wednesdays'}), 400
             
             doc = {
                 'title': title,
@@ -350,6 +380,10 @@ def init_vaccination_routes(app, collections):
                     update['date'] = date_dt.isoformat()
                 except Exception:
                     return jsonify({'error': 'date must be in YYYY-MM-DD format'}), 400
+                
+                # Vaccination schedules can only be on Wednesdays
+                if date_dt.weekday() != 2:
+                    return jsonify({'error': 'Vaccination schedules can only be updated to Wednesdays'}), 400
             if 'time' in data:
                 update['time'] = (data.get('time') or '').strip()
             if 'location' in data:
@@ -1009,6 +1043,55 @@ def init_vaccination_routes(app, collections):
                 return jsonify({'error': 'Failed to send email — check server email credentials'}), 500
         except Exception as e:
             return jsonify({'error': f'Failed to send reminder: {str(e)}'}), 500
+
+    @vaccination_bp.route('/api/vaccination/send-notification', methods=['POST'])
+    @jwt_required()
+    def send_vaccination_notification():
+        """Send an in-app notification reminder for a vaccination to a mother (ASHA/Admin only)."""
+        try:
+            claims = get_jwt() or {}
+            if claims.get('userType') not in ['asha_worker', 'admin']:
+                return jsonify({'error': 'Only ASHA workers or admins can send reminders'}), 403
+
+            data = request.get_json() or {}
+            mother_id = (data.get('motherId') or '').strip()
+            mother_name = data.get('motherName', 'Parent')
+            child_name = data.get('childName', 'your child')
+            vaccination = data.get('vaccination', {})
+
+            if not mother_id:
+                return jsonify({'error': 'Mother ID is required'}), 400
+            if not vaccination or not vaccination.get('vaccineName'):
+                return jsonify({'error': 'Vaccination details are required'}), 400
+
+            vaccine_name = vaccination.get('vaccineName', 'Vaccination')
+            due_date = vaccination.get('dueDate', 'TBD')
+            status = vaccination.get('status', '')
+
+            # Status-specific urgency
+            if status == 'overdue':
+                urgency = '🚨 OVERDUE'
+            elif status == 'due':
+                urgency = '⏰ Due Now'
+            else:
+                urgency = '📅 Upcoming'
+
+            from routes.notifications import create_notification
+            result = create_notification(
+                collections,
+                title=f"💉 {urgency}: {vaccine_name} for {child_name}",
+                message=f"Dear {mother_name}, the {vaccine_name} vaccination for {child_name} is {status}. Due date: {due_date}. Please contact your ASHA worker to schedule an appointment.",
+                recipient_id=mother_id,
+                notification_type='warning' if status == 'overdue' else 'info',
+                related_entity={'type': 'vaccination_reminder', 'vaccineName': vaccine_name}
+            )
+
+            if result:
+                return jsonify({'message': f'In-app notification sent for {vaccine_name}'}), 200
+            else:
+                return jsonify({'error': 'Failed to create notification'}), 500
+        except Exception as e:
+            return jsonify({'error': f'Failed to send notification: {str(e)}'}), 500
 
     # Register blueprint with app
     app.register_blueprint(vaccination_bp)

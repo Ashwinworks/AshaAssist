@@ -371,6 +371,11 @@ export const vaccinationAPI = {
   }) => {
     const response = await api.get('/vaccination/records/all', { params });
     return response.data as { records: any[] };
+  },
+  // Get vaccine list from Indian Immunization Program schedule
+  getVaccineList: async () => {
+    const response = await api.get('/vaccination-vaccine-list');
+    return response.data as { vaccines: Array<{ name: string; category: string; ageLabel: string; description: string }> };
   }
 };
 

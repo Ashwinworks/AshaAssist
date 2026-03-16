@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AshaLayout from './AshaLayout';
-import { Syringe, Search, Filter, Send, CheckCircle, Clock, AlertCircle, Baby, User, Phone, Mail, Loader, ChevronRight } from 'lucide-react';
+import { Syringe, Search, Filter, Send, CheckCircle, Clock, AlertCircle, Baby, User, Phone, Mail, Loader, ChevronRight, Bell, ChevronDown } from 'lucide-react';
 import { api } from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -35,6 +35,16 @@ const ChildVaccinationDetails: React.FC = () => {
     const [error, setError] = useState('');
     const [expandedChildId, setExpandedChildId] = useState<string | null>(null);
     const [sendingVaccineKey, setSendingVaccineKey] = useState<string | null>(null);
+    const [openDropdownKey, setOpenDropdownKey] = useState<string | null>(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = () => setOpenDropdownKey(null);
+        if (openDropdownKey) {
+            document.addEventListener('click', handleClickOutside);
+            return () => document.removeEventListener('click', handleClickOutside);
+        }
+    }, [openDropdownKey]);
 
     // Fetch children data from API
     useEffect(() => {
@@ -43,9 +53,9 @@ const ChildVaccinationDetails: React.FC = () => {
 
     const toggleChild = (childId: string) => {
         if (expandedChildId === childId) {
-            setExpandedChildId(null); // Collapse if already expanded
+            setExpandedChildId(null);
         } else {
-            setExpandedChildId(childId); // Expand the clicked child
+            setExpandedChildId(childId);
         }
     };
 
@@ -63,13 +73,14 @@ const ChildVaccinationDetails: React.FC = () => {
         }
     };
 
-    const sendSingleReminder = async (child: Child, vaccine: Vaccination, index: number) => {
+    const sendEmailReminder = async (child: Child, vaccine: Vaccination, index: number) => {
         if (!child.motherEmail || child.motherEmail === '(no email)') {
             toast.error('This mother does not have a registered email address.');
             return;
         }
         const key = `${child.id}-${index}`;
         setSendingVaccineKey(key);
+        setOpenDropdownKey(null);
         try {
             await api.post('/vaccination/send-reminder', {
                 motherEmail: child.motherEmail,
@@ -82,10 +93,35 @@ const ChildVaccinationDetails: React.FC = () => {
                     ageLabel: vaccine.ageLabel,
                 },
             });
-            toast.success(`Reminder for ${vaccine.vaccineName} sent to ${child.motherName}`);
+            toast.success(`📧 Email reminder for ${vaccine.vaccineName} sent to ${child.motherName}`);
         } catch (err: any) {
-            console.error(`Send reminder error for ${vaccine.vaccineName}:`, err);
-            toast.error(err.response?.data?.error || `Failed to send reminder for ${vaccine.vaccineName}`);
+            console.error(`Send email reminder error for ${vaccine.vaccineName}:`, err);
+            toast.error(err.response?.data?.error || `Failed to send email for ${vaccine.vaccineName}`);
+        } finally {
+            setSendingVaccineKey(null);
+        }
+    };
+
+    const sendInAppNotification = async (child: Child, vaccine: Vaccination, index: number) => {
+        const key = `${child.id}-${index}`;
+        setSendingVaccineKey(key);
+        setOpenDropdownKey(null);
+        try {
+            await api.post('/vaccination/send-notification', {
+                motherId: child.motherId,
+                motherName: child.motherName,
+                childName: child.childName,
+                vaccination: {
+                    vaccineName: vaccine.vaccineName,
+                    dueDate: vaccine.dueDate,
+                    status: vaccine.status,
+                    ageLabel: vaccine.ageLabel,
+                },
+            });
+            toast.success(`🔔 In-app notification for ${vaccine.vaccineName} sent to ${child.motherName}`);
+        } catch (err: any) {
+            console.error(`Send notification error for ${vaccine.vaccineName}:`, err);
+            toast.error(err.response?.data?.error || `Failed to send notification for ${vaccine.vaccineName}`);
         } finally {
             setSendingVaccineKey(null);
         }
@@ -434,31 +470,100 @@ const ChildVaccinationDetails: React.FC = () => {
                                                                             }}>
                                                                                 {vaccine.status}
                                                                             </span>
-                                                                            <button
-                                                                                className="btn"
-                                                                                disabled={isSending || sendingVaccineKey !== null}
-                                                                                onClick={(e) => { e.stopPropagation(); sendSingleReminder(child, vaccine, index); }}
-                                                                                style={{
-                                                                                    padding: '0.3rem 0.75rem',
-                                                                                    fontSize: '0.75rem',
-                                                                                    fontWeight: 600,
-                                                                                    backgroundColor: isSending ? '#93c5fd' : '#3b82f6',
-                                                                                    color: 'white',
-                                                                                    border: 'none',
-                                                                                    borderRadius: '0.375rem',
-                                                                                    cursor: isSending ? 'wait' : 'pointer',
-                                                                                    display: 'flex',
-                                                                                    alignItems: 'center',
-                                                                                    gap: '0.3rem',
-                                                                                    whiteSpace: 'nowrap',
-                                                                                }}
-                                                                            >
-                                                                                {isSending ? (
-                                                                                    <><Loader size={14} style={{ animation: 'spin 1s linear infinite' }} /> Sending...</>
-                                                                                ) : (
-                                                                                    <><Send size={14} /> Send Reminder</>
+                                                                            <div style={{ position: 'relative' }}>
+                                                                                <button
+                                                                                    className="btn"
+                                                                                    disabled={isSending || sendingVaccineKey !== null}
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        setOpenDropdownKey(openDropdownKey === vaccineKey ? null : vaccineKey);
+                                                                                    }}
+                                                                                    style={{
+                                                                                        padding: '0.3rem 0.75rem',
+                                                                                        fontSize: '0.75rem',
+                                                                                        fontWeight: 600,
+                                                                                        backgroundColor: isSending ? '#93c5fd' : '#3b82f6',
+                                                                                        color: 'white',
+                                                                                        border: 'none',
+                                                                                        borderRadius: '0.375rem',
+                                                                                        cursor: isSending ? 'wait' : 'pointer',
+                                                                                        display: 'flex',
+                                                                                        alignItems: 'center',
+                                                                                        gap: '0.3rem',
+                                                                                        whiteSpace: 'nowrap',
+                                                                                    }}
+                                                                                >
+                                                                                    {isSending ? (
+                                                                                        <><Loader size={14} style={{ animation: 'spin 1s linear infinite' }} /> Sending...</>
+                                                                                    ) : (
+                                                                                        <><Send size={14} /> Send Reminder <ChevronDown size={12} /></>
+                                                                                    )}
+                                                                                </button>
+                                                                                {openDropdownKey === vaccineKey && (
+                                                                                    <div
+                                                                                        onClick={(e) => e.stopPropagation()}
+                                                                                        style={{
+                                                                                            position: 'absolute',
+                                                                                            right: 0,
+                                                                                            top: '100%',
+                                                                                            marginTop: '4px',
+                                                                                            backgroundColor: 'white',
+                                                                                            border: '1px solid #e5e7eb',
+                                                                                            borderRadius: '0.5rem',
+                                                                                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                                                                            zIndex: 50,
+                                                                                            minWidth: '180px',
+                                                                                            overflow: 'hidden',
+                                                                                        }}
+                                                                                    >
+                                                                                        <button
+                                                                                            onClick={(e) => { e.stopPropagation(); sendEmailReminder(child, vaccine, index); }}
+                                                                                            style={{
+                                                                                                width: '100%',
+                                                                                                padding: '0.6rem 1rem',
+                                                                                                fontSize: '0.8rem',
+                                                                                                fontWeight: 500,
+                                                                                                background: 'none',
+                                                                                                border: 'none',
+                                                                                                borderBottom: '1px solid #f3f4f6',
+                                                                                                cursor: 'pointer',
+                                                                                                display: 'flex',
+                                                                                                alignItems: 'center',
+                                                                                                gap: '0.5rem',
+                                                                                                color: '#374151',
+                                                                                                textAlign: 'left',
+                                                                                            }}
+                                                                                            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f0f9ff'; }}
+                                                                                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                                                                                        >
+                                                                                            <Mail size={16} color="#3b82f6" />
+                                                                                            Send Email
+                                                                                        </button>
+                                                                                        <button
+                                                                                            onClick={(e) => { e.stopPropagation(); sendInAppNotification(child, vaccine, index); }}
+                                                                                            style={{
+                                                                                                width: '100%',
+                                                                                                padding: '0.6rem 1rem',
+                                                                                                fontSize: '0.8rem',
+                                                                                                fontWeight: 500,
+                                                                                                background: 'none',
+                                                                                                border: 'none',
+                                                                                                cursor: 'pointer',
+                                                                                                display: 'flex',
+                                                                                                alignItems: 'center',
+                                                                                                gap: '0.5rem',
+                                                                                                color: '#374151',
+                                                                                                textAlign: 'left',
+                                                                                            }}
+                                                                                            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fef9c3'; }}
+                                                                                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                                                                                        >
+                                                                                            <Bell size={16} color="#f59e0b" />
+                                                                                            In-App Notification
+                                                                                        </button>
+                                                                                    </div>
                                                                                 )}
-                                                                            </button>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 );

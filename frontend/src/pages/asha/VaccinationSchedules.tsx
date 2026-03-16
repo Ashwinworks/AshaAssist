@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import AshaLayout from './AshaLayout';
-import { Plus, Calendar, Syringe, MapPin, Clock, Users, Eye, Edit, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Calendar, Syringe, MapPin, Clock, Users, Eye, Edit, CheckCircle, XCircle, Info } from 'lucide-react';
 import { vaccinationAPI, locationsAPI } from '../../services/api';
 
 interface ScheduleForm {
@@ -8,7 +8,30 @@ interface ScheduleForm {
   date: string; // YYYY-MM-DD
   time: string;
   location: string;
-  vaccines: string; // comma-separated input
+  selectedVaccines: string[]; // multi-select vaccine names
+  description: string;
+}
+
+// Compute next upcoming Wednesday from today
+const getNextWednesday = (): string => {
+  const today = new Date();
+  const day = today.getDay(); // 0=Sun, 3=Wed
+  const diff = (3 - day + 7) % 7 || 7; // days until next Wed (if today is Wed, go to next week)
+  const nextWed = new Date(today);
+  nextWed.setDate(today.getDate() + diff);
+  return nextWed.toISOString().split('T')[0];
+};
+
+// Format date for display
+const formatWednesday = (dateStr: string): string => {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+};
+
+interface VaccineOption {
+  name: string;
+  category: string;
+  ageLabel: string;
   description: string;
 }
 
@@ -20,6 +43,8 @@ const VaccinationSchedules: React.FC = () => {
   const [success, setSuccess] = useState<string>('');
   const [locations, setLocations] = useState<any[]>([]);
   const [locationsLoading, setLocationsLoading] = useState(false);
+  const [vaccineOptions, setVaccineOptions] = useState<VaccineOption[]>([]);
+  const [vaccineOptionsLoading, setVaccineOptionsLoading] = useState(false);
 
   // View / Edit state
   const [selectedSchedule, setSelectedSchedule] = useState<any | null>(null);
@@ -35,17 +60,17 @@ const VaccinationSchedules: React.FC = () => {
     date: '',
     time: '',
     location: '',
-    vaccines: '',
+    selectedVaccines: [],
     description: ''
   });
 
 
   const [form, setForm] = useState<ScheduleForm>({
     title: '',
-    date: '',
+    date: getNextWednesday(),
     time: '',
     location: '',
-    vaccines: '',
+    selectedVaccines: [],
     description: ''
   });
 
@@ -82,7 +107,21 @@ const VaccinationSchedules: React.FC = () => {
   useEffect(() => {
     fetchSchedules();
     fetchLocations();
+    fetchVaccineOptions();
   }, []);
+
+  const fetchVaccineOptions = async () => {
+    try {
+      setVaccineOptionsLoading(true);
+      const res = await vaccinationAPI.getVaccineList();
+      setVaccineOptions(res.vaccines || []);
+    } catch (e: any) {
+      console.error('Failed to load vaccine list:', e?.response?.data?.error || e.message);
+      setVaccineOptions([]);
+    } finally {
+      setVaccineOptionsLoading(false);
+    }
+  };
 
   // Fetch booking counts for all schedules
   useEffect(() => {
@@ -106,19 +145,23 @@ const VaccinationSchedules: React.FC = () => {
   const onCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setSuccess('');
+    if (form.selectedVaccines.length === 0) {
+      setError('Please select at least one vaccine');
+      return;
+    }
     try {
       const payload = {
         title: form.title || undefined,
         date: form.date,
         time: form.time || undefined,
         location: form.location,
-        vaccines: form.vaccines.split(',').map(v => v.trim()).filter(Boolean),
+        vaccines: form.selectedVaccines,
         description: form.description || undefined,
       };
       await vaccinationAPI.createSchedule(payload);
       setSuccess('Schedule published');
       setShowCreateForm(false);
-      setForm({ title: '', date: '', time: '', location: '', vaccines: '', description: '' });
+      setForm({ title: '', date: getNextWednesday(), time: '', location: '', selectedVaccines: [], description: '' });
       fetchSchedules();
     } catch (e: any) {
       setError(e?.response?.data?.error || 'Failed to create schedule');
@@ -148,7 +191,7 @@ const VaccinationSchedules: React.FC = () => {
       date: schedule.date || '',
       time: schedule.time || '',
       location: schedule.location || '',
-      vaccines: Array.isArray(schedule.vaccines) ? schedule.vaccines.join(', ') : (schedule.vaccines || ''),
+      selectedVaccines: Array.isArray(schedule.vaccines) ? [...schedule.vaccines] : [],
       description: schedule.description || ''
     });
     setShowEditModal(true);
@@ -158,13 +201,17 @@ const VaccinationSchedules: React.FC = () => {
     e.preventDefault();
     if (!selectedSchedule) return;
     setError(''); setSuccess('');
+    if (editForm.selectedVaccines.length === 0) {
+      setError('Please select at least one vaccine');
+      return;
+    }
     try {
       await vaccinationAPI.updateSchedule(selectedSchedule.id, {
         title: editForm.title || undefined,
         date: editForm.date || undefined,
         time: editForm.time || undefined,
         location: editForm.location || undefined,
-        vaccines: editForm.vaccines.split(',').map(v => v.trim()).filter(Boolean),
+        vaccines: editForm.selectedVaccines,
         description: editForm.description || undefined,
       });
       setSuccess('Schedule updated');
@@ -178,11 +225,21 @@ const VaccinationSchedules: React.FC = () => {
 
 
 
+  // Determine effective status: if date has passed and still 'Scheduled', show as 'Expired'
+  const getEffectiveStatus = (schedule: any): string => {
+    if (schedule.status === 'Scheduled' && schedule.date) {
+      const scheduleDate = new Date(schedule.date + 'T23:59:59');
+      if (scheduleDate < new Date()) return 'Expired';
+    }
+    return schedule.status || 'Scheduled';
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Scheduled': return 'var(--blue-600)';
       case 'Completed': return 'var(--green-600)';
       case 'Cancelled': return 'var(--red-600)';
+      case 'Expired': return '#d97706';
       case 'Postponed': return 'var(--yellow-600)';
       default: return 'var(--gray-600)';
     }
@@ -193,6 +250,7 @@ const VaccinationSchedules: React.FC = () => {
       case 'Scheduled': return 'var(--blue-50)';
       case 'Completed': return 'var(--green-50)';
       case 'Cancelled': return 'var(--red-50)';
+      case 'Expired': return '#fffbeb';
       case 'Postponed': return 'var(--yellow-50)';
       default: return 'var(--gray-50)';
     }
@@ -285,7 +343,7 @@ const VaccinationSchedules: React.FC = () => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
             <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--blue-600)', marginBottom: '0.5rem' }}>
-              {schedules.filter((s: any) => s.status === 'Scheduled').length}
+              {schedules.filter((s: any) => getEffectiveStatus(s) === 'Scheduled').length}
             </div>
             <div style={{ color: 'var(--gray-600)', fontSize: '0.875rem' }}>Upcoming Schedules</div>
           </div>
@@ -340,14 +398,22 @@ const VaccinationSchedules: React.FC = () => {
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--gray-700)' }}>
                     Date <span style={{ color: 'var(--red-500)' }}>*</span>
                   </label>
-                  <input 
-                    type="date" 
-                    value={form.date}
-                    onChange={(e) => setForm({...form, date: e.target.value})}
-                    min={new Date().toISOString().split('T')[0]}
-                    required
-                    style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
-                  />
+                  <div style={{ 
+                    padding: '0.75rem', 
+                    border: '1px solid var(--gray-300)', 
+                    borderRadius: '0.5rem',
+                    backgroundColor: '#f0fdf4',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}>
+                    <Calendar size={16} color="#16a34a" />
+                    <span style={{ fontWeight: '600', color: '#166534' }}>{formatWednesday(form.date)}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.35rem', color: '#2563eb', fontSize: '0.8rem' }}>
+                    <Info size={13} />
+                    <span>Vaccination day is every Wednesday</span>
+                  </div>
                 </div>
 
                 <div>
@@ -391,18 +457,59 @@ const VaccinationSchedules: React.FC = () => {
                   </select>
                 </div>
 
-                <div>
+                <div style={{ gridColumn: '1 / -1' }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--gray-700)' }}>
                     Available Vaccines <span style={{ color: 'var(--red-500)' }}>*</span>
                   </label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g., DPT, OPV, Measles (comma-separated)"
-                    value={form.vaccines}
-                    onChange={(e) => setForm({...form, vaccines: e.target.value})}
-                    required
-                    style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }}
-                  />
+                  {vaccineOptionsLoading ? (
+                    <p style={{ color: 'var(--gray-500)', fontSize: '0.875rem' }}>Loading vaccines...</p>
+                  ) : vaccineOptions.length === 0 ? (
+                    <p style={{ color: 'var(--red-500)', fontSize: '0.875rem' }}>Could not load vaccine list.</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      {Object.entries(
+                        vaccineOptions.reduce((acc, v) => {
+                          const key = v.ageLabel || v.category;
+                          if (!acc[key]) acc[key] = [];
+                          acc[key].push(v);
+                          return acc;
+                        }, {} as Record<string, VaccineOption[]>)
+                      ).map(([group, vaccines]) => (
+                        <div key={group}>
+                          <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--blue-700)', marginBottom: '0.35rem', textTransform: 'uppercase' }}>{group}</div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                            {vaccines.map((v) => (
+                              <label key={v.name} style={{ 
+                                display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+                                border: form.selectedVaccines.includes(v.name) ? '2px solid #2563eb' : '1px solid var(--gray-300)',
+                                padding: '0.35rem 0.65rem', borderRadius: '0.375rem', cursor: 'pointer',
+                                background: form.selectedVaccines.includes(v.name) ? '#dbeafe' : 'white',
+                                fontSize: '0.875rem', transition: 'all 0.15s ease'
+                              }}>
+                                <input type="checkbox" 
+                                  checked={form.selectedVaccines.includes(v.name)}
+                                  onChange={() => {
+                                    setForm(prev => ({
+                                      ...prev,
+                                      selectedVaccines: prev.selectedVaccines.includes(v.name)
+                                        ? prev.selectedVaccines.filter(x => x !== v.name)
+                                        : [...prev.selectedVaccines, v.name]
+                                    }));
+                                  }}
+                                />
+                                {v.name}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                      {form.selectedVaccines.length > 0 && (
+                        <div style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: '500' }}>
+                          {form.selectedVaccines.length} vaccine{form.selectedVaccines.length !== 1 ? 's' : ''} selected
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ gridColumn: '1 / -1' }}>
@@ -476,14 +583,17 @@ const VaccinationSchedules: React.FC = () => {
               <p style={{ color: 'var(--gray-600)' }}>No vaccination schedules created yet.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                {schedules.map((schedule: any) => (
+                {[...schedules].sort((a, b) => (b.date || '').localeCompare(a.date || '')).map((schedule: any) => {
+                  const effectiveStatus = getEffectiveStatus(schedule);
+                  return (
                 <div 
                   key={schedule.id} 
                   className="card" 
                   style={{ 
                     padding: '1.5rem', 
                     border: '1px solid var(--gray-200)',
-                    borderLeft: `4px solid ${getStatusColor(schedule.status)}`
+                    borderLeft: `4px solid ${getStatusColor(effectiveStatus)}`,
+                    opacity: effectiveStatus === 'Expired' ? 0.75 : 1
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
@@ -496,12 +606,12 @@ const VaccinationSchedules: React.FC = () => {
                         <span style={{
                           fontSize: '0.75rem',
                           fontWeight: '600',
-                          color: getStatusColor(schedule.status),
-                          backgroundColor: getStatusBg(schedule.status),
+                          color: getStatusColor(effectiveStatus),
+                          backgroundColor: getStatusBg(effectiveStatus),
                           padding: '0.25rem 0.5rem',
                           borderRadius: '0.25rem'
                         }}>
-                          {schedule.status}
+                          {effectiveStatus}
                         </span>
                       </div>
                       <p style={{ margin: '0 0 1rem', color: 'var(--gray-600)', fontSize: '0.875rem', lineHeight: '1.4' }}>
@@ -603,7 +713,8 @@ const VaccinationSchedules: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                ))}
+                );
+                })}
               </div>
             )}
           </div>
@@ -740,13 +851,24 @@ const VaccinationSchedules: React.FC = () => {
                   </div>
                   <div>
                     <label style={{ display: 'block', marginBottom: '0.5rem' }}>Date</label>
-                    <input 
-                      type="date" 
-                      value={editForm.date} 
-                      onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} 
-                      min={new Date().toISOString().split('T')[0]}
-                      style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }} 
-                    />
+                    <div style={{ 
+                      padding: '0.75rem', 
+                      border: '1px solid var(--gray-300)', 
+                      borderRadius: '0.5rem',
+                      backgroundColor: '#f0fdf4',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}>
+                      <Calendar size={16} color="#16a34a" />
+                      <span style={{ fontWeight: '600', color: '#166534' }}>
+                        {editForm.date ? formatWednesday(editForm.date) : 'No date set'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.35rem', color: '#2563eb', fontSize: '0.8rem' }}>
+                      <Info size={13} />
+                      <span>Vaccination day is every Wednesday (date cannot be changed to a non-Wednesday)</span>
+                    </div>
                   </div>
                   <div>
                     <label style={{ display: 'block', marginBottom: '0.5rem' }}>Time</label>
@@ -772,8 +894,56 @@ const VaccinationSchedules: React.FC = () => {
                     </select>
                   </div>
                   <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>Vaccines (comma-separated)</label>
-                    <input type="text" value={editForm.vaccines} onChange={(e) => setEditForm({ ...editForm, vaccines: e.target.value })} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--gray-300)', borderRadius: '0.5rem' }} />
+                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>Vaccines</label>
+                    {vaccineOptionsLoading ? (
+                      <p style={{ color: 'var(--gray-500)', fontSize: '0.875rem' }}>Loading vaccines...</p>
+                    ) : vaccineOptions.length === 0 ? (
+                      <p style={{ color: 'var(--red-500)', fontSize: '0.875rem' }}>Could not load vaccine list.</p>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        {Object.entries(
+                          vaccineOptions.reduce((acc, v) => {
+                            const key = v.ageLabel || v.category;
+                            if (!acc[key]) acc[key] = [];
+                            acc[key].push(v);
+                            return acc;
+                          }, {} as Record<string, VaccineOption[]>)
+                        ).map(([group, vaccines]) => (
+                          <div key={group}>
+                            <div style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--blue-700)', marginBottom: '0.35rem', textTransform: 'uppercase' }}>{group}</div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                              {vaccines.map((v) => (
+                                <label key={v.name} style={{ 
+                                  display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+                                  border: editForm.selectedVaccines.includes(v.name) ? '2px solid #2563eb' : '1px solid var(--gray-300)',
+                                  padding: '0.35rem 0.65rem', borderRadius: '0.375rem', cursor: 'pointer',
+                                  background: editForm.selectedVaccines.includes(v.name) ? '#dbeafe' : 'white',
+                                  fontSize: '0.875rem', transition: 'all 0.15s ease'
+                                }}>
+                                  <input type="checkbox" 
+                                    checked={editForm.selectedVaccines.includes(v.name)}
+                                    onChange={() => {
+                                      setEditForm(prev => ({
+                                        ...prev,
+                                        selectedVaccines: prev.selectedVaccines.includes(v.name)
+                                          ? prev.selectedVaccines.filter(x => x !== v.name)
+                                          : [...prev.selectedVaccines, v.name]
+                                      }));
+                                    }}
+                                  />
+                                  {v.name}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                        {editForm.selectedVaccines.length > 0 && (
+                          <div style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: '500' }}>
+                            {editForm.selectedVaccines.length} vaccine{editForm.selectedVaccines.length !== 1 ? 's' : ''} selected
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem' }}>Description</label>
