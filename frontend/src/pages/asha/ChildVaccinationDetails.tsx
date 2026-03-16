@@ -34,7 +34,7 @@ const ChildVaccinationDetails: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [expandedChildId, setExpandedChildId] = useState<string | null>(null);
-    const [sendingReminderId, setSendingReminderId] = useState<string | null>(null);
+    const [sendingVaccineKey, setSendingVaccineKey] = useState<string | null>(null);
 
     // Fetch children data from API
     useEffect(() => {
@@ -63,34 +63,31 @@ const ChildVaccinationDetails: React.FC = () => {
         }
     };
 
-    const sendReminder = async (child: Child) => {
+    const sendSingleReminder = async (child: Child, vaccine: Vaccination, index: number) => {
         if (!child.motherEmail || child.motherEmail === '(no email)') {
             toast.error('This mother does not have a registered email address.');
             return;
         }
-        if (child.dueVaccinations.length === 0) {
-            toast.error('No due vaccinations to remind about.');
-            return;
-        }
+        const key = `${child.id}-${index}`;
+        setSendingVaccineKey(key);
         try {
-            setSendingReminderId(child.id);
             await api.post('/vaccination/send-reminder', {
                 motherEmail: child.motherEmail,
                 motherName: child.motherName,
                 childName: child.childName,
-                vaccinations: child.dueVaccinations.map(v => ({
-                    vaccineName: v.vaccineName,
-                    dueDate: v.dueDate,
-                    status: v.status,
-                    ageLabel: v.ageLabel,
-                })),
+                vaccination: {
+                    vaccineName: vaccine.vaccineName,
+                    dueDate: vaccine.dueDate,
+                    status: vaccine.status,
+                    ageLabel: vaccine.ageLabel,
+                },
             });
-            toast.success(`Vaccination reminder sent to ${child.motherName} (${child.motherEmail})`);
+            toast.success(`Reminder for ${vaccine.vaccineName} sent to ${child.motherName}`);
         } catch (err: any) {
-            console.error('Send reminder error:', err);
-            toast.error(err.response?.data?.error || 'Failed to send reminder email');
+            console.error(`Send reminder error for ${vaccine.vaccineName}:`, err);
+            toast.error(err.response?.data?.error || `Failed to send reminder for ${vaccine.vaccineName}`);
         } finally {
-            setSendingReminderId(null);
+            setSendingVaccineKey(null);
         }
     };
 
@@ -403,6 +400,8 @@ const ChildVaccinationDetails: React.FC = () => {
                                                         <div style={{ display: 'grid', gap: '0.75rem' }}>
                                                             {child.dueVaccinations.map((vaccine: Vaccination, index: number) => {
                                                                 const colors = getStatusColor(vaccine.status);
+                                                                const vaccineKey = `${child.id}-${index}`;
+                                                                const isSending = sendingVaccineKey === vaccineKey;
                                                                 return (
                                                                     <div key={index} style={{
                                                                         display: 'flex',
@@ -422,18 +421,45 @@ const ChildVaccinationDetails: React.FC = () => {
                                                                                 </div>
                                                                             </div>
                                                                         </div>
-                                                                        <span style={{
-                                                                            padding: '0.25rem 0.75rem',
-                                                                            borderRadius: '0.375rem',
-                                                                            fontSize: '0.75rem',
-                                                                            fontWeight: '600',
-                                                                            backgroundColor: 'white',
-                                                                            color: colors.text,
-                                                                            textTransform: 'capitalize',
-                                                                            border: `1px solid ${colors.border}`
-                                                                        }}>
-                                                                            {vaccine.status}
-                                                                        </span>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                            <span style={{
+                                                                                padding: '0.25rem 0.75rem',
+                                                                                borderRadius: '0.375rem',
+                                                                                fontSize: '0.75rem',
+                                                                                fontWeight: '600',
+                                                                                backgroundColor: 'white',
+                                                                                color: colors.text,
+                                                                                textTransform: 'capitalize',
+                                                                                border: `1px solid ${colors.border}`
+                                                                            }}>
+                                                                                {vaccine.status}
+                                                                            </span>
+                                                                            <button
+                                                                                className="btn"
+                                                                                disabled={isSending || sendingVaccineKey !== null}
+                                                                                onClick={(e) => { e.stopPropagation(); sendSingleReminder(child, vaccine, index); }}
+                                                                                style={{
+                                                                                    padding: '0.3rem 0.75rem',
+                                                                                    fontSize: '0.75rem',
+                                                                                    fontWeight: 600,
+                                                                                    backgroundColor: isSending ? '#93c5fd' : '#3b82f6',
+                                                                                    color: 'white',
+                                                                                    border: 'none',
+                                                                                    borderRadius: '0.375rem',
+                                                                                    cursor: isSending ? 'wait' : 'pointer',
+                                                                                    display: 'flex',
+                                                                                    alignItems: 'center',
+                                                                                    gap: '0.3rem',
+                                                                                    whiteSpace: 'nowrap',
+                                                                                }}
+                                                                            >
+                                                                                {isSending ? (
+                                                                                    <><Loader size={14} style={{ animation: 'spin 1s linear infinite' }} /> Sending...</>
+                                                                                ) : (
+                                                                                    <><Send size={14} /> Send Reminder</>
+                                                                                )}
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
                                                                 );
                                                             })}
@@ -442,27 +468,6 @@ const ChildVaccinationDetails: React.FC = () => {
 
                                                     {/* Action Buttons */}
                                                     <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
-                                                        <button
-                                                            className="btn"
-                                                            disabled={sendingReminderId === child.id}
-                                                            onClick={(e) => { e.stopPropagation(); sendReminder(child); }}
-                                                            style={{
-                                                                flex: 1,
-                                                                backgroundColor: sendingReminderId === child.id ? '#93c5fd' : '#3b82f6',
-                                                                color: 'white',
-                                                                fontWeight: 600,
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                gap: '0.5rem',
-                                                                cursor: sendingReminderId === child.id ? 'wait' : 'pointer',
-                                                            }}>
-                                                            {sendingReminderId === child.id ? (
-                                                                <><Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> Sending...</>
-                                                            ) : (
-                                                                <><Send size={18} /> Send Reminder</>
-                                                            )}
-                                                        </button>
                                                         <button className="btn" style={{
                                                             flex: 1,
                                                             backgroundColor: 'white',

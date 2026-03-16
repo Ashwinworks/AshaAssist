@@ -350,6 +350,7 @@ def send_vaccination_reminder(mother_email: str, mother_name: str,
     """
     Send a vaccination reminder email to a mother about due/overdue vaccines.
     vaccinations: list of dicts with keys vaccineName, dueDate, status, ageLabel.
+    When a single vaccination is provided, renders a focused single-vaccine email.
     Returns True if dispatched.
     """
     # Colour map for status badges
@@ -359,6 +360,82 @@ def send_vaccination_reminder(mother_email: str, mother_name: str,
         'upcoming': ('#0369a1', '#f0f9ff', '#0c4a6e'),
     }
 
+    # ---------- Single-vaccine focused email ----------
+    if len(vaccinations) == 1:
+        v = vaccinations[0]
+        border, bg, text = STATUS_COLORS.get(v.get('status', ''), ('#6b7280', '#f9fafb', '#374151'))
+        vaccine_name = v.get('vaccineName', 'Vaccination')
+        due = v.get('dueDate', 'TBD')
+        age_label = v.get('ageLabel', '')
+        status = v.get('status', '')
+
+        # Status-specific emoji and urgency text
+        if status == 'overdue':
+            emoji = '🚨'
+            urgency = 'This vaccination is <strong>overdue</strong>. Please schedule it as soon as possible.'
+        elif status == 'due':
+            emoji = '⏰'
+            urgency = 'This vaccination is <strong>due now</strong>. Please schedule it at your earliest convenience.'
+        else:
+            emoji = '📅'
+            urgency = 'This vaccination is <strong>coming up soon</strong>. Please plan ahead.'
+
+        content = f"""
+          <h2 style="margin:0 0 6px;color:#1a6b4a;font-size:20px;">{emoji} Vaccination Reminder</h2>
+          <p style="margin:0 0 20px;color:#6b7280;font-size:14px;">
+            Dear <strong>{mother_name}</strong>, this is a reminder about a vaccination
+            due for your child <strong>{child_name}</strong>.
+          </p>
+
+          <div style="background:{bg};border:2px solid {border};border-radius:12px;
+                      padding:24px;margin-bottom:20px;text-align:center;">
+            <p style="margin:0 0 4px;color:#6b7280;font-size:12px;text-transform:uppercase;
+                      letter-spacing:1px;font-weight:600;">Vaccine</p>
+            <h3 style="margin:0 0 12px;color:{text};font-size:22px;font-weight:700;">
+              💉 {vaccine_name}
+            </h3>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;">
+              <tr>
+                <td style="text-align:center;padding:6px;">
+                  <span style="display:inline-block;background:#ffffff;border-radius:8px;
+                               padding:8px 16px;font-size:13px;color:#374151;">
+                    📅 <strong>Due Date:</strong> {due}
+                  </span>
+                </td>
+              </tr>
+              {'<tr><td style="text-align:center;padding:6px;"><span style="display:inline-block;background:#ffffff;border-radius:8px;padding:8px 16px;font-size:13px;color:#374151;">👶 <strong>Age:</strong> ' + age_label + '</span></td></tr>' if age_label else ''}
+              <tr>
+                <td style="text-align:center;padding:6px;">
+                  <span style="display:inline-block;padding:4px 14px;border-radius:20px;
+                               font-size:12px;font-weight:600;background:#ffffff;color:{text};
+                               border:1px solid {border};text-transform:capitalize;">
+                    {status}
+                  </span>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="background:#fff8e1;border-left:4px solid #f59e0b;padding:12px 16px;
+                      border-radius:0 8px 8px 0;margin-bottom:16px;">
+            <p style="margin:0;color:#78350f;font-size:13px;">
+              {urgency} Contact your ASHA worker for scheduling an appointment.
+            </p>
+          </div>
+
+          <p style="color:#6b7280;font-size:13px;margin-top:16px;">
+            Open the AshaAssist app to view the full vaccination schedule and book a slot.
+          </p>
+        """
+
+        html = _base_template("Vaccination Reminder", content)
+        return send_email(
+            subject=f"💉 {vaccine_name} — Vaccination Reminder for {child_name} — AshaAssist",
+            recipients=[mother_email],
+            html_body=html
+        )
+
+    # ---------- Multi-vaccine table email (backward compat) ----------
     rows = ""
     for v in vaccinations:
         border, bg, text = STATUS_COLORS.get(v.get('status', ''), ('#6b7280', '#f9fafb', '#374151'))

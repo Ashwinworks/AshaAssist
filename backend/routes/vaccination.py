@@ -985,7 +985,11 @@ def init_vaccination_routes(app, collections):
             mother_email = (data.get('motherEmail') or '').strip()
             mother_name = data.get('motherName', 'Parent')
             child_name = data.get('childName', 'your child')
+            # Support single vaccination object or list
+            single_vaccination = data.get('vaccination')
             vaccinations = data.get('vaccinations', [])
+            if single_vaccination and isinstance(single_vaccination, dict):
+                vaccinations = [single_vaccination]
 
             if not mother_email or '@' not in mother_email:
                 return jsonify({'error': 'Valid mother email is required'}), 400
