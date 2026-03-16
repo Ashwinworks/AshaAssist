@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AshaLayout from './AshaLayout';
 import { Search, Calendar, Baby, FileText, Filter, User, Phone, Mail, Clock } from 'lucide-react';
 import { maternityAPI } from '../../services/api';
@@ -20,6 +21,7 @@ interface MaternalRecord {
 }
 
 const MaternalRecords: React.FC = () => {
+  const navigate = useNavigate();
   const [records, setRecords] = useState<MaternalRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,7 +41,7 @@ const MaternalRecords: React.FC = () => {
       if (filterUserName) params.userName = filterUserName;
       if (dateFrom) params.dateFrom = dateFrom;
       if (dateTo) params.dateTo = dateTo;
-      
+
       const { records } = await maternityAPI.getAllRecords(params);
       setRecords(records);
     } catch (error) {
@@ -88,12 +90,12 @@ const MaternalRecords: React.FC = () => {
               View and manage maternal health records from all patients.
             </p>
           </div>
-          <button 
+          <button
             className="btn"
             onClick={loadRecords}
-            style={{ 
-              backgroundColor: 'var(--pink-600)', 
-              color: 'white', 
+            style={{
+              backgroundColor: 'var(--pink-600)',
+              color: 'white',
               border: 'none',
               display: 'flex',
               alignItems: 'center',
@@ -123,15 +125,15 @@ const MaternalRecords: React.FC = () => {
                 </label>
                 <div style={{ position: 'relative' }}>
                   <Search size={16} style={{ position: 'absolute', top: 12, left: 12, color: 'var(--gray-400)' }} />
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="Search by patient name, center, or notes..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{ 
+                    style={{
                       width: '100%',
-                      padding: '0.75rem 0.75rem 0.75rem 2.5rem', 
-                      border: '1px solid var(--gray-300)', 
+                      padding: '0.75rem 0.75rem 0.75rem 2.5rem',
+                      border: '1px solid var(--gray-300)',
                       borderRadius: '0.5rem',
                       fontSize: '1rem'
                     }}
@@ -145,10 +147,10 @@ const MaternalRecords: React.FC = () => {
                 <select
                   value={filterUserName}
                   onChange={(e) => setFilterUserName(e.target.value)}
-                  style={{ 
+                  style={{
                     width: '100%',
-                    padding: '0.75rem', 
-                    border: '1px solid var(--gray-300)', 
+                    padding: '0.75rem',
+                    border: '1px solid var(--gray-300)',
                     borderRadius: '0.5rem',
                     fontSize: '1rem'
                   }}
@@ -167,10 +169,10 @@ const MaternalRecords: React.FC = () => {
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  style={{ 
+                  style={{
                     width: '100%',
-                    padding: '0.75rem', 
-                    border: '1px solid var(--gray-300)', 
+                    padding: '0.75rem',
+                    border: '1px solid var(--gray-300)',
                     borderRadius: '0.5rem',
                     fontSize: '1rem'
                   }}
@@ -184,10 +186,10 @@ const MaternalRecords: React.FC = () => {
                   type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
-                  style={{ 
+                  style={{
                     width: '100%',
-                    padding: '0.75rem', 
-                    border: '1px solid var(--gray-300)', 
+                    padding: '0.75rem',
+                    border: '1px solid var(--gray-300)',
                     borderRadius: '0.5rem',
                     fontSize: '1rem'
                   }}
@@ -241,11 +243,11 @@ const MaternalRecords: React.FC = () => {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 {filteredRecords.map((record) => (
-                  <div 
-                    key={record.id} 
-                    className="card" 
-                    style={{ 
-                      padding: '1.5rem', 
+                  <div
+                    key={record.id}
+                    className="card"
+                    style={{
+                      padding: '1.5rem',
                       border: '1px solid var(--gray-200)',
                       borderLeft: '4px solid var(--pink-600)'
                     }}
@@ -286,6 +288,28 @@ const MaternalRecords: React.FC = () => {
                           )}
                         </div>
                       </div>
+                      <button
+                        onClick={() => navigate(`/asha/maternal-report/${record.user.id}`)}
+                        className="btn"
+                        style={{
+                          backgroundColor: 'var(--pink-600)',
+                          color: 'white',
+                          border: 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          fontSize: '0.8rem',
+                          fontWeight: '600',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '0.5rem',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          boxShadow: '0 2px 6px rgba(219, 39, 119, 0.25)'
+                        }}
+                      >
+                        <FileText size={14} />
+                        View Report
+                      </button>
                     </div>
 
                     {/* Visit Details */}

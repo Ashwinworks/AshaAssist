@@ -40,6 +40,7 @@ from routes.anganvaadi import init_anganvaadi_routes
 from routes.stock import init_stock_routes
 from routes.milestones import init_milestone_routes
 from routes.government_benefits import init_government_benefits_routes
+from routes.maternal_report import init_maternal_report_routes
 
 # Import utilities
 from utils.helpers import JSONEncoder
@@ -130,6 +131,9 @@ def create_app(config_name='default'):
         print(f"[ERROR] Failed to initialize government benefits routes: {e}")
         import traceback
         traceback.print_exc()
+    
+    # Initialize maternal report routes
+    init_maternal_report_routes(app, collections)
     
     # Initialize ward analytics routes
     from routes.ward_analytics import init_ward_analytics_routes

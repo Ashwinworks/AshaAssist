@@ -1132,3 +1132,11 @@ export const chatAPI = {
     return response.data as { reply: string };
   }
 };
+
+// Maternal Report API (ASHA worker one-click report)
+export const maternalReportAPI = {
+  getReport: async (userId: string) => {
+    const response = await api.get(`/maternal-report/${userId}`);
+    return response.data as { report: any };
+  }
+};
