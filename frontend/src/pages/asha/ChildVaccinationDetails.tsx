@@ -25,6 +25,8 @@ interface Child {
     motherEmail: string;
     motherId: string;
     dueVaccinations: Vaccination[];
+    completedVaccinations?: number;
+    totalVaccinations?: number;
 }
 
 const ChildVaccinationDetails: React.FC = () => {
@@ -386,6 +388,19 @@ const ChildVaccinationDetails: React.FC = () => {
                                                         }}>
                                                             {child.dueVaccinations.length} Due Vaccine{child.dueVaccinations.length !== 1 ? 's' : ''}
                                                         </span>
+                                                        {child.completedVaccinations !== undefined && child.totalVaccinations !== undefined && (
+                                                            <span style={{
+                                                                padding: '0.5rem 1rem',
+                                                                borderRadius: '0.5rem',
+                                                                fontSize: '0.875rem',
+                                                                fontWeight: '600',
+                                                                backgroundColor: '#f0fdf4',
+                                                                color: '#166534',
+                                                                border: '1px solid #86efac'
+                                                            }}>
+                                                                ✓ {child.completedVaccinations}/{child.totalVaccinations} Done
+                                                            </span>
+                                                        )}
                                                         <ChevronRight
                                                             size={24}
                                                             color="#6b7280"

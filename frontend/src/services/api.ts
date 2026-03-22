@@ -376,6 +376,27 @@ export const vaccinationAPI = {
   getVaccineList: async () => {
     const response = await api.get('/vaccination-vaccine-list');
     return response.data as { vaccines: Array<{ name: string; category: string; ageLabel: string; description: string }> };
+  },
+  // Get vaccination milestones for maternity user's child (real data)
+  getMyMilestones: async () => {
+    const response = await api.get('/vaccination/my-milestones');
+    return response.data as {
+      locked: boolean;
+      reason?: string;
+      child?: { name: string; dateOfBirth: string; gender: string; weight?: number; height?: number };
+      milestones?: Array<{
+        vaccineName: string;
+        ageInDays: number;
+        ageLabel: string;
+        description: string;
+        dueDate: string;
+        status: string;
+        completedAt?: string;
+        category: string;
+      }>;
+      completedCount?: number;
+      totalCount?: number;
+    };
   }
 };
 

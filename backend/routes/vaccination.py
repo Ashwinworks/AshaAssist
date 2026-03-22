@@ -931,6 +931,17 @@ def init_vaccination_routes(app, collections):
                 maternal_health = mother.get('maternalHealth', {})
                 children = maternal_health.get('children', [])
                 
+                # Get completed vaccination bookings for this mother
+                completed_bookings = list(collections['vaccination_bookings'].find({
+                    'userId': mother['_id'],
+                    'status': 'Completed'
+                }))
+                # Build a set of completed vaccine names from bookings
+                completed_vaccine_names = set()
+                for booking in completed_bookings:
+                    for v in booking.get('vaccines', []):
+                        completed_vaccine_names.add(v.strip())
+                
                 for idx, child in enumerate(children):
                     # Get or calculate vaccination milestones
                     if 'vaccinationMilestones' in child:
@@ -946,12 +957,20 @@ def init_vaccination_routes(app, collections):
                         else:
                             milestones = []
                     
-                    # Filter only pending/due/overdue vaccinations
+                    # Cross-reference with completed bookings
+                    for milestone in milestones:
+                        if milestone.get('vaccineName') in completed_vaccine_names:
+                            milestone['status'] = 'completed'
+                    
+                    # Filter only pending/due/overdue vaccinations (exclude completed)
                     due_vaccinations = [
                         m for m in milestones 
                         if m.get('status') in ['pending', 'due', 'overdue', 'upcoming']
                         and not m.get('completedAt')
                     ]
+                    
+                    # Count completed for stats
+                    completed_count = len([m for m in milestones if m.get('status') == 'completed'])
                     
                     # Calculate child age
                     dob = child.get('dateOfBirth')
@@ -994,7 +1013,9 @@ def init_vaccination_routes(app, collections):
                         'motherPhone': mother.get('phone', ''),
                         'motherEmail': mother.get('email', ''),
                         'motherId': str(mother['_id']),
-                        'dueVaccinations': due_vaccinations
+                        'dueVaccinations': due_vaccinations,
+                        'completedVaccinations': completed_count,
+                        'totalVaccinations': len(milestones)
                     }
                     
                     children_data.append(child_info)
@@ -1092,6 +1113,104 @@ def init_vaccination_routes(app, collections):
                 return jsonify({'error': 'Failed to create notification'}), 500
         except Exception as e:
             return jsonify({'error': f'Failed to send notification: {str(e)}'}), 500
+
+    @vaccination_bp.route('/api/vaccination/my-milestones', methods=['GET'])
+    @jwt_required()
+    def get_my_vaccination_milestones():
+        """Get vaccination milestones for the logged-in maternity user's child,
+        cross-referencing completed vaccination bookings."""
+        try:
+            user_id = get_jwt_identity()
+            user = collections['users'].find_one({'_id': ObjectId(user_id)})
+            if not user:
+                return jsonify({'error': 'User not found'}), 404
+
+            maternal_health = user.get('maternalHealth', {})
+            pregnancy_status = maternal_health.get('pregnancyStatus', '')
+
+            # If still pregnant, return locked status
+            if pregnancy_status == 'pregnant':
+                return jsonify({'locked': True, 'reason': 'pregnant'}), 200
+
+            children = maternal_health.get('children', [])
+            if not children:
+                return jsonify({'locked': True, 'reason': 'no_children'}), 200
+
+            # Use the first child
+            child = children[0]
+            dob = child.get('dateOfBirth')
+            if not dob:
+                return jsonify({'error': 'Child date of birth not found'}), 400
+
+            from utils.vaccination_utils import calculate_vaccination_milestones
+
+            milestones = calculate_vaccination_milestones(dob)
+
+            # Get completed vaccination bookings for this user
+            completed_bookings = list(collections['vaccination_bookings'].find({
+                'userId': ObjectId(user_id),
+                'status': 'Completed'
+            }))
+
+            # Build a set of completed vaccine names
+            completed_vaccine_names = set()
+            # Also track completion dates per vaccine
+            vaccine_completion_dates = {}
+            for booking in completed_bookings:
+                # Try to get the schedule date as completion date
+                schedule = None
+                if booking.get('scheduleId'):
+                    schedule = collections['vaccination_schedules'].find_one({'_id': booking['scheduleId']})
+                completion_date = None
+                if schedule and schedule.get('date'):
+                    completion_date = schedule['date']
+                elif booking.get('createdAt'):
+                    ca = booking['createdAt']
+                    completion_date = ca.isoformat() if isinstance(ca, datetime) else ca
+
+                for v in booking.get('vaccines', []):
+                    vname = v.strip()
+                    completed_vaccine_names.add(vname)
+                    if vname not in vaccine_completion_dates:
+                        vaccine_completion_dates[vname] = completion_date
+
+            # Mark milestones as completed where applicable
+            for milestone in milestones:
+                vname = milestone['vaccineName']
+                if vname in completed_vaccine_names:
+                    milestone['status'] = 'completed'
+                    milestone['completedAt'] = vaccine_completion_dates.get(vname)
+
+            # Build child info
+            child_dob = dob
+            if isinstance(child_dob, datetime):
+                child_dob_str = child_dob.isoformat()
+            else:
+                child_dob_str = str(child_dob)
+
+            child_info = {
+                'name': child.get('name', 'Unknown'),
+                'dateOfBirth': child_dob_str,
+                'gender': child.get('gender', 'unknown'),
+                'weight': child.get('weight'),
+                'height': child.get('height')
+            }
+
+            completed_count = len([m for m in milestones if m['status'] == 'completed'])
+            total_count = len(milestones)
+
+            return jsonify({
+                'locked': False,
+                'child': child_info,
+                'milestones': milestones,
+                'completedCount': completed_count,
+                'totalCount': total_count
+            }), 200
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return jsonify({'error': f'Failed to get vaccination milestones: {str(e)}'}), 500
 
     # Register blueprint with app
     app.register_blueprint(vaccination_bp)
