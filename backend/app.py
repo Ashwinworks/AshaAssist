@@ -146,6 +146,10 @@ def create_app(config_name='default'):
     # Initialize jaundice detection routes (AI model)
     from routes.jaundice import init_jaundice_routes
     init_jaundice_routes(app, collections)
+
+    # Initialize maternal risk prediction routes (ML model)
+    from routes.maternal_risk import init_maternal_risk_routes
+    init_maternal_risk_routes(app, collections)
     
     # Initialize chatbot routes (Mistral AI)
     from routes.chatbot import init_chatbot_routes

@@ -69,6 +69,7 @@ body {
   --green-700: #15803d;
   --green-25: #f0fdf4;
 
+  --red-500: var(--error-500);
   --red-600: var(--error-600);
   --red-50: #fef2f2;
   --red-200: #fecaca;
@@ -77,13 +78,43 @@ body {
   --purple-600: #7c3aed;
   --purple-700: #6d28d9;
 
+
   --amber-700: #b45309;
   --rose-600: #e11d48;
   --indigo-600: #4f46e5;
   --orange-600: #ea580c;
-  --teal-700: #0f766e;
-  --cyan-700: #0e7490;
+  --orange-50:  #fff7ed;
+  --orange-100: #ffedd5;
+  --teal-600:   #0d9488;
+  --teal-700:   #0f766e;
+  --cyan-700:   #0e7490;
   --emerald-700: #047857;
+
+  /* Pink palette (used across maternity & ASHA pages) */
+  --pink-50:  #fdf2f8;
+  --pink-100: #fce7f3;
+  --pink-200: #fbcfe8;
+  --pink-600: #db2777;
+  --pink-700: #be185d;
+
+  /* Green shades */
+  --green-50:  #f0fdf4;
+  --green-100: #dcfce7;
+  --green-300: #86efac;
+
+  /* Purple shades */
+  --purple-50:  #faf5ff;
+  --purple-100: #ede9fe;
+  --purple-200: #ddd6fe;
+  --purple-800: #3730a3;
+
+  /* Yellow / amber shades (used in status badges) */
+  --yellow-50:  #fefce8;
+  --yellow-100: #fef9c3;
+  --yellow-700: #a16207;
+
+  /* Blue additional shades */
+  --blue-800: #1e40af;
 }
 
 /* Button Styles */

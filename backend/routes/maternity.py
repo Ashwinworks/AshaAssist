@@ -60,12 +60,19 @@ def init_maternity_routes(app, collections):
         try:
             user_id = get_jwt_identity()
             data = request.get_json() or {}
+
+            # If age is not supplied by the client, try to get it from the user profile
+            if not data.get('age'):
+                user = collections['users'].find_one({'_id': ObjectId(user_id)})
+                if user and user.get('age'):
+                    data['age'] = user.get('age')
+
             result, status_code = maternity_service.add_maternity_visit(user_id, data)
-            
+
             # If successful, check and unlock installment 2
             if status_code == 201:
                 benefits_service.check_and_unlock_installment2(user_id)
-            
+
             return jsonify(result), status_code
         except Exception as e:
             return jsonify({'error': f'Failed to add visit: {str(e)}'}), 500
@@ -147,6 +154,12 @@ def init_maternity_routes(app, collections):
                     'week': doc.get('week'),
                     'center': doc.get('center'),
                     'notes': doc.get('notes'),
+                    'doctorNotes': doc.get('doctorNotes', ''),
+                    'vitals': doc.get('vitals'),
+                    'riskLevel': doc.get('riskLevel'),
+                    'riskConfidence': doc.get('riskConfidence'),
+                    'riskFactors': doc.get('riskFactors', []),
+                    'riskRecommendations': doc.get('riskRecommendations', []),
                     'createdAt': doc.get('createdAt').isoformat() if isinstance(doc.get('createdAt'), datetime) else doc.get('createdAt'),
                     'user': {
                         'id': str(doc['user']['_id']),

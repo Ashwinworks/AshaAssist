@@ -217,10 +217,24 @@ export const maternityAPI = {
     const response = await api.get('/maternity/visits');
     return response.data;
   },
-  addVisit: async (payload: { visitDate: string; week?: number; center?: string; notes?: string }) => {
+  addVisit: async (payload: {
+    visitDate: string;
+    week?: number;
+    center?: string;
+    notes?: string;
+    doctorNotes?: string;
+    // Vitals (optional — triggers risk prediction)
+    systolicBP?: number;
+    diastolicBP?: number;
+    bloodSugar?: number;
+    bodyTemp?: number;
+    heartRate?: number;
+    age?: number;
+  }) => {
     const response = await api.post('/maternity/visits', payload);
     return response.data;
   },
+
   deleteVisit: async (visitId: string) => {
     const response = await api.delete(`/maternity/visits/${visitId}`);
     return response.data;
