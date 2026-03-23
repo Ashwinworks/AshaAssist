@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Heart, LogOut, Calendar, Home, Package,
-  MessageSquare, Menu, X, ChevronDown, ChevronRight, Clipboard, MapPin, Baby, Syringe, Activity
+  MessageSquare, Menu, X, ChevronDown, ChevronRight, Clipboard, MapPin, Baby, Syringe, Activity, DollarSign
 } from 'lucide-react';
 import LanguageToggle from '../../components/LanguageToggle';
 
@@ -36,6 +36,12 @@ const AshaLayout: React.FC<AshaLayoutProps> = ({ children, title }) => {
       path: '/asha/maternal-records'
     },
     {
+      id: 'pmsma-benefits',
+      label: 'PMSMA Benefits',
+      icon: DollarSign,
+      path: '/asha/pmsma-benefits'
+    },
+    {
       id: 'requests',
       label: t('asha.requests'),
       icon: Package,
@@ -51,7 +57,6 @@ const AshaLayout: React.FC<AshaLayoutProps> = ({ children, title }) => {
       icon: Clipboard,
       isDropdown: true,
       children: [
-        { id: 'pmsma-benefits', label: 'PMSMA Benefits', path: '/asha/pmsma-benefits' },
         { id: 'palliative-records', label: t('asha.palliativeRecords'), path: '/asha/palliative-records' },
         { id: 'vaccination-records', label: t('asha.vaccinationRecords'), path: '/asha/vaccination-records' }
       ]
