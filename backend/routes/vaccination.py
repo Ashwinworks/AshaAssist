@@ -573,49 +573,24 @@ def init_vaccination_routes(app, collections):
             cert_hash = get_certificate_hash(cert_data)
             verification_url = generate_verification_url(certificate_id, signature)
 
-            # Generate QR code with human-readable formatted certificate data
-            # This creates a beautiful, easy-to-read certificate when scanned
-            vaccines_list = '\n'.join([f'  • {v}' for v in vaccines])
-            
-            qr_text = f"""╔══════════════════════════════════════╗
-║   VACCINATION CERTIFICATE            ║
-║   AshaAssist Health Department       ║
-╚══════════════════════════════════════╝
+            # Generate QR code with compact JSON payload — readable by all scanners
+            import json as _json
+            qr_payload = _json.dumps({
+                "type": "VACCINATION_CERTIFICATE",
+                "issuer": "AshaAssist Health Department",
+                "certificateId": certificate_id,
+                "childName": child_name,
+                "parentName": parent_name,
+                "vaccines": vaccines,
+                "vaccinationDate": vaccination_date,
+                "location": location,
+                "issuedAt": issued_date,
+                "verifyAt": verification_url,
+                "hash": cert_hash[:32],
+            }, separators=(',', ':'))
 
-📋 CERTIFICATE ID
-   {certificate_id}
-
-👶 CHILD'S NAME
-   {child_name}
-
-👨‍👩‍👧 PARENT/GUARDIAN
-   {parent_name}
-
-💉 VACCINES ADMINISTERED
-{vaccines_list}
-
-📅 VACCINATION DATE
-   {vaccination_date}
-
-📍 LOCATION
-   {location}
-
-📝 ISSUED ON
-   {issued_date}
-
-🔐 DIGITAL SIGNATURE
-   {signature[:48]}...
-
-✓ CERTIFICATE VERIFIED
-   This is an authentic vaccination certificate
-   issued by AshaAssist Health Department
-
-🌐 Online Verification:
-   {verification_url}
-"""
-            
-            qr = qrcode.QRCode(version=None, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=2)
-            qr.add_data(qr_text)
+            qr = qrcode.QRCode(version=None, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=10, border=2)
+            qr.add_data(qr_payload)
             qr.make(fit=True)
             qr_img = qr.make_image(fill_color="black", back_color="white")
             
